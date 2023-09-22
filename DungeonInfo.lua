@@ -21,3 +21,26 @@ function addon:GetGeneralDungeonInfo()
     end
     addon.dungeonInfo = dungeonInfo 
 end
+
+function addon:GetPlayerDungeonBests()
+    local playerBests = {
+        ["tyrannical"] = {},
+        ["fortified"] = {}
+    }
+    for key, value in pairs(addon.dungeonInfo) do
+        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(value.mythicID)
+        for i, affix in ipairs(affixScores) do
+            dungeonBest = {
+               ["level"] = affix.level,
+               ["rating"] = affix.score,
+               ["time"] = affix.durationSec,
+            }
+            if(string.lower(affix.name) == "tyrannical") then
+                playerBests.tyrannical[key] = dungeonBest
+            else
+                playerBests.fortified[key] = dungeonBest
+            end
+        end
+    end
+    addon.playerBests = playerBests
+end

@@ -25,7 +25,15 @@ print(bestOverAllScore)--]]
 local addonName, addon = ...
 print(string.format("Welcome to %s.", addonName))
 addon:GetGeneralDungeonInfo()
+addon:GetPlayerDungeonBests()
 
 for key, value in pairs(addon.dungeonInfo) do
     print(string.format("MapInfo: %s %s!", key, addon:FormatTimer(value.timeLimit)))
+end
+
+for key, value in pairs(addon.playerBests) do
+    print(string.format("Best for %s:", key))
+    for k, v in pairs(value) do
+        print(k, v.level, v.rating, v.time, v.overTime)
+    end
 end
