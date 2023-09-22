@@ -22,7 +22,10 @@ end
 
 print(bestOverAllScore)--]]
 
---package.path = package.path .. ";../?.lua"
 local addonName, addon = ...
 print(string.format("Welcome to %s.", addonName))
 addon:GetGeneralDungeonInfo()
+
+for key, value in pairs(addon.dungeonInfo) do
+    print(string.format("MapInfo: %s %s!", key, addon:FormatTimer(value.timeLimit)))
+end
