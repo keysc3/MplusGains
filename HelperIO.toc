@@ -4,4 +4,5 @@
 ## Author: Colin Keys
 ## Version: 0.0.1
 
+DungeonInfo.lua
 HelperIO.lua
