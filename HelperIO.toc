@@ -1,0 +1,7 @@
+## Interface: 100105
+## Title: HelperIO
+## Notes: Provides IO gain information.
+## Author: Colin Keys
+## Version: 0.0.1
+
+HelperIO.lua
