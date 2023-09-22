@@ -21,7 +21,11 @@ for i, affix in ipairs(affixScores) do
 end
 
 print(bestOverAllScore)--]]
+
+-- Undertime
 -- ((totaltime - runTime)/(totaltime - totaltime*0.6)) * 5 = bonusScore
+-- Overtime
+-- (abs(((totaltime - runTime))/(totaltime - totaltime*0.6)) * 5) + 5 = lostScore
 local addonName, addon = ...
 print(string.format("Welcome to %s.", addonName))
 addon:GetGeneralDungeonInfo()
