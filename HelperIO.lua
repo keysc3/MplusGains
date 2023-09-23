@@ -38,6 +38,10 @@ end
 for key, value in pairs(addon.playerBests) do
     print(string.format("Best for %s:", key))
     for k, v in pairs(value) do
-        print(k, v.level, v.rating, v.time)
+        rating = v.rating
+        if(not string.match(rating, "%.")) then
+            rating = rating .. ".0"
+        end
+        print(k, v.level, rating, v.time)
     end
 end
