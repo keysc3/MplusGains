@@ -8,34 +8,53 @@ local mouseDown = false
 local currX, currY
 local origX, origY
 local maxScrollRange = 0
-local maxLevel = 10
+local maxLevel = 30
 
 local myFont = CreateFont("Font")
 myFont:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE, MONOCHROME")
 myFont:SetTextColor(1, 1, 1, 1)
 
-local frame = CreateFrame("Frame", "Main", UIParent)
-frame:SetPoint("CENTER", nil, 0, 100)
-frame:SetSize(1000, 600)
---frame:Hide()
+local function CreateNewTexture(red, green, blue, alpha, parent)
+    local texture = parent:CreateTexture()
+    texture:SetAllPoints()
+    texture:SetTexture("Interface\\buttons\\white8x8")
+    texture:SetVertexColor(red/255, green/255, blue/255, alpha)
+    return texture
+end
 
-local frame1 = CreateFrame("Frame", "Row", frame)
-frame1:SetPoint("TOPLEFT")
-frame1:SetSize(600, 60)
+local function CreateMainFrame()
+    local frame = CreateFrame("Frame", "Main", UIParent)
+    frame:SetPoint("CENTER", nil, 0, 100)
+    frame:SetSize(1000, 600)
+    frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
+    return frame
+end
 
-local frame2 = CreateFrame("Frame", "Test", frame1)
+local mainFrame = CreateMainFrame()
+
+local function CreateDungeonRow(name)
+    local frame = CreateFrame("Frame", name .. "_ROW", mainFrame)
+    frame:SetPoint("TOPLEFT")
+    frame:SetSize(600, 60)
+    frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
+    return frame
+end
+
+local row1 = CreateDungeonRow("ULD")
+
+local frame2 = CreateFrame("Frame", "Test", row1)
 frame2:SetPoint("LEFT")
 local text = frame2:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 text:SetPoint("LEFT")
 text:SetText("ULDAMAN: LEGACY OF TYR")
-frame2:SetSize(text:GetStringWidth(), frame1:GetHeight())
+frame2:SetSize(text:GetStringWidth(), row1:GetHeight())
 
-local frame3 = CreateFrame("Frame", "Test", frame1)
+local frame3 = CreateFrame("Frame", "Test", row1)
 frame3:SetPoint("LEFT", frame2, "RIGHT")
 local text = frame3:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 text:SetPoint("LEFT")
 text:SetText("0000")
-frame3:SetSize(text:GetStringWidth(), frame1:GetHeight())
+frame3:SetSize(text:GetStringWidth(), row1:GetHeight())
 
 print("TEXT WIDTH: " .. text:GetStringWidth())
 
@@ -118,9 +137,9 @@ local function CreateButtonRow(parentFrame, startingLevel)
     end
 end
 
-local scrollHolder = CreateFrame("Frame", nil, frame1)
+local scrollHolder = CreateFrame("Frame", nil, row1)
 scrollHolder:SetPoint("LEFT", frame3, "RIGHT")
-scrollHolder:SetSize(300, frame1:GetHeight())
+scrollHolder:SetSize(300, row1:GetHeight())
 
 local rowFrame = CreateFrame("Frame", "Row1")
 rowFrame:SetPoint("LEFT", frame3, "RIGHT")
@@ -134,36 +153,14 @@ scrollFrame:SetPoint("BOTTOMRIGHT")
 --scrollbar:SetMinMaxValues(0, 100)
 scrollFrame:SetScrollChild(rowFrame)
 
---[[local scrollFrame = CreateFrame("ScrollFrame", "myScrollFrame", scrollHolder, "UIPanelScrollFrameTemplate")
-local scrollbarName = scrollFrame:GetName()
-scrollFrame.scrollbar = _G[scrollbarName.."ScrollBar"];
-scrollFrame.scrollupbutton = _G[scrollbarName.."ScrollBarScrollUpButton"];
-scrollFrame.scrolldownbutton = _G[scrollbarName.."ScrollBarScrollDownButton"];
-scrollFrame.scrollbar:SetOrientation('HORIZONTAL')
-scrollFrame.scrollbar:SetPoint("TOPLEFT", scrollHolder, "BOTTOMLEFT")
-scrollFrame.scrolldownbutton:ClearAllPoints()
-scrollFrame.scrolldownbutton:SetPoint("TOPLEFT", scrollHolder, "BOTTOMLEFT")
-scrollFrame.scrollupbutton:ClearAllPoints()
-scrollFrame.scrollupbutton:SetPoint("TOPRIGHT", scrollHolder, "BOTTOMRIGHT")
-scrollFrame.scrollbar:ClearAllPoints()
-scrollFrame.scrollbar:SetPoint("TOP", scrollFrame.scrollupbutton, "BOTTOM", 0, -2);
-scrollFrame.scrollbar:SetPoint("BOTTOM", scrollFrame.scrolldownbutton, "TOP", 0, 2);
---scrollFrame.scrollbar:SetPoint("LEFT", scrollFrame.scrolldownbutton, "RIGHT", -2, 0);
-scrollFrame:SetPoint("TOPLEFT")
-scrollFrame:SetPoint("BOTTOMRIGHT")
-scrollFrame:SetScrollChild(rowFrame)
-print("RANGE: " .. scrollFrame:GetVerticalScrollRange())--]]
-
 CreateButtonRow(rowFrame, 2)
-frame1.texture = CreateNewTexture(40, 40, 40, 1, frame1)
-frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
 
-local frame4 = CreateFrame("Frame", "Test", frame1)
+local frame4 = CreateFrame("Frame", "Test", row1)
 frame4:SetPoint("LEFT", scrollHolder, "RIGHT")
 local text = frame4:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 text:SetPoint("LEFT")
 text:SetText("HELLO")
-frame4:SetSize(text:GetStringWidth(), frame1:GetHeight())
+frame4:SetSize(text:GetStringWidth(), row1:GetHeight())
 
 
 --[[local function ToggleButton(widget, button, down)
