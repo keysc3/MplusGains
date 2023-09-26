@@ -5,7 +5,8 @@ local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local mouseDown = false
-local cursorX, cursorY
+local currX, currY
+local origX, origY
 local maxScrollRange = 0
 local maxLevel = 10
 
@@ -15,7 +16,7 @@ myFont:SetTextColor(1, 1, 1, 1)
 
 local frame = CreateFrame("Frame", "Main", UIParent)
 frame:SetPoint("CENTER", nil, 0, 100)
-frame:SetSize(800, 600)
+frame:SetSize(1000, 600)
 --frame:Hide()
 
 local frame1 = CreateFrame("Frame", "Row", frame)
@@ -25,15 +26,15 @@ frame1:SetSize(600, 60)
 local frame2 = CreateFrame("Frame", "Test", frame1)
 frame2:SetPoint("LEFT")
 local text = frame2:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-text:SetPoint("Left")
-text:SetText("Test")
+text:SetPoint("LEFT")
+text:SetText("ULDAMAN: LEGACY OF TYR")
 frame2:SetSize(text:GetStringWidth(), frame1:GetHeight())
 
 local frame3 = CreateFrame("Frame", "Test", frame1)
 frame3:SetPoint("LEFT", frame2, "RIGHT")
 local text = frame3:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-text:SetPoint("Left")
-text:SetText("238")
+text:SetPoint("LEFT")
+text:SetText("0000")
 frame3:SetSize(text:GetStringWidth(), frame1:GetHeight())
 
 print("TEXT WIDTH: " .. text:GetStringWidth())
@@ -68,35 +69,37 @@ end
 
 local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFrame)
     local keystoneButtonObject = addon.CreateKeystoneButton(keyLevel, 260)
-    btn:SetScript("OnMouseUp", function(self, btn, down)
+    btn:SetScript("OnMouseUp", function(self, btn)
         mouseDown = false
-        if(keystoneButtonObject.isSelected) then
-            self:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-        else
-            self:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+        local x, y = GetCursorPosition()
+        if(math.ceil(origX) == math.ceil(x)) then 
+            if(keystoneButtonObject.isSelected) then
+                self:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+            else
+                self:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+            end
+            keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
+            print("Selected: " .. tostring(keystoneButtonObject.isSelected))
         end
-        keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
-        print("Selected: " .. tostring(keystoneButtonObject.isSelected))
     end)
-    btn:SetScript("OnMouseDown", function(self, btn, down)
+    btn:SetScript("OnMouseDown", function(self, btn)
         mouseDown = true
-        cursorX, cursorY = GetCursorPosition()
-        print("HOR SCROLL: " .. parentScroll:GetHorizontalScroll() .. "MAX: " .. parentFrame.maxScrollRange)
+        origX, origY = GetCursorPosition()
+        currX, currY = GetCursorPosition()
     end)
     btn:SetScript("OnUpdate", function(self, btn, down)
         local x, y = GetCursorPosition()
-        --print("HOR SCROLL: " .. parentScroll:GetHorizontalScroll() .. "MAX: " .. btn:GetParent().maxScrollRange)
         if(mouseDown) then
-            local diff = math.abs(cursorX - x)*1.36
-            if(cursorX < x and parentScroll:GetHorizontalScroll() > 0) then
+            local diff = math.abs(currX - x)*1.36
+            if(currX < x and parentScroll:GetHorizontalScroll() > 0) then
                 newPos = parentScroll:GetHorizontalScroll() - diff
                 parentScroll:SetHorizontalScroll(( newPos < 0) and 0 or newPos)
-            elseif(cursorX > x and parentScroll:GetHorizontalScroll() < parentFrame.maxScrollRange) then
+            elseif(currX > x and parentScroll:GetHorizontalScroll() < parentFrame.maxScrollRange) then
                 newPos = parentScroll:GetHorizontalScroll() + diff
                 parentScroll:SetHorizontalScroll(( newPos > parentFrame.maxScrollRange) and parentFrame.maxScrollRange or newPos)
             end
         end
-        cursorX, cursorY = GetCursorPosition()
+        currX, currY = GetCursorPosition()
     end)
     return keystoneButtonObject
 end
@@ -154,6 +157,13 @@ print("RANGE: " .. scrollFrame:GetVerticalScrollRange())--]]
 CreateButtonRow(rowFrame, 2)
 frame1.texture = CreateNewTexture(40, 40, 40, 1, frame1)
 frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
+
+local frame4 = CreateFrame("Frame", "Test", frame1)
+frame4:SetPoint("LEFT", scrollHolder, "RIGHT")
+local text = frame4:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+text:SetPoint("LEFT")
+text:SetText("HELLO")
+frame4:SetSize(text:GetStringWidth(), frame1:GetHeight())
 
 
 --[[local function ToggleButton(widget, button, down)
