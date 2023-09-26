@@ -173,13 +173,18 @@ local scrollHolderFrame = CreateScrollHolderFrame(row1, currentScoreFrame)
 
 CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
 
-local frame4 = CreateFrame("Frame", "Test", row1)
-frame4:SetPoint("LEFT", scrollHolder, "RIGHT")
-local text = frame4:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-text:SetPoint("LEFT")
-text:SetText("HELLO")
-frame4:SetSize(text:GetStringWidth(), row1:GetHeight())
 
+local function CreateGainedScoreFrame(parentRow, anchorFrame)
+    local frame = CreateFrame("Frame", "Test", parentRow)
+    frame:SetPoint("LEFT", anchorFrame, "RIGHT")
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetPoint("LEFT")
+    text:SetText("+0")
+    frame:SetSize(text:GetStringWidth(), parentRow:GetHeight())
+    return frame
+end
+
+local gainedScoreFrame = CreateGainedScoreFrame(row1, scrollHolderFrame)
 
 --[[local function ToggleButton(widget, button, down)
     widget:SetNormalTexture(selected)
