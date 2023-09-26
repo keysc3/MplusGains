@@ -4,6 +4,8 @@ local myButtons = {}
 local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
+local mouseDown = false
+local cursorX, cursorY
 
 local myFont = CreateFont("Font")
 myFont:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE, MONOCHROME")
@@ -17,6 +19,22 @@ frame:SetSize(800, 600)
 local frame1 = CreateFrame("Frame", "Row", frame)
 frame1:SetPoint("TOPLEFT")
 frame1:SetSize(600, 60)
+
+local frame2 = CreateFrame("Frame", "Test", frame1)
+frame2:SetPoint("LEFT")
+local text = frame2:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+text:SetPoint("Left")
+text:SetText("Test")
+frame2:SetSize(text:GetStringWidth(), frame1:GetHeight())
+
+local frame3 = CreateFrame("Frame", "Test", frame1)
+frame3:SetPoint("LEFT", frame2, "RIGHT")
+local text = frame3:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+text:SetPoint("Left")
+text:SetText("238")
+frame3:SetSize(text:GetStringWidth(), frame1:GetHeight())
+
+print("TEXT WIDTH: " .. text:GetStringWidth())
 
 local function CreateNewTexture(red, green, blue, alpha, parent)
     local texture = parent:CreateTexture()
@@ -32,7 +50,7 @@ local function CreateButton(keyLevel, xOffset, parentFrame)
     local btn = CreateFrame("Button", parentFrame:GetName() .. "Button" .. "+" .. tostring(keyLevel), nil, "BackdropTemplate")
     btn:SetParent(parentFrame)
     btn:SetPoint("LEFT", xOffset, 0)
-    btn:SetSize(48, 58)
+    btn:SetSize(48, parentFrame:GetHeight())
     btn:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -46,9 +64,10 @@ local function CreateButton(keyLevel, xOffset, parentFrame)
     return btn
 end
 
-local function CreateKeystoneLevelButton(keyLevel, btn)
+local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll)
     local keystoneButtonObject = addon.CreateKeystoneButton(keyLevel, 260)
-    btn:SetScript("OnClick", function(self, btn, down)
+    btn:SetScript("OnMouseUp", function(self, btn, down)
+        mouseDown = false
         if(keystoneButtonObject.isSelected) then
             self:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         else
@@ -57,6 +76,26 @@ local function CreateKeystoneLevelButton(keyLevel, btn)
         keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
         print("Selected: " .. tostring(keystoneButtonObject.isSelected))
     end)
+    btn:SetScript("OnMouseDown", function(self, btn, down)
+        mouseDown = true
+        cursorX, cursorY = GetCursorPosition()
+    end)
+    btn:SetScript("OnUpdate", function(self, btn, down)
+        local x, y = GetCursorPosition()
+        if(mouseDown) then
+            local diff = math.abs(cursorX - x)*1.36
+            if(cursorX < x) then
+                print("Scroll Right")
+                parentScroll:SetHorizontalScroll(parentScroll:GetHorizontalScroll() - diff)
+            elseif(cursorX > x) then
+                print("Scroll Left")
+                parentScroll:SetHorizontalScroll(parentScroll:GetHorizontalScroll() + diff)
+            end
+        end
+        print("HOR SCROLL RANGE: " .. parentScroll:GetHorizontalScrollRange())
+        print("HOR SCROLL: " .. parentScroll:GetHorizontalScroll())
+        cursorX, cursorY = GetCursorPosition()
+    end)
     return keystoneButtonObject
 end
 
@@ -64,7 +103,7 @@ local function CreateButtonRow(parentFrame, startingLevel, numButtons)
     local xOffset = startingOffset
     for i = 1, numButtons - 1 do
         local button = CreateButton(startingLevel, xOffset, parentFrame)
-        button.keystoneButton = CreateKeystoneLevelButton(startingLevel, button)
+        button.keystoneButton = CreateKeystoneLevelButton(startingLevel, button, parentFrame:GetParent())
         xOffset = xOffset  + 48
         startingLevel = startingLevel + 1
     end
@@ -75,7 +114,43 @@ local function CreateButtonRow(parentFrame, startingLevel, numButtons)
     end
 end
 
-CreateButtonRow(frame1, 2, 10)
+local scrollHolder = CreateFrame("Frame", nil, frame1)
+scrollHolder:SetPoint("LEFT", frame3, "RIGHT")
+scrollHolder:SetSize(300, frame1:GetHeight())
+
+local rowFrame = CreateFrame("Frame", "Row1")
+rowFrame:SetPoint("LEFT", frame3, "RIGHT")
+rowFrame:SetSize(600, 60)
+
+local scrollFrame = CreateFrame("ScrollFrame", "testScrollFrame", scrollHolder, "UIPanelScrollFrameCodeTemplate")
+local scrollbarName = scrollFrame:GetName();
+--local scrollbar =  _G[scrollBarName.."ScrollBar"];
+scrollFrame:SetPoint("TOPLEFT")
+scrollFrame:SetPoint("BOTTOMRIGHT")
+--scrollbar:SetMinMaxValues(0, 100)
+scrollFrame:SetScrollChild(rowFrame)
+
+--[[local scrollFrame = CreateFrame("ScrollFrame", "myScrollFrame", scrollHolder, "UIPanelScrollFrameTemplate")
+local scrollbarName = scrollFrame:GetName()
+scrollFrame.scrollbar = _G[scrollbarName.."ScrollBar"];
+scrollFrame.scrollupbutton = _G[scrollbarName.."ScrollBarScrollUpButton"];
+scrollFrame.scrolldownbutton = _G[scrollbarName.."ScrollBarScrollDownButton"];
+scrollFrame.scrollbar:SetOrientation('HORIZONTAL')
+scrollFrame.scrollbar:SetPoint("TOPLEFT", scrollHolder, "BOTTOMLEFT")
+scrollFrame.scrolldownbutton:ClearAllPoints()
+scrollFrame.scrolldownbutton:SetPoint("TOPLEFT", scrollHolder, "BOTTOMLEFT")
+scrollFrame.scrollupbutton:ClearAllPoints()
+scrollFrame.scrollupbutton:SetPoint("TOPRIGHT", scrollHolder, "BOTTOMRIGHT")
+scrollFrame.scrollbar:ClearAllPoints()
+scrollFrame.scrollbar:SetPoint("TOP", scrollFrame.scrollupbutton, "BOTTOM", 0, -2);
+scrollFrame.scrollbar:SetPoint("BOTTOM", scrollFrame.scrolldownbutton, "TOP", 0, 2);
+--scrollFrame.scrollbar:SetPoint("LEFT", scrollFrame.scrolldownbutton, "RIGHT", -2, 0);
+scrollFrame:SetPoint("TOPLEFT")
+scrollFrame:SetPoint("BOTTOMRIGHT")
+scrollFrame:SetScrollChild(rowFrame)
+print("RANGE: " .. scrollFrame:GetVerticalScrollRange())--]]
+
+CreateButtonRow(rowFrame, 2, 10)
 frame1.texture = CreateNewTexture(40, 40, 40, 1, frame1)
 frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
 
