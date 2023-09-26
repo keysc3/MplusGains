@@ -6,6 +6,8 @@ local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local mouseDown = false
 local cursorX, cursorY
+local maxScrollRange = 0
+local maxLevel = 10
 
 local myFont = CreateFont("Font")
 myFont:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE, MONOCHROME")
@@ -64,7 +66,7 @@ local function CreateButton(keyLevel, xOffset, parentFrame)
     return btn
 end
 
-local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll)
+local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFrame)
     local keystoneButtonObject = addon.CreateKeystoneButton(keyLevel, 260)
     btn:SetScript("OnMouseUp", function(self, btn, down)
         mouseDown = false
@@ -79,38 +81,37 @@ local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll)
     btn:SetScript("OnMouseDown", function(self, btn, down)
         mouseDown = true
         cursorX, cursorY = GetCursorPosition()
+        print("HOR SCROLL: " .. parentScroll:GetHorizontalScroll() .. "MAX: " .. parentFrame.maxScrollRange)
     end)
     btn:SetScript("OnUpdate", function(self, btn, down)
         local x, y = GetCursorPosition()
+        --print("HOR SCROLL: " .. parentScroll:GetHorizontalScroll() .. "MAX: " .. btn:GetParent().maxScrollRange)
         if(mouseDown) then
             local diff = math.abs(cursorX - x)*1.36
-            if(cursorX < x) then
-                print("Scroll Right")
-                parentScroll:SetHorizontalScroll(parentScroll:GetHorizontalScroll() - diff)
-            elseif(cursorX > x) then
-                print("Scroll Left")
-                parentScroll:SetHorizontalScroll(parentScroll:GetHorizontalScroll() + diff)
+            if(cursorX < x and parentScroll:GetHorizontalScroll() > 0) then
+                newPos = parentScroll:GetHorizontalScroll() - diff
+                parentScroll:SetHorizontalScroll(( newPos < 0) and 0 or newPos)
+            elseif(cursorX > x and parentScroll:GetHorizontalScroll() < parentFrame.maxScrollRange) then
+                newPos = parentScroll:GetHorizontalScroll() + diff
+                parentScroll:SetHorizontalScroll(( newPos > parentFrame.maxScrollRange) and parentFrame.maxScrollRange or newPos)
             end
         end
-        print("HOR SCROLL RANGE: " .. parentScroll:GetHorizontalScrollRange())
-        print("HOR SCROLL: " .. parentScroll:GetHorizontalScroll())
         cursorX, cursorY = GetCursorPosition()
     end)
     return keystoneButtonObject
 end
 
-local function CreateButtonRow(parentFrame, startingLevel, numButtons)
+local function CreateButtonRow(parentFrame, startingLevel)
+    local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
+    local diff = totalRowWidth - 300
+    parentFrame.maxScrollRange = (diff > 0) and diff or 0
+    print("ROW MAX: " .. parentFrame.maxScrollRange)
     local xOffset = startingOffset
-    for i = 1, numButtons - 1 do
+    for i = 1, maxLevel - 1 do
         local button = CreateButton(startingLevel, xOffset, parentFrame)
-        button.keystoneButton = CreateKeystoneLevelButton(startingLevel, button, parentFrame:GetParent())
+        button.keystoneButton = CreateKeystoneLevelButton(startingLevel, button, parentFrame:GetParent(), parentFrame)
         xOffset = xOffset  + 48
         startingLevel = startingLevel + 1
-    end
-    local children = {parentFrame:GetChildren()}
-
-    for i, child in ipairs(children) do
-        print(i, child:GetObjectType(), child:GetDebugName())
     end
 end
 
@@ -150,7 +151,7 @@ scrollFrame:SetPoint("BOTTOMRIGHT")
 scrollFrame:SetScrollChild(rowFrame)
 print("RANGE: " .. scrollFrame:GetVerticalScrollRange())--]]
 
-CreateButtonRow(rowFrame, 2, 10)
+CreateButtonRow(rowFrame, 2)
 frame1.texture = CreateNewTexture(40, 40, 40, 1, frame1)
 frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
 
