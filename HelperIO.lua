@@ -42,21 +42,29 @@ end
 
 local row1 = CreateDungeonRow("ULD")
 
-local frame2 = CreateFrame("Frame", "Test", row1)
-frame2:SetPoint("LEFT")
-local text = frame2:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-text:SetPoint("LEFT")
-text:SetText("ULDAMAN: LEGACY OF TYR")
-frame2:SetSize(text:GetStringWidth(), row1:GetHeight())
+local function CreateDungeonNameFrame(name, parentRow)
+    local frame = CreateFrame("Frame", name .. "_TEXT", parentRow)
+    frame:SetPoint("LEFT")
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetPoint("LEFT")
+    text:SetText(name)
+    frame:SetSize(text:GetStringWidth(), parentRow:GetHeight())
+    return frame
+end
 
-local frame3 = CreateFrame("Frame", "Test", row1)
-frame3:SetPoint("LEFT", frame2, "RIGHT")
-local text = frame3:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-text:SetPoint("LEFT")
-text:SetText("0000")
-frame3:SetSize(text:GetStringWidth(), row1:GetHeight())
+local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row1)
 
-print("TEXT WIDTH: " .. text:GetStringWidth())
+local function CreateCurrentScoreFrame(score, parentRow, anchorFrame)
+    local frame = CreateFrame("Frame", "Test", parentRow)
+    frame:SetPoint("LEFT", anchorFrame, "RIGHT")
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetPoint("CENTER")
+    text:SetText(score)
+    frame:SetSize(text:GetStringWidth(), row1:GetHeight())
+    return frame
+end
+
+local currentScoreFrame = CreateCurrentScoreFrame(100, row1, dungeonNameFrame)
 
 local function CreateNewTexture(red, green, blue, alpha, parent)
     local texture = parent:CreateTexture()
@@ -138,11 +146,11 @@ local function CreateButtonRow(parentFrame, startingLevel)
 end
 
 local scrollHolder = CreateFrame("Frame", nil, row1)
-scrollHolder:SetPoint("LEFT", frame3, "RIGHT")
+scrollHolder:SetPoint("LEFT", currentScoreFrame, "RIGHT")
 scrollHolder:SetSize(300, row1:GetHeight())
 
 local rowFrame = CreateFrame("Frame", "Row1")
-rowFrame:SetPoint("LEFT", frame3, "RIGHT")
+rowFrame:SetPoint("LEFT", currentScoreFrame, "RIGHT")
 rowFrame:SetSize(0, 60)
 
 local scrollFrame = CreateFrame("ScrollFrame", "testScrollFrame", scrollHolder, "UIPanelScrollFrameCodeTemplate")
