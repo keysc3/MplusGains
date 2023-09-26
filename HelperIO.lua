@@ -30,17 +30,13 @@ local function CreateMainFrame()
     return frame
 end
 
-local mainFrame = CreateMainFrame()
-
-local function CreateDungeonRow(name)
-    local frame = CreateFrame("Frame", name .. "_ROW", mainFrame)
+local function CreateDungeonRow(name, anchorFrame)
+    local frame = CreateFrame("Frame", name .. "_ROW", anchorFrame)
     frame:SetPoint("TOPLEFT")
     frame:SetSize(600, 60)
     frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
     return frame
 end
-
-local row1 = CreateDungeonRow("ULD")
 
 local function CreateDungeonNameFrame(name, parentRow)
     local frame = CreateFrame("Frame", name .. "_TEXT", parentRow)
@@ -52,19 +48,15 @@ local function CreateDungeonNameFrame(name, parentRow)
     return frame
 end
 
-local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row1)
-
 local function CreateCurrentScoreFrame(score, parentRow, anchorFrame)
     local frame = CreateFrame("Frame", "Test", parentRow)
     frame:SetPoint("LEFT", anchorFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER")
     text:SetText(score)
-    frame:SetSize(text:GetStringWidth(), row1:GetHeight())
+    frame:SetSize(text:GetStringWidth(), parentRow:GetHeight())
     return frame
 end
-
-local currentScoreFrame = CreateCurrentScoreFrame(100, row1, dungeonNameFrame)
 
 local function CreateNewTexture(red, green, blue, alpha, parent)
     local texture = parent:CreateTexture()
@@ -169,11 +161,6 @@ local function CreateScrollHolderFrame(parentRow, anchorFrame)
     return scrollHolderFrame
 end
 
-local scrollHolderFrame = CreateScrollHolderFrame(row1, currentScoreFrame)
-
-CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
-
-
 local function CreateGainedScoreFrame(parentRow, anchorFrame)
     local frame = CreateFrame("Frame", "Test", parentRow)
     frame:SetPoint("LEFT", anchorFrame, "RIGHT")
@@ -184,6 +171,12 @@ local function CreateGainedScoreFrame(parentRow, anchorFrame)
     return frame
 end
 
+local mainFrame = CreateMainFrame()
+local row1 = CreateDungeonRow("ULD", mainFrame)
+local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row1)
+local currentScoreFrame = CreateCurrentScoreFrame(100, row1, dungeonNameFrame)
+local scrollHolderFrame = CreateScrollHolderFrame(row1, currentScoreFrame)
+CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
 local gainedScoreFrame = CreateGainedScoreFrame(row1, scrollHolderFrame)
 
 --[[local function ToggleButton(widget, button, down)
