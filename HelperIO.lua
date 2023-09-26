@@ -105,7 +105,7 @@ local function CreateButtonRow(parentFrame, startingLevel)
     local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
     local diff = totalRowWidth - 300
     parentFrame.maxScrollRange = (diff > 0) and diff or 0
-    print("ROW MAX: " .. parentFrame.maxScrollRange)
+    parentFrame:SetWidth(totalRowWidth)
     local xOffset = startingOffset
     for i = 1, maxLevel - 1 do
         local button = CreateButton(startingLevel, xOffset, parentFrame)
@@ -121,7 +121,7 @@ scrollHolder:SetSize(300, frame1:GetHeight())
 
 local rowFrame = CreateFrame("Frame", "Row1")
 rowFrame:SetPoint("LEFT", frame3, "RIGHT")
-rowFrame:SetSize(600, 60)
+rowFrame:SetSize(0, 60)
 
 local scrollFrame = CreateFrame("ScrollFrame", "testScrollFrame", scrollHolder, "UIPanelScrollFrameCodeTemplate")
 local scrollbarName = scrollFrame:GetName();
