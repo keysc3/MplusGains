@@ -6,5 +6,6 @@ function addon.CreateKeystoneButton(level, onTimeScore)
     keystoneButton.isSelected = false
     keystoneButton.level = level
     keystoneButton.onTimeScore = onTimeScore
+    keystoneButton.mouseDown = false
     return keystoneButton
 end

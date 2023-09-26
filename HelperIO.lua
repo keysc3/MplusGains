@@ -4,7 +4,6 @@ local myButtons = {}
 local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
-local mouseDown = false
 local currX, currY
 local origX, origY
 local maxScrollRange = 0
@@ -30,9 +29,15 @@ local function CreateMainFrame()
     return frame
 end
 
+local mainFrame = CreateMainFrame()
+
 local function CreateDungeonRow(name, anchorFrame)
-    local frame = CreateFrame("Frame", name .. "_ROW", anchorFrame)
-    frame:SetPoint("TOPLEFT")
+    local frame = CreateFrame("Frame", name .. "_ROW", mainFrame)
+    if(anchorFrame == nil) then
+        frame:SetPoint("TOPLEFT")
+    else
+        frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
+    end
     frame:SetSize(600, 60)
     frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
     return frame
@@ -66,12 +71,14 @@ local function CreateNewTexture(red, green, blue, alpha, parent)
     return texture
 end
 
-local startingOffset = 0
-
-local function CreateButton(keyLevel, xOffset, parentFrame)
+local function CreateButton(keyLevel, anchorButton, parentFrame)
     local btn = CreateFrame("Button", parentFrame:GetName() .. "Button" .. "+" .. tostring(keyLevel), nil, "BackdropTemplate")
     btn:SetParent(parentFrame)
-    btn:SetPoint("LEFT", xOffset, 0)
+    if(anchorButton ~= nil) then 
+        btn:SetPoint("LEFT", anchorButton, "RIGHT")
+    else
+        btn:SetPoint("LEFT", parentFrame, "LEFT")
+    end
     btn:SetSize(48, parentFrame:GetHeight())
     btn:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
@@ -89,7 +96,8 @@ end
 local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFrame)
     local keystoneButtonObject = addon.CreateKeystoneButton(keyLevel, 260)
     btn:SetScript("OnMouseUp", function(self, btn)
-        mouseDown = false
+        keystoneButtonObject.mouseDown = false
+        buttonDown = nil
         local x, y = GetCursorPosition()
         if(math.ceil(origX) == math.ceil(x)) then 
             if(keystoneButtonObject.isSelected) then
@@ -102,13 +110,13 @@ local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFram
         end
     end)
     btn:SetScript("OnMouseDown", function(self, btn)
-        mouseDown = true
+        keystoneButtonObject.mouseDown = true
         origX, origY = GetCursorPosition()
-        currX, currY = GetCursorPosition()
+        currX, currY = origX, origY
     end)
     btn:SetScript("OnUpdate", function(self, btn, down)
-        local x, y = GetCursorPosition()
-        if(mouseDown) then
+        if(keystoneButtonObject.mouseDown) then
+            local x, y = GetCursorPosition()
             local diff = math.abs(currX - x)*1.36
             if(currX < x and parentScroll:GetHorizontalScroll() > 0) then
                 newPos = parentScroll:GetHorizontalScroll() - diff
@@ -117,8 +125,8 @@ local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFram
                 newPos = parentScroll:GetHorizontalScroll() + diff
                 parentScroll:SetHorizontalScroll(( newPos > parentFrame.maxScrollRange) and parentFrame.maxScrollRange or newPos)
             end
+            currX, currY = GetCursorPosition()
         end
-        currX, currY = GetCursorPosition()
     end)
     return keystoneButtonObject
 end
@@ -128,11 +136,10 @@ local function CreateButtonRow(parentFrame, startingLevel)
     local diff = totalRowWidth - 300
     parentFrame.maxScrollRange = (diff > 0) and diff or 0
     parentFrame:SetWidth(totalRowWidth)
-    local xOffset = startingOffset
+    local button = nil
     for i = 1, maxLevel - 1 do
-        local button = CreateButton(startingLevel, xOffset, parentFrame)
+        button = CreateButton(startingLevel, button, parentFrame)
         button.keystoneButton = CreateKeystoneLevelButton(startingLevel, button, parentFrame:GetParent(), parentFrame)
-        xOffset = xOffset  + 48
         startingLevel = startingLevel + 1
     end
 end
@@ -171,13 +178,27 @@ local function CreateGainedScoreFrame(parentRow, anchorFrame)
     return frame
 end
 
-local mainFrame = CreateMainFrame()
+local function CreateAllDungeonRows()
+    local row = nil
+    for i = 1, 4 do
+        print("ROW# " .. i)
+        row = CreateDungeonRow("ULD" .. i, row)
+        local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row)
+        local currentScoreFrame = CreateCurrentScoreFrame(100, row, dungeonNameFrame)
+        local scrollHolderFrame = CreateScrollHolderFrame(row, currentScoreFrame)
+        CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
+        local gainedScoreFrame = CreateGainedScoreFrame(row, scrollHolderFrame)
+    end
+end
+
+CreateAllDungeonRows()
+--[[local mainFrame = CreateMainFrame()
 local row1 = CreateDungeonRow("ULD", mainFrame)
 local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row1)
 local currentScoreFrame = CreateCurrentScoreFrame(100, row1, dungeonNameFrame)
 local scrollHolderFrame = CreateScrollHolderFrame(row1, currentScoreFrame)
 CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
-local gainedScoreFrame = CreateGainedScoreFrame(row1, scrollHolderFrame)
+local gainedScoreFrame = CreateGainedScoreFrame(row1, scrollHolderFrame)]]--
 
 --[[local function ToggleButton(widget, button, down)
     widget:SetNormalTexture(selected)
