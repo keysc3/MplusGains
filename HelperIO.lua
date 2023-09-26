@@ -145,10 +145,12 @@ local function CreateButtonRow(parentFrame, startingLevel)
     end
 end
 
-local function CreateScrollHolderFrame(parentRow, anchorFrame)
-    local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", row1)
-    scrollHolderFrame:SetPoint("LEFT", anchorFrame, "RIGHT")
-    scrollHolderFrame:SetSize(300, parentRow:GetHeight())
+local function CreateScrollFrame(scrollHolderFrame, scrollChildFrame)
+    local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
+    scrollFrame:SetPoint("TOPLEFT")
+    scrollFrame:SetPoint("BOTTOMRIGHT")
+    scrollFrame:SetScrollChild(scrollChildFrame)
+    return scrollFrame
 end
 
 local function CreateScrollChildFrame(scrollHolderFrame)
@@ -158,33 +160,18 @@ local function CreateScrollChildFrame(scrollHolderFrame)
     return scrollChildFrame
 end
 
-local function CreateScrollFrame(parentRow, anchorFrame)
-    local scrollHolderFrame = CreateScrollHolderFrame(parentRow, anchorFrame)
+local function CreateScrollHolderFrame(parentRow, anchorFrame)
+    local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow)  
+    scrollHolderFrame:SetPoint("LEFT", anchorFrame, "RIGHT")
+    scrollHolderFrame:SetSize(300, parentRow:GetHeight())
     local scrollChildFrame = CreateScrollChildFrame(scrollHolderFrame)
-    local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
-    scrollFrame:SetPoint("TOPLEFT")
-    scrollFrame:SetPoint("BOTTOMRIGHT")
-    scrollFrame:SetScrollChild(scrollChildFrame)
-    return scrollFrame
+    scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame, scrollChildFrame)
+    return scrollHolderFrame
 end
 
---local function CreateSelectedLevelScoreFrame()
-local scrollHolder = CreateFrame("Frame", nil, row1)
-scrollHolder:SetPoint("LEFT", currentScoreFrame, "RIGHT")
-scrollHolder:SetSize(300, row1:GetHeight())
+local scrollHolderFrame = CreateScrollHolderFrame(row1, currentScoreFrame)
 
-local rowFrame = CreateFrame("Frame", "SCROLLCHILD")
-rowFrame:SetPoint("LEFT", scrollHolder, "RIGHT")
-rowFrame:SetSize(0, 60)
-
-local scrollFrame = CreateFrame("ScrollFrame", "testScrollFrame", scrollHolder, "UIPanelScrollFrameCodeTemplate")
-local scrollbarName = scrollFrame:GetName();
---local scrollbar =  _G[scrollBarName.."ScrollBar"];
-scrollFrame:SetPoint("TOPLEFT")
-scrollFrame:SetPoint("BOTTOMRIGHT")
---scrollbar:SetMinMaxValues(0, 100)
-scrollFrame:SetScrollChild(rowFrame)
-CreateButtonRow(rowFrame, 2)
+CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
 
 local frame4 = CreateFrame("Frame", "Test", row1)
 frame4:SetPoint("LEFT", scrollHolder, "RIGHT")
