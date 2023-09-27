@@ -144,14 +144,14 @@ local function SelectButtons(parentFrame, keystoneButton)
     if(keystoneButton.index > parentFrame.selectedIndex) then
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
         for i = parentFrame.selectedIndex + 1, keystoneButton.index do
-            parentFrame.buttons[i]:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+            parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
         end
     end
     -- If the clicked button is a lower keystone level than the currently selected button.
     if(keystoneButton.index < parentFrame.selectedIndex) then
         -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
         for i = parentFrame.selectedIndex, keystoneButton.index + 1, - 1 do
-            parentFrame.buttons[i]:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+            parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         end
     end
     parentFrame.selectedIndex = keystoneButton.index
@@ -214,14 +214,14 @@ local function CreateButtonRow(parentFrame, startingLevel)
     local diff = totalRowWidth - 300
     parentFrame.maxScrollRange = (diff > 0) and diff or 0
     parentFrame:SetWidth(totalRowWidth)
-    parentFrame.buttons = {}
+    parentFrame.keystoneButtons = {}
     local button = nil
     -- Create the buttons and add them to the parent frames buttons table
     for i = 0, maxLevel  - startingLevel do
         button = CreateButton(startingLevel, button, parentFrame)
         keystoneButton = addon.CreateKeystoneButton(startingLevel, button, i)
         SetKeystoneButtonScripts(keystoneButton, parentFrame, parentFrame:GetParent())
-        parentFrame.buttons[i] = button
+        parentFrame.keystoneButtons[i] = keystoneButton
         startingLevel = startingLevel + 1
     end
 end
