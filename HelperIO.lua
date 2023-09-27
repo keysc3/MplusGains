@@ -103,7 +103,7 @@ end
 
 local function SelectButtons(parentFrame, keystoneButton)
     if(keystoneButton.index > parentFrame.selectedIndex) then
-        for i = parentFrame.selectedIndex, keystoneButton.index do
+        for i = parentFrame.selectedIndex + 1, keystoneButton.index do
             parentFrame.buttons[i]:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
             keystoneButton.isSelected = true
         end
