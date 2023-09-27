@@ -49,7 +49,7 @@ local function CreateDungeonNameFrame(name, parentRow)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
     text:SetText(name)
-    frame:SetSize(text:GetStringWidth(), parentRow:GetHeight())
+    frame:SetSize(150, parentRow:GetHeight())
     return frame
 end
 
@@ -57,9 +57,12 @@ local function CreateCurrentScoreFrame(score, parentRow, anchorFrame)
     local frame = CreateFrame("Frame", "Test", parentRow)
     frame:SetPoint("LEFT", anchorFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("CENTER")
+    text:SetPoint("LEFT")
+    if(not string.match(score, "%.")) then
+        score = score .. ".0"
+    end
     text:SetText(score)
-    frame:SetSize(text:GetStringWidth(), parentRow:GetHeight())
+    frame:SetSize(40, parentRow:GetHeight())
     return frame
 end
 
@@ -203,16 +206,18 @@ end
 
 local function CreateAllDungeonRows()
     local row = nil
-    for i = 1, 4 do
-        row = CreateDungeonRow("ULD" .. i, row)
-        local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row)
-        local currentScoreFrame = CreateCurrentScoreFrame(100, row, dungeonNameFrame)
+    for key, value in pairs(addon.dungeonInfo) do
+        row = CreateDungeonRow(key, row)
+        local dungeonNameFrame = CreateDungeonNameFrame(key, row)
+        local currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests["tyrannical"][key].rating, row, dungeonNameFrame)
         local scrollHolderFrame = CreateScrollHolderFrame(row, currentScoreFrame)
         CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
         local gainedScoreFrame = CreateGainedScoreFrame(row, scrollHolderFrame)
     end
 end
 
+addon:GetGeneralDungeonInfo()
+addon:GetPlayerDungeonBests()
 CreateAllDungeonRows()
 --[[local mainFrame = CreateMainFrame()
 local row1 = CreateDungeonRow("ULD", mainFrame)
@@ -250,8 +255,6 @@ print(bestOverAllScore)--]]
 -- (abs(((totaltime - runTime))/(totaltime - totaltime*0.6)) * 5) + 5 = lostScore
 
 print(string.format("Welcome to %s.", addonName))
-addon:GetGeneralDungeonInfo()
-addon:GetPlayerDungeonBests()
 
 for key, value in pairs(addon.dungeonInfo) do
     print(string.format("MapInfo: %s %s!", key, addon:FormatTimer(value.timeLimit)))
