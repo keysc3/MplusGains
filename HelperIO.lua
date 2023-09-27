@@ -219,7 +219,7 @@ local function CreateButtonRow(parentFrame, startingLevel)
     -- Create the buttons and add them to the parent frames buttons table
     for i = 0, maxLevel  - startingLevel do
         button = CreateButton(startingLevel, button, parentFrame)
-        keystoneButton = addon.CreateKeystoneButton(startingLevel, button, i)
+        keystoneButton = addon:CreateKeystoneButton(startingLevel, button, i)
         SetKeystoneButtonScripts(keystoneButton, parentFrame, parentFrame:GetParent())
         parentFrame.keystoneButtons[i] = keystoneButton
         startingLevel = startingLevel + 1

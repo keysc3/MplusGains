@@ -7,7 +7,7 @@ local _, addon = ...
     @param index - index of the button in its respective rows button table.
     @return keystoneButton - created keystone button object
 --]]
-function addon.CreateKeystoneButton(level, button, index)
+function addon:CreateKeystoneButton(level, button, index)
     local keystoneButton = {}
     keystoneButton.level = level
     keystoneButton.mouseDown = false
