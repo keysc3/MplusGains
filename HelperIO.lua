@@ -102,23 +102,19 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
 end
 
 local function SelectButtons(parentFrame, keystoneButton)
-    local kids = { parentFrame:GetChildren() }
-    --print("CHECK: " .. parentFrame.selectedLevel .. " " .. btn.index)
-    if(keystoneButton.index > parentFrame.selectedLevel) then
-        for i = parentFrame.selectedLevel, keystoneButton.index do
-            --print("GREATER: " .. i .. " " .. btn.index)
+    if(keystoneButton.index > parentFrame.selectedIndex) then
+        for i = parentFrame.selectedIndex, keystoneButton.index do
             parentFrame.buttons[i]:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
             keystoneButton.isSelected = true
         end
     end
-    if(keystoneButton.level < parentFrame.selectedLevel) then
-        for i = parentFrame.selectedLevel - 1, keystoneButton.level, - 1 do
-            print("LESSER: " .. i .. " " .. kids[i]:GetName())
-            kids[i]:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+    if(keystoneButton.index < parentFrame.selectedIndex) then
+        for i = parentFrame.selectedIndex, keystoneButton.index + 1, - 1 do
+            parentFrame.buttons[i]:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
             keystoneButton.isSelected = false
         end
     end
-    parentFrame.selectedLevel = btn.index
+    parentFrame.selectedIndex = keystoneButton.index
 end
 
 local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll)
@@ -126,7 +122,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
         keystoneButton.mouseDown = false
         local x, y = GetCursorPosition()
         if(math.ceil(origX) == math.ceil(x)) then 
-            if(keystoneButton.index ~= parentFrame.selectedLevel) then
+            if(keystoneButton.index ~= parentFrame.selectedIndex) then
                 SelectButtons(parentFrame, keystoneButton)
             end
             --keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
@@ -156,22 +152,19 @@ end
 
 local function CreateButtonRow(parentFrame, startingLevel)
     parentFrame.startingLevel = startingLevel
-    parentFrame.selectedLevel = 0
+    parentFrame.selectedIndex = 0
     local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
     local diff = totalRowWidth - 300
     parentFrame.maxScrollRange = (diff > 0) and diff or 0
     parentFrame:SetWidth(totalRowWidth)
     parentFrame.buttons = {}
     local button = nil
-    local index = 0
-    for i = startingLevel, maxLevel do
+    for i = 0, maxLevel  - startingLevel do
         button = CreateButton(startingLevel, button, parentFrame)
-        keystoneButton = addon.CreateKeystoneButton(keyLevel, 260, button, index)
-        --button.index = index
+        keystoneButton = addon.CreateKeystoneButton(startingLevel, 260, button, i)
         SetKeystoneButtonScripts(keystoneButton, parentFrame, parentFrame:GetParent())
-        parentFrame.buttons[index] = button
+        parentFrame.buttons[i] = button
         startingLevel = startingLevel + 1
-        index = index + 1
     end
 end
 
