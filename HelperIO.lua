@@ -93,6 +93,23 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     return btn
 end
 
+local function SelectButtons(parentFrame, keystoneButton)
+    local kids = { parentFrame:GetChildren() }
+    increment = 1
+    offset = 1
+    if(keystoneButton.level > parentFrame.selectedLevel) then
+        for i = parentFrame.selectedLevel, keystoneButton.level - 1 do
+            print("GREATER: " .. i .. " " .. kids[i]:GetName())
+        end
+    end
+    if(keystoneButton.level < parentFrame.selectedLevel) then
+        for i = parentFrame.selectedLevel - 1, keystoneButton.level, -1 do
+            print("LESSER: " .. i .. " " .. kids[i]:GetName())
+        end
+    end
+    parentFrame.selectedLevel = keystoneButton.level
+end
+
 local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFrame)
     local keystoneButtonObject = addon.CreateKeystoneButton(keyLevel, 260)
     btn:SetScript("OnMouseUp", function(self, btn)
@@ -104,6 +121,7 @@ local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFram
                 self:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
             else
                 self:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+                SelectButtons(parentFrame, keystoneButtonObject)
             end
             keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
             print("Selected: " .. tostring(keystoneButtonObject.isSelected))
@@ -132,6 +150,8 @@ local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFram
 end
 
 local function CreateButtonRow(parentFrame, startingLevel)
+    parentFrame.startingLevel = startingLevel
+    parentFrame.selectedLevel = startingLevel
     local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
     local diff = totalRowWidth - 300
     parentFrame.maxScrollRange = (diff > 0) and diff or 0
@@ -181,7 +201,6 @@ end
 local function CreateAllDungeonRows()
     local row = nil
     for i = 1, 4 do
-        print("ROW# " .. i)
         row = CreateDungeonRow("ULD" .. i, row)
         local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row)
         local currentScoreFrame = CreateCurrentScoreFrame(100, row, dungeonNameFrame)
