@@ -105,13 +105,11 @@ local function SelectButtons(parentFrame, keystoneButton)
     if(keystoneButton.index > parentFrame.selectedIndex) then
         for i = parentFrame.selectedIndex + 1, keystoneButton.index do
             parentFrame.buttons[i]:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
-            keystoneButton.isSelected = true
         end
     end
     if(keystoneButton.index < parentFrame.selectedIndex) then
         for i = parentFrame.selectedIndex, keystoneButton.index + 1, - 1 do
             parentFrame.buttons[i]:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-            keystoneButton.isSelected = false
         end
     end
     parentFrame.selectedIndex = keystoneButton.index
@@ -125,8 +123,6 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             if(keystoneButton.index ~= parentFrame.selectedIndex) then
                 SelectButtons(parentFrame, keystoneButton)
             end
-            --keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
-            --print(keyLevel)
         end
     end)
     keystoneButton.button:SetScript("OnMouseDown", function(self, btn)
@@ -217,40 +213,6 @@ end
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
 CreateAllDungeonRows()
---[[local mainFrame = CreateMainFrame()
-local row1 = CreateDungeonRow("ULD", mainFrame)
-local dungeonNameFrame = CreateDungeonNameFrame("ULDAMAN", row1)
-local currentScoreFrame = CreateCurrentScoreFrame(100, row1, dungeonNameFrame)
-local scrollHolderFrame = CreateScrollHolderFrame(row1, currentScoreFrame)
-CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 2)
-local gainedScoreFrame = CreateGainedScoreFrame(row1, scrollHolderFrame)]]--
-
---[[local function ToggleButton(widget, button, down)
-    widget:SetNormalTexture(selected)
-end--]]
---btn:SetText("Click me")
-
-
---[[frame:EnableMouse(true)
-frame:SetMovable(true)
-frame:RegisterForDrag("LeftButton")
-frame:SetScript("OnDragStart", frame.StartMoving)
-frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-frame:SetScript("OnHide", frame.StopMovingOrSizing)--]]
-
---[[local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(438)
-
-for i, affix in ipairs(affixScores) do
-    print(affix.name .. " " .. affix.score .. " " .. affix.level .. " " .. affix.durationSec)
-    --print(affix.name)
-end
-
-print(bestOverAllScore)--]]
-
--- Undertime
--- ((totaltime - runTime)/(totaltime - totaltime*0.6)) * 5 = bonusScore
--- Overtime
--- (abs(((totaltime - runTime))/(totaltime - totaltime*0.6)) * 5) + 5 = lostScore
 
 print(string.format("Welcome to %s.", addonName))
 
