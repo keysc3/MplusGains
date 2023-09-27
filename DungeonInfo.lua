@@ -3,17 +3,28 @@ local _, addon = ...
 local scorePerLevel  = {40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
 142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
 
+addon.scorePerLevel = scorePerLevel
+
 local maxModifier = 0.4
 
+--[[
+    FormatTimer - Formats a dungeon timer to be in mm:ss
+    @param totalSeconds - the dungeon time limit in seconds
+    @return - the formated string in mm:ss
+--]]
 function addon:FormatTimer(totalSeconds)
     minutes = totalSeconds / 60
     seconds = 60 * (minutes%1)
+    -- Add leading zero
     if seconds < 10 then
         seconds = "0" .. seconds
     end
     return math.floor(minutes) .. ":" .. seconds
 end
 
+--[[
+    GetGeneralDungeonInfo - Gets and stores the current mythic+ dungeons and their time limits.
+--]]
 function addon:GetGeneralDungeonInfo()
     local dungeonInfo = {}
     local mapChallengeModeIDs = C_ChallengeMode.GetMapTable()
@@ -27,6 +38,9 @@ function addon:GetGeneralDungeonInfo()
     addon.dungeonInfo = dungeonInfo 
 end
 
+--[[
+    GetGeneralDungeonInfo - Gets and stores the current characters best dungeon run per affix per dungeon.
+--]]
 function addon:GetPlayerDungeonBests()
     local playerBests = {
         ["tyrannical"] = {},
@@ -50,10 +64,15 @@ function addon:GetPlayerDungeonBests()
     addon.playerBests = playerBests
 end
 
--- Bonus score calculation
--- ((totaltime - runTime)/(totaltime * maxModifier)) * 5 = bonusScore
--- Subtract 5 if overtime
+--[[
+    CalculateRating - Calculates the exact rating for a dungeon run based on timer.
+    @param runTime - the runs time in seconds
+    @param dungeonName - the dungeon name the run is from.
+    @return rating - the score from the run
+--]]
 function CalculateRating(runTime, dungeonName)
+    -- ((totaltime - runTime)/(totaltime * maxModifier)) * 5 = bonusScore
+    -- Subtract 5 if overtime
     dungeonTimeLimit = addon.dungeonInfo[dungeonName].timeLimit
     numerator = dungeonTimeLimit - runTime
     denominator = dungeonTimeLimit * maxModifier
