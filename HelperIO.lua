@@ -205,7 +205,7 @@ local function CreateAllDungeonRows()
         local dungeonNameFrame = CreateDungeonNameFrame(key, row)
         local currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests["tyrannical"][key].rating, row, dungeonNameFrame)
         local scrollHolderFrame = CreateScrollHolderFrame(row, currentScoreFrame)
-        CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), 5)
+        CreateButtonRow(scrollHolderFrame.scrollFrame:GetScrollChild(), addon.playerBests["tyrannical"][key].level)
         local gainedScoreFrame = CreateGainedScoreFrame(row, scrollHolderFrame)
     end
 end
