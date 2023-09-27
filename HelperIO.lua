@@ -86,7 +86,11 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+    if(keyLevel ~= parentFrame.startingLevel) then
+        btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+    else
+        btn:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+    end
     btn:SetText("+" .. keyLevel)
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     btn:SetNormalFontObject(myFont)
@@ -95,16 +99,18 @@ end
 
 local function SelectButtons(parentFrame, keystoneButton)
     local kids = { parentFrame:GetChildren() }
-    increment = 1
-    offset = 1
     if(keystoneButton.level > parentFrame.selectedLevel) then
         for i = parentFrame.selectedLevel, keystoneButton.level - 1 do
             print("GREATER: " .. i .. " " .. kids[i]:GetName())
+            kids[i]:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+            keystoneButton.isSelected = true
         end
     end
     if(keystoneButton.level < parentFrame.selectedLevel) then
         for i = parentFrame.selectedLevel - 1, keystoneButton.level, -1 do
             print("LESSER: " .. i .. " " .. kids[i]:GetName())
+            kids[i]:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+            keystoneButton.isSelected = false
         end
     end
     parentFrame.selectedLevel = keystoneButton.level
@@ -117,14 +123,11 @@ local function CreateKeystoneLevelButton(keyLevel, btn, parentScroll, parentFram
         buttonDown = nil
         local x, y = GetCursorPosition()
         if(math.ceil(origX) == math.ceil(x)) then 
-            if(keystoneButtonObject.isSelected) then
-                self:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-            else
-                self:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+            if(keyLevel ~= parentFrame.selectedLevel) then
                 SelectButtons(parentFrame, keystoneButtonObject)
             end
-            keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
-            print("Selected: " .. tostring(keystoneButtonObject.isSelected))
+            --keystoneButtonObject.isSelected = not keystoneButtonObject.isSelected
+            --print("Selected: " .. tostring(keystoneButtonObject.isSelected))
         end
     end)
     btn:SetScript("OnMouseDown", function(self, btn)
