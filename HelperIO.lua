@@ -80,6 +80,13 @@ local function CreateDungeonNameFrame(name, parentRow)
     return frame
 end
 
+local function FormateDecimal(number)
+    -- Round
+    number = tonumber(string.format("%.1f", number))
+    -- Add ending 0 if no decimal
+    return (string.match(number, "%.")) and number or number .. ".0"
+end
+
 --[[
     CreateCurrentScoreFrame- Creates a frame for displaying the players top score for the rows dungeon.
     @param parentRow - the frames parent row frame
@@ -91,9 +98,7 @@ local function CreateCurrentScoreFrame(score, parentRow)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
     -- If the score does not contain a decimal then add a .0 to follow formatting.
-    if(not string.match(score, "%.")) then
-        score = score .. ".0"
-    end
+    score = FormateDecimal(score)
     text:SetText(score)
     frame:SetSize(40, parentRow:GetHeight())
     return frame
@@ -157,11 +162,26 @@ local function SelectButtons(parentFrame, keystoneButton)
     parentFrame.selectedIndex = keystoneButton.index
 end
 
+local function CalculateGainedRating(keystoneLevel, dungeonID)
+    local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
+    local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
+    local newScore = addon.scorePerLevel[keystoneLevel - 1]
+    local newTotal
+    if(newScore > oppositeBest) then
+        newTotal = (newScore * 1.5) + (oppositeBest * 0.5)
+    else
+        newTotal = (newScore * 0.5) + (oppositeBest * 1.5)
+    end
+    local gainedScore = newTotal - addon.playerDungeonRatings[dungeonID].mapScore
+    return (gainedScore > 0) and gainedScore or 0
+end
+
 --[[
     SetKeystoneButtonScripts - Sets a keystone buttons event scripts.
     @param keystoneButton - the keystoneButton object to use
     @param parentFrame - the parent frame of the keystoneButton
     @param parentScroll - the scroll frame the button is a part of
+    @param rowGainedScoreFrame - the rows gained score frame
 --]]
 local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll, rowGainedScoreFrame)
     -- OnMouseUp
@@ -174,8 +194,8 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             if(keystoneButton.index ~= parentFrame.selectedIndex) then
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
-                --local gained = addon.scorePerLevel[keystoneButton.level - 1] - addon.playerBests["tyrannical"][addon.ratingSummary.runs[parentFrame.dungeonID]].rating
-                --rowGainedScoreFrame.text:SetText("+" .. tostring((gained > 0) and gained or 0))
+                local gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
+                rowGainedScoreFrame.text:SetText("+" .. tostring(FormateDecimal(gained)))
             end
         end
     end)
@@ -206,23 +226,6 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
         end
     end)
 end
-
---[[local function CalculateGainedRating(keystoneLevel, dungeonID)
-    if(gained < 0) then
-        return 0
-    end
-    local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
-    local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
-    local newScore = addon.scorePerLevel[keystoneLevel - 1]
-    local newTotal
-    if(newScore >= oppositeBest) then
-        newTotal = (newScore * 1.5) + (oppositeBest * 0.5)
-    else
-        newTotal = (newScore * 0.5) + (oppositeBest * 1.5)
-    end
-    local gainedScore = newTotal - oldTotal
-    --local gained = addon.scorePerLevel[keystoneButton.level - 1] - addon.playerBests["tyrannical"][parentFrame.dungeonName].rating
-end--]]
 
 --[[
     CreateButtonRow - Creates the buttons for a row frame.
@@ -302,7 +305,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT")
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
-    frame.text:SetText("+0")
+    frame.text:SetText("+0.0")
     frame:SetSize(40, parentRow:GetHeight())
     return frame
 end
