@@ -7,35 +7,32 @@ local scorePerLevel  = {40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 1
 
 addon.scorePerLevel = scorePerLevel
 
---[[
-    GetPlayerSummary - Gets players mythic plus season summary and adds it to the addon table.
---]]
-function addon:GetPlayerSummary()
-    local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
-    addon.playerSeasonScore = ratingSummary.currentSeasonScore
+function addon:CalculateDungeonTotal(seasonAffixScore1, seasonAffixScore2)
+    local total
+    if(seasonAffixScore1 > seasonAffixScore2) then
+        total = (seasonAffixScore1 * 1.5) + (seasonAffixScore2 * 0.5)
+    else
+        total = (seasonAffixScore1 * 0.5) + (seasonAffixScore2 * 1.5)
+    end
+    return total
+end
+
+function addon:CalculateDungeonRatings()
     local playerDungeonRatings = {}
-    for i, value in ipairs(ratingSummary.runs) do
-        playerDungeonRatings[value.challengeModeID] = {
-            ["mapScore"] = value.mapScore
+    for key, value in pairs(addon.playerBests["tyrannical"]) do
+        local bestTyran = value.rating
+        local bestFort = addon.playerBests["fortified"][key].rating
+        local total
+        if(bestTyran > bestFort) then
+            total = (bestTyran * 1.5) + (bestFort * 0.5)
+        else
+           total = (bestTyran * 0.5) + (bestFort * 1.5)
+        end
+        playerDungeonRatings[key] = {
+            ["mapScore"] = addon:RoundToOneDecimal(addon:CalculateDungeonTotal(bestTyran, bestFort))
         }
     end
     addon.playerDungeonRatings = playerDungeonRatings
-end
-
-
---[[
-    FormatTimer - Formats a dungeon timer to be in mm:ss
-    @param totalSeconds - the dungeon time limit in seconds
-    @return - the formated string in mm:ss
---]]
-function addon:FormatTimer(totalSeconds)
-    minutes = totalSeconds / 60
-    seconds = 60 * (minutes%1)
-    -- Add leading zero
-    if seconds < 10 then
-        seconds = "0" .. seconds
-    end
-    return math.floor(minutes) .. ":" .. seconds
 end
 
 --[[
@@ -97,5 +94,5 @@ function CalculateRating(runTime, dungeonName)
     if(runTime > dungeonTimeLimit) then
         rating = rating - 5
     end
-    return rating
+    return addon:RoundToOneDecimal(rating)
 end

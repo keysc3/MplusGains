@@ -80,13 +80,6 @@ local function CreateDungeonNameFrame(name, parentRow)
     return frame
 end
 
-local function FormateDecimal(number)
-    -- Round
-    number = tonumber(string.format("%.1f", number))
-    -- Add ending 0 if no decimal
-    return (string.match(number, "%.")) and number or number .. ".0"
-end
-
 --[[
     CreateCurrentScoreFrame- Creates a frame for displaying the players top score for the rows dungeon.
     @param parentRow - the frames parent row frame
@@ -97,9 +90,7 @@ local function CreateCurrentScoreFrame(score, parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
-    -- If the score does not contain a decimal then add a .0 to follow formatting.
-    score = FormateDecimal(score)
-    text:SetText(score)
+    text:SetText(addon:FormateDecimal(score))
     frame:SetSize(40, parentRow:GetHeight())
     return frame
 end
@@ -166,13 +157,7 @@ local function CalculateGainedRating(keystoneLevel, dungeonID)
     local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
     local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
     local newScore = addon.scorePerLevel[keystoneLevel - 1]
-    local newTotal
-    if(newScore > oppositeBest) then
-        newTotal = (newScore * 1.5) + (oppositeBest * 0.5)
-    else
-        newTotal = (newScore * 0.5) + (oppositeBest * 1.5)
-    end
-    local gainedScore = newTotal - addon.playerDungeonRatings[dungeonID].mapScore
+    local gainedScore = addon:CalculateDungeonTotal(newScore, oppositeBest) - addon.playerDungeonRatings[dungeonID].mapScore
     return (gainedScore > 0) and gainedScore or 0
 end
 
@@ -195,7 +180,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
                 local gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
-                rowGainedScoreFrame.text:SetText("+" .. tostring(FormateDecimal(gained)))
+                rowGainedScoreFrame.text:SetText("+" .. addon:FormateDecimal(addon:RoundToOneDecimal(gained)))
             end
         end
     end)
@@ -330,7 +315,7 @@ end
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
-addon:GetPlayerSummary()
+addon:CalculateDungeonRatings()
 local mainFrame = CreateMainFrame()
 CreateAllDungeonRows(mainFrame)
 
