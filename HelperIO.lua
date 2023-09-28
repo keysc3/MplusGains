@@ -8,6 +8,7 @@ local lastX, lastY
 local origX, origY
 local maxScrollRange = 0
 local maxLevel = 30
+local weeklyAffix = "tyrannical"
 
 -- Create keystone button font
 local myFont = CreateFont("Font")
@@ -173,8 +174,8 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             if(keystoneButton.index ~= parentFrame.selectedIndex) then
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
-                local gained = addon.scorePerLevel[keystoneButton.level - 1] - addon.playerBests["tyrannical"][parentFrame.dungeonName].rating
-                rowGainedScoreFrame.text:SetText("+" .. tostring((gained > 0) and gained or 0))
+                --local gained = addon.scorePerLevel[keystoneButton.level - 1] - addon.playerBests["tyrannical"][addon.ratingSummary.runs[parentFrame.dungeonID]].rating
+                --rowGainedScoreFrame.text:SetText("+" .. tostring((gained > 0) and gained or 0))
             end
         end
     end)
@@ -206,16 +207,33 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
     end)
 end
 
+--[[local function CalculateGainedRating(keystoneLevel, dungeonID)
+    if(gained < 0) then
+        return 0
+    end
+    local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
+    local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
+    local newScore = addon.scorePerLevel[keystoneLevel - 1]
+    local newTotal
+    if(newScore >= oppositeBest) then
+        newTotal = (newScore * 1.5) + (oppositeBest * 0.5)
+    else
+        newTotal = (newScore * 0.5) + (oppositeBest * 1.5)
+    end
+    local gainedScore = newTotal - oldTotal
+    --local gained = addon.scorePerLevel[keystoneButton.level - 1] - addon.playerBests["tyrannical"][parentFrame.dungeonName].rating
+end--]]
+
 --[[
     CreateButtonRow - Creates the buttons for a row frame.
     @param parentRow - the row frame of the buttons.
     @param startingLevel - the keystone level to start creating buttons at.
-    @param dungeonName - the dungeon the row is for.
+    @param dungeonID - the dungeonID the row is for.
 --]]
-local function CreateButtonRow(parentRow, startingLevel, dungeonName)
+local function CreateButtonRow(parentRow, startingLevel, dungeonID)
     local scrollChild = parentRow.scrollHolderFrame.scrollFrame:GetScrollChild()
     --row.scrollHolderFrame.scrollFrame:GetScrollChild()
-    scrollChild.dungeonName = dungeonName
+    scrollChild.dungeonID = dungeonID
     scrollChild.startingLevel = startingLevel
     scrollChild.selectedIndex = 0
     -- Calculate the row width and max scroll range based on number of buttons being created.
@@ -279,7 +297,6 @@ end
     @param parentRow - the parent row frame
     @return frame - the created frame
 --]]
--- TODO: TEXT BASED ON SELECTED KEYSTONE LEVEL
 local function CreateGainedScoreFrame(parentRow)
     local frame = CreateFrame("Frame", "Test", parentRow)
     frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT")
@@ -298,8 +315,8 @@ end
 local function CreateAllDungeonRows(parentFrame)
     local row = nil
     for key, value in pairs(addon.dungeonInfo) do
-        row = CreateDungeonRowFrame(key, row, parentFrame)
-        row.dungeonNameFrame = CreateDungeonNameFrame(key, row)
+        row = CreateDungeonRowFrame(value.name, row, parentFrame)
+        row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
         row.currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests["tyrannical"][key].rating, row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
@@ -310,14 +327,19 @@ end
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
+addon:GetPlayerSummary()
 local mainFrame = CreateMainFrame()
 CreateAllDungeonRows(mainFrame)
+
+for key, value in pairs(addon.playerDungeonRatings) do
+    print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
+end
 
 -- Debug prints
 print(string.format("Welcome to %s.", addonName))
 
 for key, value in pairs(addon.dungeonInfo) do
-    print(string.format("MapInfo: %s %s!", key, addon:FormatTimer(value.timeLimit)))
+    print(string.format("MapInfo: %s %s!", value.name, addon:FormatTimer(value.timeLimit)))
 end
 
 for key, value in pairs(addon.playerBests) do
@@ -327,6 +349,6 @@ for key, value in pairs(addon.playerBests) do
         if(not string.match(rating, "%.")) then
             rating = rating .. ".0"
         end
-        print(k, v.level, rating, v.time)
+        print(v.name , v.level, rating, v.time)
     end
 end

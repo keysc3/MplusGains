@@ -1,11 +1,24 @@
 local _, addon = ...
 
+local maxModifier = 0.4
+
 local scorePerLevel  = {40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
 142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
 
 addon.scorePerLevel = scorePerLevel
 
-local maxModifier = 0.4
+function addon:GetPlayerSummary()
+    local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
+    addon.playerSeasonScore = ratingSummary.currentSeasonScore
+    local playerDungeonRatings = {}
+    for i, value in ipairs(ratingSummary.runs) do
+        playerDungeonRatings[value.challengeModeID] = {
+            ["mapScore"] = value.mapScore
+        }
+    end
+    addon.playerDungeonRatings = playerDungeonRatings
+end
+
 
 --[[
     FormatTimer - Formats a dungeon timer to be in mm:ss
@@ -30,9 +43,9 @@ function addon:GetGeneralDungeonInfo()
     local mapChallengeModeIDs = C_ChallengeMode.GetMapTable()
     for i, map in ipairs(mapChallengeModeIDs) do
         local name, id, timeLimit, texture, backgroundTexture = C_ChallengeMode.GetMapUIInfo(map)
-        dungeonInfo[name] = {
+        dungeonInfo[map] = {
             ["timeLimit"] = timeLimit,
-            ["mythicID"] = map
+            ["name"] = name
         }
     end
     addon.dungeonInfo = dungeonInfo 
@@ -47,12 +60,13 @@ function addon:GetPlayerDungeonBests()
         ["fortified"] = {}
     }
     for key, value in pairs(addon.dungeonInfo) do
-        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(value.mythicID)
+        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
         for i, affix in ipairs(affixScores) do
             dungeonBest = {
                ["level"] = affix.level,
                ["rating"] = scorePerLevel[affix.level - 1] + CalculateRating(affix.durationSec, key),
-               ["time"] = affix.durationSec
+               ["time"] = affix.durationSec,
+               ["name"] = value.name
             }
             if(string.lower(affix.name) == "tyrannical") then
                 playerBests.tyrannical[key] = dungeonBest
