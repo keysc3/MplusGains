@@ -180,7 +180,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
                 local gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
-                rowGainedScoreFrame.text:SetText("+" .. addon:FormateDecimal(addon:RoundToOneDecimal(gained)))
+                rowGainedScoreFrame.text:SetText("+" .. addon:FormateDecimal(gained))
             end
         end
     end)

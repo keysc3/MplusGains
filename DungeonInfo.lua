@@ -14,7 +14,7 @@ function addon:CalculateDungeonTotal(seasonAffixScore1, seasonAffixScore2)
     else
         total = (seasonAffixScore1 * 0.5) + (seasonAffixScore2 * 1.5)
     end
-    return total
+    return addon:RoundToOneDecimal(total)
 end
 
 function addon:CalculateDungeonRatings()
@@ -29,7 +29,7 @@ function addon:CalculateDungeonRatings()
            total = (bestTyran * 0.5) + (bestFort * 1.5)
         end
         playerDungeonRatings[key] = {
-            ["mapScore"] = addon:RoundToOneDecimal(addon:CalculateDungeonTotal(bestTyran, bestFort))
+            ["mapScore"] = addon:CalculateDungeonTotal(bestTyran, bestFort)
         }
     end
     addon.playerDungeonRatings = playerDungeonRatings
