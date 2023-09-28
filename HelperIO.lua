@@ -162,7 +162,7 @@ end
     @param parentFrame - the parent frame of the keystoneButton
     @param parentScroll - the scroll frame the button is a part of
 --]]
-local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll)
+local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll, rowGainedScoreFrame)
     -- OnMouseUp
     keystoneButton.button:SetScript("OnMouseUp", function(self, btn)
         keystoneButton.mouseDown = false
@@ -172,8 +172,9 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             -- If the clicked button is not the currently selected button then select necessary buttons.
             if(keystoneButton.index ~= parentFrame.selectedIndex) then
                 SelectButtons(parentFrame, keystoneButton)
+                -- Set gained from selected key completion
                 local gained = addon.scorePerLevel[keystoneButton.level - 1] - addon.playerBests["tyrannical"][parentFrame.dungeonName].rating
-                print("GAINED: " .. gained)
+                rowGainedScoreFrame.text:SetText("+" .. tostring((gained > 0) and gained or 0))
             end
         end
     end)
@@ -207,27 +208,29 @@ end
 
 --[[
     CreateButtonRow - Creates the buttons for a row frame.
-    @param parentFrame - the parent frame of the buttons
+    @param parentRow - the row frame of the buttons.
     @param startingLevel - the keystone level to start creating buttons at.
     @param dungeonName - the dungeon the row is for.
 --]]
-local function CreateButtonRow(parentFrame, startingLevel, dungeonName)
-    parentFrame.dungeonName = dungeonName
-    parentFrame.startingLevel = startingLevel
-    parentFrame.selectedIndex = 0
+local function CreateButtonRow(parentRow, startingLevel, dungeonName)
+    local scrollChild = parentRow.scrollHolderFrame.scrollFrame:GetScrollChild()
+    --row.scrollHolderFrame.scrollFrame:GetScrollChild()
+    scrollChild.dungeonName = dungeonName
+    scrollChild.startingLevel = startingLevel
+    scrollChild.selectedIndex = 0
     -- Calculate the row width and max scroll range based on number of buttons being created.
     local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
     local diff = totalRowWidth - 300
-    parentFrame.maxScrollRange = (diff > 0) and diff or 0
-    parentFrame:SetWidth(totalRowWidth)
-    parentFrame.keystoneButtons = {}
+    scrollChild.maxScrollRange = (diff > 0) and diff or 0
+    scrollChild:SetWidth(totalRowWidth)
+    scrollChild.keystoneButtons = {}
     local button = nil
     -- Create the buttons and add them to the parent frames buttons table
     for i = 0, maxLevel  - startingLevel do
-        button = CreateButton(startingLevel, button, parentFrame)
+        button = CreateButton(startingLevel, button, scrollChild)
         keystoneButton = addon:CreateKeystoneButton(startingLevel, button, i)
-        SetKeystoneButtonScripts(keystoneButton, parentFrame, parentFrame:GetParent())
-        parentFrame.keystoneButtons[i] = keystoneButton
+        SetKeystoneButtonScripts(keystoneButton, scrollChild, parentRow.scrollHolderFrame.scrollFrame, parentRow.gainedScoreFrame)
+        scrollChild.keystoneButtons[i] = keystoneButton
         startingLevel = startingLevel + 1
     end
 end
@@ -267,8 +270,7 @@ local function CreateScrollHolderFrame(parentRow)
     local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow)  
     scrollHolderFrame:SetPoint("LEFT", parentRow.currentScoreFrame, "RIGHT")
     scrollHolderFrame:SetSize(300, parentRow:GetHeight())
-    local scrollChildFrame = CreateScrollChildFrame(scrollHolderFrame)
-    scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame, scrollChildFrame)
+    scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame, CreateScrollChildFrame(scrollHolderFrame))
     return scrollHolderFrame
 end
 
@@ -281,10 +283,10 @@ end
 local function CreateGainedScoreFrame(parentRow)
     local frame = CreateFrame("Frame", "Test", parentRow)
     frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT")
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("LEFT")
-    text:SetText("+0")
-    frame:SetSize(text:GetStringWidth(), parentRow:GetHeight())
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text:SetPoint("LEFT")
+    frame.text:SetText("+0")
+    frame:SetSize(40, parentRow:GetHeight())
     return frame
 end
 
@@ -300,8 +302,8 @@ local function CreateAllDungeonRows(parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(key, row)
         row.currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests["tyrannical"][key].rating, row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
-        CreateButtonRow(row.scrollHolderFrame.scrollFrame:GetScrollChild(), addon.playerBests["tyrannical"][key].level, key)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
+        CreateButtonRow(row, addon.playerBests["tyrannical"][key].level, key)
     end
 end
 
