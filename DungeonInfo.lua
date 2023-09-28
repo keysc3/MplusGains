@@ -7,6 +7,9 @@ local scorePerLevel  = {40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 1
 
 addon.scorePerLevel = scorePerLevel
 
+--[[
+    GetPlayerSummary - Gets players mythic plus season summary and adds it to the addon table.
+--]]
 function addon:GetPlayerSummary()
     local ratingSummary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
     addon.playerSeasonScore = ratingSummary.currentSeasonScore
@@ -94,6 +97,5 @@ function CalculateRating(runTime, dungeonName)
     if(runTime > dungeonTimeLimit) then
         rating = rating - 5
     end
-    rating = tonumber(string.format("%.1f", rating))
     return rating
 end
