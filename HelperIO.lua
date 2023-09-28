@@ -90,7 +90,7 @@ local function CreateCurrentScoreFrame(score, parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
-    text:SetText(addon:FormateDecimal(score))
+    text:SetText(addon:FormatDecimal(score))
     frame:SetSize(40, parentRow:GetHeight())
     return frame
 end
@@ -180,7 +180,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
                 local gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
-                rowGainedScoreFrame.text:SetText("+" .. addon:FormateDecimal(gained))
+                rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
             end
         end
     end)
