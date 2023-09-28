@@ -159,6 +159,9 @@ end
 
 --[[
     SetKeystoneButtonScripts - Sets a keystone buttons event scripts.
+    @param keystoneButton - the keystoneButton object to use
+    @param parentFrame - the parent frame of the keystoneButton
+    @param parentScroll - the scroll frame the button is a part of
 --]]
 local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll)
     -- OnMouseUp
