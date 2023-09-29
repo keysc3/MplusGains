@@ -45,6 +45,31 @@ local function CreateMainFrame()
 end
 
 --[[
+    CreateHeaderFrame- Creates the header frame for the addon.
+    @return frame - the created frame
+--]]
+local function CreateHeaderFrame(parentFrame)
+    local frame = CreateFrame("Frame", "Header", parentFrame, "BackdropTemplate")
+    frame:SetPoint("TOP", parentFrame, "TOP", 0, -4)
+    frame:SetSize(parentFrame:GetWidth() - 8, 40)
+    --frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
+    frame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropBorderColor(196/255, 31/255, 59/255, 1)
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetPoint("CENTER")
+    text:SetText("TEST")
+    --btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
+    --frame:SetNormalFontObject(myFont)
+    return frame
+end
+
+--[[
     CreateDungeonRowFrame - Creates a frame for a new dungeon row.
     @param name - name of the dungeon
     @param anchorFrame - frame to anchor the new row to
@@ -54,11 +79,11 @@ end
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", name .. "_ROW", parentFrame)
     -- If nil then it is the first created row, parent it to the top left of its parent.
-    if(anchorFrame == nil) then
-        frame:SetPoint("TOPLEFT")
-    else
-        frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT")
-    end
+    --if(anchorFrame == nil) then
+        --frame:SetPoint("TOPLEFT")
+    --else
+    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -2)
+    --end
     frame:SetSize(600, 60)
     frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
     return frame
@@ -306,8 +331,8 @@ end
     @param parentFrame - the parent frame for the rows
 --]]
 -- TODO: DATA BASED ON WEEKLY AFFIX 
-local function CreateAllDungeonRows(parentFrame)
-    local row = nil
+local function CreateAllDungeonRows(parentFrame, anchorFrame)
+    local row = anchorFrame
     for key, value in pairs(addon.dungeonInfo) do
         row = CreateDungeonRowFrame(value.name, row, parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
@@ -324,7 +349,8 @@ addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
 addon:CalculateDungeonRatings()
 local mainFrame = CreateMainFrame()
-CreateAllDungeonRows(mainFrame)
+local headerFrame = CreateHeaderFrame(mainFrame)
+CreateAllDungeonRows(mainFrame, headerFrame)
 
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
