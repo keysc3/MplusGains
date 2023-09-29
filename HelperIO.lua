@@ -292,14 +292,13 @@ end
 --[[
     CreateScrollFrame - Creates a scroll frame for holding a scroll child to scroll.
     @param scrollHolderFrame - the parent frame.
-    @param scrollChild - the scroll child frame.
     @return scrollFrame - the created scroll frame
 --]]
 local function CreateScrollFrame(scrollHolderFrame)
     local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
-    --scrollFrame:SetPoint("TOPLEFT")
-    --scrollFrame:SetPoint("BOTTOMRIGHT")
-    --scrollFrame:SetScrollChild(scrollChildFrame)
+    scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
+    scrollFrame:SetSize(scrollHolderFrame:GetWidth() - 2, scrollHolderFrame:GetHeight())
+    scrollFrame:SetHorizontalScroll(1)
     return scrollFrame
 end
 
@@ -310,8 +309,6 @@ end
 --]]
 local function CreateScrollChildFrame(scrollHolderFrame)
     local scrollChildFrame = CreateFrame("Frame", "SCROLLHOLDER_SCROLLCHILD")
-    --scrollChildFrame:SetPoint("LEFT", scrollHolderFrame.scrollFrame, "LEFT")
-    --scrollChildFrame:SetSize(0, scrollHolderFrame.scrollChildFrame:GetHeight())
     return scrollChildFrame
 end
 
@@ -335,9 +332,6 @@ local function CreateScrollHolderFrame(parentRow)
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
-    scrollHolderFrame.scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
-    scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth() - 2, scrollHolderFrame:GetHeight())
-    scrollHolderFrame.scrollFrame:SetHorizontalScroll(1)
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     return scrollHolderFrame
 end
