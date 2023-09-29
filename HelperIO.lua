@@ -88,10 +88,18 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", name .. "_ROW", parentFrame)
+    local frame = CreateFrame("Frame", name .. "_ROW", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -2)
     frame:SetSize(600, 60)
-    frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
+    frame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    --frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
     return frame
 end
 
@@ -149,6 +157,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
+    btn:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     -- If the button being created is the first/highest key level button for the dungeon it is for. Set it to the selected color.
     if(keyLevel ~= parentFrame.startingLevel) then
         btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
@@ -284,11 +293,11 @@ end
     @param scrollChild - the scroll child frame.
     @return scrollFrame - the created scroll frame
 --]]
-local function CreateScrollFrame(scrollHolderFrame, scrollChildFrame)
+local function CreateScrollFrame(scrollHolderFrame)
     local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
-    scrollFrame:SetPoint("TOPLEFT")
-    scrollFrame:SetPoint("BOTTOMRIGHT")
-    scrollFrame:SetScrollChild(scrollChildFrame)
+    --scrollFrame:SetPoint("TOPLEFT")
+    --scrollFrame:SetPoint("BOTTOMRIGHT")
+    --scrollFrame:SetScrollChild(scrollChildFrame)
     return scrollFrame
 end
 
@@ -299,8 +308,8 @@ end
 --]]
 local function CreateScrollChildFrame(scrollHolderFrame)
     local scrollChildFrame = CreateFrame("Frame", "SCROLLHOLDER_SCROLLCHILD")
-    scrollChildFrame:SetPoint("LEFT", scrollHolderFrame, "RIGHT")
-    scrollChildFrame:SetSize(0, scrollHolderFrame:GetHeight())
+    --scrollChildFrame:SetPoint("LEFT", scrollHolderFrame.scrollFrame, "LEFT")
+    --scrollChildFrame:SetSize(0, scrollHolderFrame.scrollChildFrame:GetHeight())
     return scrollChildFrame
 end
 
@@ -310,10 +319,24 @@ end
     @return scrollHolderFrame - the created frame
 --]]
 local function CreateScrollHolderFrame(parentRow)
-    local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow)  
+    local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow, "BackdropTemplate")  
     scrollHolderFrame:SetPoint("LEFT", parentRow.currentScoreFrame, "RIGHT")
-    scrollHolderFrame:SetSize(300, parentRow:GetHeight())
-    scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame, CreateScrollChildFrame(scrollHolderFrame))
+    scrollHolderFrame:SetSize(300, parentRow:GetHeight() - 1)
+    scrollHolderFrame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    scrollHolderFrame:SetBackdropColor(0, 0, 0, 1)
+    scrollHolderFrame:SetBackdropBorderColor(0, 0, 0, 1)
+    scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
+    scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
+    scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
+    --scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
+    scrollHolderFrame.scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
+    scrollHolderFrame.scrollFrame:SetSize(298, scrollHolderFrame:GetHeight())
+    scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     return scrollHolderFrame
 end
 
