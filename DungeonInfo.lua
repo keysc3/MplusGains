@@ -7,6 +7,12 @@ local scorePerLevel  = {40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 1
 
 addon.scorePerLevel = scorePerLevel
 
+--[[
+    CalculateDungeonTotal - Calculates a dungeons overall score contributing to a players rating.
+    @param seasonAffixScore1 - best score for dungeon for a weekly affix
+    @param seasonAffixScore2 - best score for dungeon for a weekly affix
+    @return - the total rating for the dungeons scores
+--]]
 function addon:CalculateDungeonTotal(seasonAffixScore1, seasonAffixScore2)
     local total
     if(seasonAffixScore1 > seasonAffixScore2) then
@@ -17,17 +23,14 @@ function addon:CalculateDungeonTotal(seasonAffixScore1, seasonAffixScore2)
     return addon:RoundToOneDecimal(total)
 end
 
+--[[
+    CalculateDungeonRatings - Calculates and stores the total rating a dungeon is giving the player.
+--]]
 function addon:CalculateDungeonRatings()
     local playerDungeonRatings = {}
     for key, value in pairs(addon.playerBests["tyrannical"]) do
         local bestTyran = value.rating
         local bestFort = addon.playerBests["fortified"][key].rating
-        local total
-        if(bestTyran > bestFort) then
-            total = (bestTyran * 1.5) + (bestFort * 0.5)
-        else
-           total = (bestTyran * 0.5) + (bestFort * 1.5)
-        end
         playerDungeonRatings[key] = {
             ["mapScore"] = addon:CalculateDungeonTotal(bestTyran, bestFort)
         }
