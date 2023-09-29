@@ -245,9 +245,9 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             -- Get the difference between the last frames mouse position and the current frames, multiply it by a scrolling speed coefficient.
             local diff = math.abs(lastX - currX) * 1.36
             -- If attempting to scroll left and haven't reached the minimum scroll range yet set the value.
-            if(lastX < currX and parentScroll:GetHorizontalScroll() > 0) then
+            if(lastX < currX and parentScroll:GetHorizontalScroll() > 1) then
                 newPos = parentScroll:GetHorizontalScroll() - diff
-                parentScroll:SetHorizontalScroll((newPos < 0) and 0 or newPos)
+                parentScroll:SetHorizontalScroll((newPos < 1) and 1 or newPos)
             -- If attempting to scroll right and haven't reached the moximum scroll range yet set the value.
             elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentFrame.maxScrollRange) then
                 newPos = parentScroll:GetHorizontalScroll() + diff
@@ -273,7 +273,7 @@ local function CreateButtonRow(parentRow, startingLevel, dungeonID)
     -- Calculate the row width and max scroll range based on number of buttons being created.
     local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
     local diff = totalRowWidth - 300
-    scrollChild.maxScrollRange = (diff > 0) and diff or 0
+    scrollChild.maxScrollRange = (diff > 1) and diff or 1
     scrollChild:SetWidth(totalRowWidth)
     scrollChild.keystoneButtons = {}
     local button = nil
@@ -328,14 +328,14 @@ local function CreateScrollHolderFrame(parentRow)
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    scrollHolderFrame:SetBackdropColor(0, 0, 0, 1)
+    scrollHolderFrame:SetBackdropColor(0, 0, 0, 0)
     scrollHolderFrame:SetBackdropBorderColor(0, 0, 0, 1)
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
-    --scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
-    scrollHolderFrame.scrollFrame:SetSize(298, scrollHolderFrame:GetHeight())
+    scrollHolderFrame.scrollFrame:SetSize(298, scrollHolderFrame:GetHeight()+1)
+    scrollHolderFrame.scrollFrame:SetHorizontalScroll(1)
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     return scrollHolderFrame
 end
