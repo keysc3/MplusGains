@@ -2,8 +2,9 @@ local addonName, addon = ...
 
 local myButtons = {}
 local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
-local hover = { r = 255, g = 255, b = 255, a = 0.1 }
+local hover = { r = 1, g = 1, b = 1, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
+local outline = { r = 1, g = 125/255, b = 10/255, a = 1 }
 local lastX, lastY
 local origX, origY
 local maxScrollRange = 0
@@ -37,15 +38,24 @@ end
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
-    local frame = CreateFrame("Frame", "Main", UIParent)
+    local frame = CreateFrame("Frame", "Main", UIParent, "BackdropTemplate")
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
-    frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
+    --frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
+    frame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0.5)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     return frame
 end
 
 --[[
     CreateHeaderFrame- Creates the header frame for the addon.
+    @param parentFrame - the parent frame to use
     @return frame - the created frame
 --]]
 local function CreateHeaderFrame(parentFrame)
@@ -60,7 +70,7 @@ local function CreateHeaderFrame(parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(196/255, 31/255, 59/255, 1)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER")
     text:SetText("TEST")
@@ -78,12 +88,7 @@ end
 --]]
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", name .. "_ROW", parentFrame)
-    -- If nil then it is the first created row, parent it to the top left of its parent.
-    --if(anchorFrame == nil) then
-        --frame:SetPoint("TOPLEFT")
-    --else
     frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -2)
-    --end
     frame:SetSize(600, 60)
     frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
     return frame
