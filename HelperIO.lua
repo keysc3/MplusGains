@@ -11,6 +11,7 @@ local origX, origY
 local maxScrollRange = 0
 local maxLevel = 30
 local weeklyAffix = "tyrannical"
+local buttonWidth = 48
 
 -- Create keystone button font
 local myFont = CreateFont("Font")
@@ -146,11 +147,11 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     btn:SetParent(parentFrame)
     -- If anchorButton is nil then it is the first in its parent frame, so set anchoring appropriately.
     if(anchorButton ~= nil) then 
-        btn:SetPoint("LEFT", anchorButton, "RIGHT")
+        btn:SetPoint("LEFT", anchorButton, "RIGHT", -1, 0)
     else
         btn:SetPoint("LEFT", parentFrame, "LEFT")
     end
-    btn:SetSize(48, parentFrame:GetHeight())
+    btn:SetSize(buttonWidth, parentFrame:GetHeight())
     btn:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -270,9 +271,10 @@ local function CreateButtonRow(parentRow, startingLevel, dungeonID)
     scrollChild.dungeonID = dungeonID
     scrollChild.startingLevel = startingLevel
     scrollChild.selectedIndex = 0
-    -- Calculate the row width and max scroll range based on number of buttons being created.
-    local totalRowWidth = ((maxLevel + 1) - startingLevel) * 48
-    local diff = totalRowWidth - 300
+    -- Calculate the row width and max scroll range.
+    -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
+    local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
+    local diff = totalRowWidth - parentRow.scrollHolderFrame:GetWidth()
     scrollChild.maxScrollRange = (diff > 1) and diff or 1
     scrollChild:SetWidth(totalRowWidth)
     scrollChild.keystoneButtons = {}
@@ -321,7 +323,7 @@ end
 local function CreateScrollHolderFrame(parentRow)
     local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow, "BackdropTemplate")  
     scrollHolderFrame:SetPoint("LEFT", parentRow.currentScoreFrame, "RIGHT")
-    scrollHolderFrame:SetSize(300, parentRow:GetHeight() - 1)
+    scrollHolderFrame:SetSize(300, parentRow:GetHeight())
     scrollHolderFrame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -334,7 +336,7 @@ local function CreateScrollHolderFrame(parentRow)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
-    scrollHolderFrame.scrollFrame:SetSize(298, scrollHolderFrame:GetHeight()+1)
+    scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth() - 2, scrollHolderFrame:GetHeight())
     scrollHolderFrame.scrollFrame:SetHorizontalScroll(1)
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     return scrollHolderFrame
