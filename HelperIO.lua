@@ -246,9 +246,9 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             -- Get the difference between the last frames mouse position and the current frames, multiply it by a scrolling speed coefficient.
             local diff = math.abs(lastX - currX) * 1.36
             -- If attempting to scroll left and haven't reached the minimum scroll range yet set the value.
-            if(lastX < currX and parentScroll:GetHorizontalScroll() > 1) then
+            if(lastX < currX and parentScroll:GetHorizontalScroll() > parentScroll.minScrollRange) then
                 newPos = parentScroll:GetHorizontalScroll() - diff
-                parentScroll:SetHorizontalScroll((newPos < 1) and 1 or newPos)
+                parentScroll:SetHorizontalScroll((newPos < parentScroll.minScrollRange) and parentScroll.minScrollRange or newPos)
             -- If attempting to scroll right and haven't reached the moximum scroll range yet set the value.
             elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentScroll.maxScrollRange) then
                 newPos = parentScroll:GetHorizontalScroll() + diff
@@ -261,7 +261,8 @@ end
 
 --[[
     CreateButtonRow - Creates the buttons for a row frame.
-    @param parentRow - the row frame of the buttons.
+    @param scrollHolderFrame - the scroll holder frame for the buttons.
+    @param gainedScoreFrame - the gained score frame for the buttons respective row.
     @param startingLevel - the keystone level to start creating buttons at.
     @param dungeonID - the dungeonID the row is for.
 --]]
@@ -273,7 +274,7 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLeve
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
     local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
     local diff = totalRowWidth - scrollHolderFrame:GetWidth()
-    scrollHolderFrame.scrollFrame.maxScrollRange = (diff > 1) and diff or 1
+    scrollHolderFrame.scrollFrame.maxScrollRange = (diff > scrollHolderFrame.scrollFrame.minScrollRange) and diff or scrollHolderFrame.scrollFrame.minScrollRange
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     local button = nil
@@ -332,6 +333,7 @@ local function CreateScrollHolderFrame(parentRow)
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
+    scrollHolderFrame.scrollFrame.minScrollRange = 1
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     return scrollHolderFrame
 end
