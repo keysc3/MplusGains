@@ -153,6 +153,12 @@ local function SelectButtons(parentFrame, keystoneButton)
     parentFrame.selectedIndex = keystoneButton.index
 end
 
+--[[
+    CalculateGainedRating - Calculates the rating gained given a keystone level and a dungeon.
+    @param keystoneLevel - the level of the keystone completed
+    @param dungeonID - the dungeon ID for the dungeon being completed.
+    @return - the amount of score gained from the completed keystone
+--]]
 local function CalculateGainedRating(keystoneLevel, dungeonID)
     local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
     local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
@@ -312,6 +318,7 @@ local function CreateAllDungeonRows(parentFrame)
     end
 end
 
+-- TODO: CHANGE SCORE FRAME TO TOTAL GRANTED AND SORT DUNGEONS BY TOTAL RATING
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
