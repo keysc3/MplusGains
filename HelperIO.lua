@@ -1,10 +1,11 @@
 local addonName, addon = ...
 
 local myButtons = {}
-local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
-local hover = { r = 1, g = 1, b = 1, a = 0.1 }
+--local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
+local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
+local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
-local outline = { r = 1, g = 125/255, b = 10/255, a = 1 }
+local outline = { r = 0, g = 0, b = 0, a = 1 }
 local lastX, lastY
 local origX, origY
 local maxScrollRange = 0
@@ -48,7 +49,7 @@ local function CreateMainFrame()
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    frame:SetBackdropColor(0, 0, 0, 0.5)
+    frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     return frame
 end
