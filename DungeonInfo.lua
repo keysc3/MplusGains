@@ -82,6 +82,31 @@ function addon:GetPlayerDungeonBests()
 end
 
 --[[
+    GetWeeklyAffixInfo - Gets and stores the weekly affix info.
+    @return - retuns the alternating weekly affix
+--]]
+function addon:GetWeeklyAffixInfo()
+    local weeklyAffix = ""
+    local affixInfo = {}
+    C_MythicPlus.RequestMapInfo()
+    local affixIDs = C_MythicPlus.GetCurrentAffixes()
+    for i, value in ipairs(affixIDs) do
+        name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
+        print("AFFIX: ", name, description, filedataid)
+        affixInfo[name] = {
+            ["description"] = description,
+            ["id"] = id
+        }
+        if(string.lower(name) == "tyrannical" or string.lower(name) == "fortified") then
+            weeklyAffix = string.lower(name)
+        end
+            
+    end 
+    addon.affixInfo = affixInfo
+    return weeklyAffix
+end
+
+--[[
     CalculateRating - Calculates the exact rating for a dungeon run based on timer.
     @param runTime - the runs time in seconds
     @param dungeonName - the dungeon name the run is from.
