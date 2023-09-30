@@ -10,7 +10,7 @@ local lastX, lastY
 local origX, origY
 local maxScrollRange = 0
 local maxLevel = 30
-local weeklyAffix = "tyrannical"
+local weeklyAffix
 local buttonWidth = 48
 
 -- Create keystone button font
@@ -375,6 +375,7 @@ end
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
 addon:CalculateDungeonRatings()
+weeklyAffix = addon:GetWeeklyAffixInfo()
 local mainFrame = CreateMainFrame()
 local headerFrame = CreateHeaderFrame(mainFrame)
 CreateAllDungeonRows(mainFrame, headerFrame)
