@@ -363,10 +363,10 @@ local function CreateAllDungeonRows(parentFrame, anchorFrame)
     for key, value in pairs(addon.dungeonInfo) do
         row = CreateDungeonRowFrame(value.name, row, parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
-        row.currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests["tyrannical"][key].rating, row)
+        row.currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests[weeklyAffix][key].rating, row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
-        CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests["tyrannical"][key].level, key)
+        CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
     end
 end
 
