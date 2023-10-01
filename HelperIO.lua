@@ -72,7 +72,7 @@ local function CreateHeaderFrame(parentFrame)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER")
-    text:SetText("TEST")
+    text:SetText(addonName)
     return frame
 end
 
@@ -109,7 +109,7 @@ local function CreateDungeonNameFrame(name, parentRow)
     frame:SetPoint("LEFT")
     frame:SetSize(150, parentRow:GetHeight())
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetText(name .. " tyler is huntard")
+    text:SetText(name)
     text:ClearAllPoints()
     text:SetPoint("LEFT", frame, "LEFT")
     text:SetPoint("RIGHT", frame, "RIGHT")
@@ -124,7 +124,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateCurrentScoreFrame(score, parentRow)
-    local frame = CreateFrame("Frame", "Test", parentRow)
+    local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
@@ -342,7 +342,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateGainedScoreFrame(parentRow)
-    local frame = CreateFrame("Frame", "Test", parentRow)
+    local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT")
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
