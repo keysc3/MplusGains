@@ -92,7 +92,6 @@ function addon:GetWeeklyAffixInfo()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
     for i, value in ipairs(affixIDs) do
         name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
-        print("AFFIX: ", name, description, filedataid)
         affixInfo[name] = {
             ["description"] = description,
             ["id"] = id

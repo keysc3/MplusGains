@@ -1,7 +1,6 @@
 local addonName, addon = ...
 
 local myButtons = {}
---local selected = { r = 63/255, g = 81/255, b = 181/255, a = 1 }
 local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
@@ -43,7 +42,6 @@ local function CreateMainFrame()
     local frame = CreateFrame("Frame", "Main", UIParent, "BackdropTemplate")
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
-    --frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -64,7 +62,6 @@ local function CreateHeaderFrame(parentFrame)
     local frame = CreateFrame("Frame", "Header", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, -4)
     frame:SetSize(parentFrame:GetWidth() - 8, 40)
-    --frame.texture = CreateNewTexture(0, 0, 0, 0.5, frame)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -76,8 +73,6 @@ local function CreateHeaderFrame(parentFrame)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER")
     text:SetText("TEST")
-    --btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
-    --frame:SetNormalFontObject(myFont)
     return frame
 end
 
@@ -100,7 +95,6 @@ local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
     })
     frame:SetBackdropColor(0, 0, 0, 0)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    --frame.texture = CreateNewTexture(40, 40, 40, 1, frame)
     return frame
 end
 
@@ -113,10 +107,14 @@ end
 local function CreateDungeonNameFrame(name, parentRow)
     local frame = CreateFrame("Frame", name .. "_TEXT", parentRow)
     frame:SetPoint("LEFT")
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("LEFT")
-    text:SetText(name)
     frame:SetSize(150, parentRow:GetHeight())
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetText(name .. " tyler is huntard")
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", frame, "LEFT")
+    text:SetPoint("RIGHT", frame, "RIGHT")
+    text:SetJustifyH("LEFT")
+
     return frame
 end
 
