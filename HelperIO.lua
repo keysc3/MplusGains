@@ -317,7 +317,7 @@ end
 local function CreateScrollHolderFrame(parentRow)
     local widthMulti = 6
     local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow, "BackdropTemplate")  
-    scrollHolderFrame:SetPoint("LEFT", parentRow.currentScoreFrame, "RIGHT")
+    scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT")
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((widthMulti * buttonWidth) - widthMulti, parentRow:GetHeight())
     scrollHolderFrame:SetBackdrop({
@@ -361,7 +361,7 @@ local function CreateAllDungeonRows(parentFrame, anchorFrame)
     for key, value in pairs(addon.dungeonInfo) do
         row = CreateDungeonRowFrame(value.name, row, parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
-        row.currentScoreFrame = CreateDungeonTimerFrame(value.timeLimit, row)
+        row.dungeonTimerFrame = CreateDungeonTimerFrame(value.timeLimit, row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
         CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
