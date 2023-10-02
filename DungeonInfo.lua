@@ -2,7 +2,7 @@ local _, addon = ...
 
 local maxModifier = 0.4
 
-local scorePerLevel  = {40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
+local scorePerLevel  = {0, 40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
 142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
 
 addon.scorePerLevel = scorePerLevel
@@ -68,7 +68,7 @@ function addon:GetPlayerDungeonBests()
             for i, affix in ipairs(affixScores) do
                 dungeonBest = {
                 ["level"] = affix.level,
-                ["rating"] = scorePerLevel[affix.level - 1] + CalculateRating(affix.durationSec, key),
+                ["rating"] = scorePerLevel[affix.level] + CalculateRating(affix.durationSec, key),
                 ["time"] = affix.durationSec,
                 ["name"] = value.name
                 }
@@ -88,7 +88,7 @@ end
 
 function CreateNoRunsEntry(name)
     local dungeonBest = {
-        ["level"] = 0,
+        ["level"] = 1,
         ["rating"] = 0,
         ["time"] = 0,
         ["name"] = name

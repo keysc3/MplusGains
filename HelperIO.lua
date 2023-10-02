@@ -7,7 +7,6 @@ local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
 local lastX, lastY
 local origX, origY
-local maxScrollRange = 0
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
@@ -158,12 +157,14 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     })
     btn:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     -- If the button being created is the first/highest key level button for the dungeon it is for. Set it to the selected color.
+    --print(parentFrame.startingLevel, keyLevel)
     if(keyLevel ~= parentFrame.startingLevel) then
         btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     else
         btn:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
     end
-    btn:SetText("+" .. keyLevel)
+    btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
+    print("CHECK")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     btn:SetNormalFontObject(myFont)
     return btn
@@ -201,7 +202,7 @@ end
 local function CalculateGainedRating(keystoneLevel, dungeonID)
     local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
     local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
-    local newScore = addon.scorePerLevel[keystoneLevel - 1]
+    local newScore = addon.scorePerLevel[keystoneLevel]
     local gainedScore = addon:CalculateDungeonTotal(newScore, oppositeBest) - addon.playerDungeonRatings[dungeonID].mapScore
     return (gainedScore > 0) and gainedScore or 0
 end
@@ -371,9 +372,13 @@ end
 -- TODO: CHANGE SCORE FRAME TO TOTAL GRANTED AND SORT DUNGEONS BY TOTAL RATING
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
+print("MHM1")
 addon:GetPlayerDungeonBests()
+print("MHM3")
 addon:CalculateDungeonRatings()
+print("MHM4")
 weeklyAffix = addon:GetWeeklyAffixInfo()
+print("MHM2")
 local mainFrame = CreateMainFrame()
 local headerFrame = CreateHeaderFrame(mainFrame)
 CreateAllDungeonRows(mainFrame, headerFrame)
