@@ -64,21 +64,36 @@ function addon:GetPlayerDungeonBests()
     }
     for key, value in pairs(addon.dungeonInfo) do
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
-        for i, affix in ipairs(affixScores) do
-            dungeonBest = {
-               ["level"] = affix.level,
-               ["rating"] = scorePerLevel[affix.level - 1] + CalculateRating(affix.durationSec, key),
-               ["time"] = affix.durationSec,
-               ["name"] = value.name
-            }
-            if(string.lower(affix.name) == "tyrannical") then
-                playerBests.tyrannical[key] = dungeonBest
-            else
-                playerBests.fortified[key] = dungeonBest
+        if(affixScores ~= nil) then
+            for i, affix in ipairs(affixScores) do
+                dungeonBest = {
+                ["level"] = affix.level,
+                ["rating"] = scorePerLevel[affix.level - 1] + CalculateRating(affix.durationSec, key),
+                ["time"] = affix.durationSec,
+                ["name"] = value.name
+                }
+                if(string.lower(affix.name) == "tyrannical") then
+                    playerBests.tyrannical[key] = dungeonBest
+                else
+                    playerBests.fortified[key] = dungeonBest
+                end
             end
+        else
+            playerBests.tyrannical[key] = CreateNoRunsEntry(value.name)
+            playerBests.fortified[key] = CreateNoRunsEntry(value.name)
         end
     end
     addon.playerBests = playerBests
+end
+
+function CreateNoRunsEntry(name)
+    local dungeonBest = {
+        ["level"] = 0,
+        ["rating"] = 0,
+        ["time"] = 0,
+        ["name"] = name
+    }
+    return dungeonBest
 end
 
 --[[
