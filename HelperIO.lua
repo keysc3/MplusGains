@@ -119,16 +119,16 @@ local function CreateDungeonNameFrame(name, parentRow)
 end
 
 --[[
-    CreateCurrentScoreFrame- Creates a frame for displaying the players top score for the rows dungeon.
+    CreateDungeonTimerFrame- Creates a frame for displaying the dungeons timer for the row.
     @param parentRow - the frames parent row frame
     @return frame - the created frame
 --]]
-local function CreateCurrentScoreFrame(score, parentRow)
+local function CreateDungeonTimerFrame(dungeonTimeLimit, parentRow)
     local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
-    text:SetText(addon:FormatDecimal(score))
+    text:SetText(addon:FormatTimer(dungeonTimeLimit))
     frame:SetSize(40, parentRow:GetHeight())
     return frame
 end
@@ -361,7 +361,7 @@ local function CreateAllDungeonRows(parentFrame, anchorFrame)
     for key, value in pairs(addon.dungeonInfo) do
         row = CreateDungeonRowFrame(value.name, row, parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
-        row.currentScoreFrame = CreateCurrentScoreFrame(addon.playerBests[weeklyAffix][key].rating, row)
+        row.currentScoreFrame = CreateDungeonTimerFrame(value.timeLimit, row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
         CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
