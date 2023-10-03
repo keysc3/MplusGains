@@ -135,7 +135,6 @@ local function CreateDungeonTimerFrame(dungeonTimeLimit, parentRow)
     frame:SetScript("OnEnter", function(self, motion)
         GameTooltip:SetOwner(parentRow, "ANCHOR_NONE")
         GameTooltip:SetPoint("RIGHT", parentRow, "LEFT", -3, 0)
-        --GameTooltip:SetHeight(parentRow.GetHeight())
         GameTooltip:SetText(string.format("+2: %s\n+3: %s", plusTwo, plusThree))
     end)
     frame:SetScript("OnLeave", function(self, motion)
@@ -170,14 +169,12 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     })
     btn:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     -- If the button being created is the first/highest key level button for the dungeon it is for. Set it to the selected color.
-    --print(parentFrame.startingLevel, keyLevel)
     if(keyLevel ~= parentFrame.startingLevel) then
         btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     else
         btn:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
     end
     btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
-    print("CHECK")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     btn:SetNormalFontObject(myFont)
     return btn
