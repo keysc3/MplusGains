@@ -16,9 +16,9 @@ addon.scorePerLevel = scorePerLevel
 function addon:CalculateDungeonTotal(seasonAffixScore1, seasonAffixScore2)
     local total
     if(seasonAffixScore1 > seasonAffixScore2) then
-        total = (seasonAffixScore1 * 1.5) + (seasonAffixScore2 * 0.5)
+        total = addon:RoundToOneDecimal(seasonAffixScore1 * 1.5) + addon:RoundToOneDecimal(seasonAffixScore2 * 0.5)
     else
-        total = (seasonAffixScore1 * 0.5) + (seasonAffixScore2 * 1.5)
+        total = addon:RoundToOneDecimal(seasonAffixScore1 * 0.5) + addon:RoundToOneDecimal(seasonAffixScore2 * 1.5)
     end
     return addon:RoundToOneDecimal(total)
 end
@@ -62,6 +62,7 @@ function addon:GetPlayerDungeonBests()
         ["tyrannical"] = {},
         ["fortified"] = {}
     }
+    print("WE OUT HERE")
     for key, value in pairs(addon.dungeonInfo) do
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
         if(affixScores ~= nil) then
@@ -74,8 +75,10 @@ function addon:GetPlayerDungeonBests()
                 }
                 if(string.lower(affix.name) == "tyrannical") then
                     playerBests.tyrannical[key] = dungeonBest
+                    if(#affixScores == 1) then playerBests.fortified[key] = CreateNoRunsEntry(value.name) end
                 else
                     playerBests.fortified[key] = dungeonBest
+                    if(#affixScores == 1) then playerBests.tyrannical[key] = CreateNoRunsEntry(value.name) end
                 end
             end
         else
@@ -84,6 +87,7 @@ function addon:GetPlayerDungeonBests()
         end
     end
     addon.playerBests = playerBests
+    print("WE OUT HERE MHM")
 end
 
 function CreateNoRunsEntry(name)
