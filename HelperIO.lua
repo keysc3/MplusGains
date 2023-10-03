@@ -11,6 +11,7 @@ local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
 local xPadding = 20
+local yPadding = -2
 local rowEdgePadding = 4
 
 -- Create keystone button font
@@ -78,9 +79,17 @@ local function CreateHeaderFrame(parentFrame)
 end
 
 local function CreateDungeonHolderFrame(anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", "DungeonHolder", parentFrame)
-    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -2)
-    frame:SetSize(600, 60)
+    local frame = CreateFrame("Frame", "DungeonHolder", parentFrame, "BackdropTemplate")
+    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, yPadding)
+    frame:SetSize(1, 1)
+    frame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropBorderColor(1, 0, 0, outline.a)
     return frame
 end
 
@@ -93,14 +102,13 @@ end
 --]]
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", name .. "_ROW", parentFrame, "BackdropTemplate")
-    local yOffset = -2
+    local yOffset = yPadding
     local anchorPoint = "BOTTOMLEFT"
-    if(parentFrame.name == "DungeonHolder") then
-        print("WE HERE")
+    if(anchorFrame == parentFrame) then
         yOffset = 0
         anchorPoint = "TOPLEFT"
     end
-    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, yOffset)
+    frame:SetPoint("TOPLEFT", anchorFrame, anchorPoint, 0, yOffset)
     frame:SetSize(600, 60)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
@@ -378,6 +386,15 @@ local function CreateGainedScoreFrame(parentRow)
     return frame
 end
 
+local function CalculateRowWidth(row)
+    local totalWidth = 0
+    local children = { row:GetChildren() }
+    for _, child in ipairs(children) do
+        totalWidth = totalWidth + child:GetWidth() + xPadding
+    end
+    return totalWidth
+end
+
 --[[
     CreateAllDungeonRows - Creates a row frame for each mythic+ dungeon.
     @param parentFrame - the parent frame for the rows
@@ -391,15 +408,21 @@ local function CreateAllDungeonRows(parentFrame)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
         CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
-        -- Set total row width
-        local totalWidth = 0
-        local children = { row:GetChildren() }
-        print(#children)
-        for _, child in ipairs(children) do
-            totalWidth = totalWidth + child:GetWidth() + xPadding
-        end
-        row:SetWidth(totalWidth)
     end
+    -- Set frame widths
+    local totalWidth = CalculateRowWidth(row)
+    parentFrame:SetWidth(totalWidth)
+    local children = { parentFrame:GetChildren() }
+    for _, child in ipairs(children) do
+        child:SetWidth(totalWidth)
+    end
+end
+
+local function SetDungeonHolderHeight(dungeonHolderFrame)
+    local children = { dungeonHolderFrame:GetChildren() }
+    local key, value = next(children)
+    local totalHeight = (#children * value:GetHeight()) + ((#children - 1) * (-yPadding))
+    dungeonHolderFrame:SetHeight(totalHeight)
 end
 
 -- Addon startup.
@@ -411,6 +434,7 @@ local mainFrame = CreateMainFrame()
 local headerFrame = CreateHeaderFrame(mainFrame)
 local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
 CreateAllDungeonRows(dungeonHolderFrame)
+SetDungeonHolderHeight(dungeonHolderFrame)
 
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
