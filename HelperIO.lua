@@ -434,6 +434,51 @@ local function SetDungeonHolderHeight(dungeonHolderFrame)
     dungeonHolderFrame:SetHeight(totalHeight)
 end
 
+--[[
+    CreateSummaryFrame - Creates the parent frame for the summary section.
+    @param anchorFrame - the frame to anchor the summary frame to.
+    @param parentFrame - the parent frame of the summary frame.
+    @param headerWidth - the total width of the header frame.
+    @return frame - the created summary frame.
+]]
+local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
+    local frame = CreateFrame("Frame", "Summary", parentFrame, "BackdropTemplate")
+    frame:SetPoint("LEFT", anchorFrame, "RIGHT", 2, 0)
+    frame:SetSize(headerWidth - anchorFrame:GetWidth() - 2 , anchorFrame:GetHeight())
+    frame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropBorderColor(1, 0, 0, 1)
+    return frame
+end
+
+--[[
+    CreateSummaryHeaderFrame - Creates the header frame for the summary section.
+    @param parentFrame - the parent frame of the summary header frame.
+    @return frame - the created summary header frame.
+]]
+local function CreateSummaryHeaderFrame(parentFrame)
+    local frame = CreateFrame("Frame", "SummaryHeader", parentFrame, "BackdropTemplate")
+    frame:SetPoint("TOP", parentFrame, "TOP", -2, 0)
+    frame:SetSize(parentFrame:GetWidth(), 100)
+    frame:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    text:SetPoint("CENTER")
+    text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n\n" .. addon.totalRating)
+    return frame
+end
+
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
@@ -444,6 +489,8 @@ local headerFrame = CreateHeaderFrame(mainFrame)
 local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
 CreateAllDungeonRows(dungeonHolderFrame)
 SetDungeonHolderHeight(dungeonHolderFrame)
+local summaryFrame = CreateSummaryFrame(dungeonHolderFrame, mainFrame, headerFrame:GetWidth())
+local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
 
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)

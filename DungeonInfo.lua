@@ -36,6 +36,7 @@ function addon:CalculateDungeonRatings()
         }
     end
     addon.playerDungeonRatings = playerDungeonRatings
+    CalculateTotalRating()
 end
 
 --[[
@@ -120,6 +121,14 @@ function addon:GetWeeklyAffixInfo()
     end 
     addon.affixInfo = affixInfo
     return weeklyAffix
+end
+
+function CalculateTotalRating()
+    local total = 0
+    for key, value in pairs(addon.playerDungeonRatings) do
+        total = total + value.mapScore
+    end
+    addon.totalRating = total
 end
 
 --[[
