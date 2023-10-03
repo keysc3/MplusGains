@@ -62,7 +62,6 @@ function addon:GetPlayerDungeonBests()
         ["tyrannical"] = {},
         ["fortified"] = {}
     }
-    print("WE OUT HERE")
     for key, value in pairs(addon.dungeonInfo) do
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
         if(affixScores ~= nil) then
@@ -87,7 +86,6 @@ function addon:GetPlayerDungeonBests()
         end
     end
     addon.playerBests = playerBests
-    print("WE OUT HERE MHM")
 end
 
 function CreateNoRunsEntry(name)

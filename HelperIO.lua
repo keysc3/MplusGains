@@ -77,6 +77,13 @@ local function CreateHeaderFrame(parentFrame)
     return frame
 end
 
+local function CreateDungeonHolderFrame(anchorFrame, parentFrame)
+    local frame = CreateFrame("Frame", "DungeonHolder", parentFrame)
+    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -2)
+    frame:SetSize(600, 60)
+    return frame
+end
+
 --[[
     CreateDungeonRowFrame - Creates a frame for a new dungeon row.
     @param name - name of the dungeon
@@ -86,7 +93,14 @@ end
 --]]
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", name .. "_ROW", parentFrame, "BackdropTemplate")
-    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -2)
+    local yOffset = -2
+    local anchorPoint = "BOTTOMLEFT"
+    if(parentFrame.name == "DungeonHolder") then
+        print("WE HERE")
+        yOffset = 0
+        anchorPoint = "TOPLEFT"
+    end
+    frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, yOffset)
     frame:SetSize(600, 60)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
@@ -368,8 +382,8 @@ end
     CreateAllDungeonRows - Creates a row frame for each mythic+ dungeon.
     @param parentFrame - the parent frame for the rows
 --]]
-local function CreateAllDungeonRows(parentFrame, anchorFrame)
-    local row = anchorFrame
+local function CreateAllDungeonRows(parentFrame)
+    local row = parentFrame
     for key, value in pairs(addon.dungeonInfo) do
         row = CreateDungeonRowFrame(value.name, row, parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
@@ -395,7 +409,8 @@ addon:CalculateDungeonRatings()
 weeklyAffix = addon:GetWeeklyAffixInfo()
 local mainFrame = CreateMainFrame()
 local headerFrame = CreateHeaderFrame(mainFrame)
-CreateAllDungeonRows(mainFrame, headerFrame)
+local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
+CreateAllDungeonRows(dungeonHolderFrame)
 
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
