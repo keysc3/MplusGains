@@ -386,6 +386,11 @@ local function CreateGainedScoreFrame(parentRow)
     return frame
 end
 
+--[[
+    CalculateRowWidth - Calculates the width of the dungeon rows.
+    @param row - the row to calculate the width of.
+    @return totalWidth - the totalWidth of a row
+]]
 local function CalculateRowWidth(row)
     local totalWidth = 0
     local children = { row:GetChildren() }
@@ -418,6 +423,10 @@ local function CreateAllDungeonRows(parentFrame)
     end
 end
 
+--[[
+    SetDungeonHolderHeight - Calculates and sets the needed height of the dungeon holder frame.
+    @param dungeonHolderFrame - the dungeon holder frame.
+]]
 local function SetDungeonHolderHeight(dungeonHolderFrame)
     local children = { dungeonHolderFrame:GetChildren() }
     local key, value = next(children)
