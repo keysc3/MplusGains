@@ -123,12 +123,25 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonTimerFrame(dungeonTimeLimit, parentRow)
+    local plusTwo = addon:FormatTimer(dungeonTimeLimit * 0.8)
+    local plusThree = addon:FormatTimer(dungeonTimeLimit * 0.6)
     local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT")
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
     text:SetText(addon:FormatTimer(dungeonTimeLimit))
     frame:SetSize(40, parentRow:GetHeight())
+
+    frame:SetScript("OnEnter", function(self, motion)
+        GameTooltip:SetOwner(parentRow, "ANCHOR_NONE")
+        GameTooltip:SetPoint("RIGHT", parentRow, "LEFT", -3, 0)
+        --GameTooltip:SetHeight(parentRow.GetHeight())
+        GameTooltip:SetText(string.format("+2: %s\n+3: %s", plusTwo, plusThree))
+    end)
+    frame:SetScript("OnLeave", function(self, motion)
+        GameTooltip:Hide()
+    end)
+
     return frame
 end
 
@@ -372,13 +385,9 @@ end
 -- TODO: CHANGE SCORE FRAME TO TOTAL GRANTED AND SORT DUNGEONS BY TOTAL RATING
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
-print("MHM1")
 addon:GetPlayerDungeonBests()
-print("MHM3")
 addon:CalculateDungeonRatings()
-print("MHM4")
 weeklyAffix = addon:GetWeeklyAffixInfo()
-print("MHM2")
 local mainFrame = CreateMainFrame()
 local headerFrame = CreateHeaderFrame(mainFrame)
 CreateAllDungeonRows(mainFrame, headerFrame)
