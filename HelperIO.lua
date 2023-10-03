@@ -10,6 +10,8 @@ local origX, origY
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
+local xPadding = 20
+local rowEdgePadding = 4
 
 -- Create keystone button font
 local myFont = CreateFont("Font")
@@ -105,7 +107,7 @@ end
 --]]
 local function CreateDungeonNameFrame(name, parentRow)
     local frame = CreateFrame("Frame", name .. "_TEXT", parentRow)
-    frame:SetPoint("LEFT")
+    frame:SetPoint("LEFT", rowEdgePadding, 0)
     frame:SetSize(150, parentRow:GetHeight())
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetText(name)
@@ -126,7 +128,7 @@ local function CreateDungeonTimerFrame(dungeonTimeLimit, parentRow)
     local plusTwo = addon:FormatTimer(dungeonTimeLimit * 0.8)
     local plusThree = addon:FormatTimer(dungeonTimeLimit * 0.6)
     local frame = CreateFrame("Frame", nil, parentRow)
-    frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT")
+    frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT", xPadding, 0)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT")
     text:SetText(addon:FormatTimer(dungeonTimeLimit))
@@ -328,7 +330,7 @@ end
 local function CreateScrollHolderFrame(parentRow)
     local widthMulti = 6
     local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow, "BackdropTemplate")  
-    scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT")
+    scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xPadding, 0)
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((widthMulti * buttonWidth) - widthMulti, parentRow:GetHeight())
     scrollHolderFrame:SetBackdrop({
@@ -354,7 +356,7 @@ end
 --]]
 local function CreateGainedScoreFrame(parentRow)
     local frame = CreateFrame("Frame", nil, parentRow)
-    frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT")
+    frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT", xPadding, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
@@ -366,7 +368,6 @@ end
     CreateAllDungeonRows - Creates a row frame for each mythic+ dungeon.
     @param parentFrame - the parent frame for the rows
 --]]
--- TODO: DATA BASED ON WEEKLY AFFIX 
 local function CreateAllDungeonRows(parentFrame, anchorFrame)
     local row = anchorFrame
     for key, value in pairs(addon.dungeonInfo) do
@@ -376,10 +377,17 @@ local function CreateAllDungeonRows(parentFrame, anchorFrame)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
         CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
+        -- Set total row width
+        local totalWidth = 0
+        local children = { row:GetChildren() }
+        print(#children)
+        for _, child in ipairs(children) do
+            totalWidth = totalWidth + child:GetWidth() + xPadding
+        end
+        row:SetWidth(totalWidth)
     end
 end
 
--- TODO: CHANGE SCORE FRAME TO TOTAL GRANTED AND SORT DUNGEONS BY TOTAL RATING
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
