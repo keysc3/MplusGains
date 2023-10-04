@@ -452,7 +452,7 @@ local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 1)
     return frame
 end
 
@@ -464,7 +464,7 @@ end
 local function CreateSummaryHeaderFrame(parentFrame)
     local frame = CreateFrame("Frame", "SummaryHeader", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", parentFrame, "TOP")
-    frame:SetSize(parentFrame:GetWidth(), 62)
+    frame:SetSize(parentFrame:GetWidth(), 60)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -475,7 +475,8 @@ local function CreateSummaryHeaderFrame(parentFrame)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     text:SetPoint("CENTER")
-    text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n\n" .. addon.totalRating)
+    text:SetSpacing(1)
+    text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
     return frame
 end
 --[[
@@ -486,8 +487,8 @@ end
 ]]
 local function CreateAffixInfoFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "AffixInfo", parentFrame, "BackdropTemplate")
-    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -2)
-    frame:SetSize(parentFrame:GetWidth(), 186)
+    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
+    frame:SetSize(parentFrame:GetWidth(), 184)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -508,7 +509,7 @@ local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
         yOffset = 0
     end
     frame:SetPoint("TOP", anchorFrame, anchorPoint, 0, yOffset)
-    frame:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/3)
+    frame:SetSize(parentFrame:GetWidth(), 60)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -552,6 +553,22 @@ local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
     text1:SetText(desc)
     return frame
 end
+
+local function CreateSplitFrame(anchorFrame, parentFrame)
+    local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, 0)
+    frame:SetSize(parentFrame:GetWidth()/2, 1)
+    frame:SetBackdrop({
+    bgFile = "Interface\\buttons\\white8x8",
+    edgeFile = "Interface\\buttons\\white8x8",
+    edgeSize = 1,
+    insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(0,0,0,0)
+    frame:SetBackdropBorderColor(0, outline.g, outline.b, 1)
+    return frame
+end
+
 -- Addon startup.
 addon:GetGeneralDungeonInfo()
 addon:GetPlayerDungeonBests()
@@ -564,36 +581,16 @@ CreateAllDungeonRows(dungeonHolderFrame)
 SetDungeonHolderHeight(dungeonHolderFrame)
 local summaryFrame = CreateSummaryFrame(dungeonHolderFrame, mainFrame, headerFrame:GetWidth())
 local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
-local frame1 = CreateFrame("Frame", "TEST", summaryFrame, "BackdropTemplate")
-frame1:SetPoint("CENTER", summaryHeaderFrame, "BOTTOM", 0, -1)
-frame1:SetSize(100, 1)
-frame1:SetBackdrop({
-    bgFile = "Interface\\buttons\\white8x8",
-    edgeFile = "Interface\\buttons\\white8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-})
-frame1:SetBackdropColor(0,0,0,1)
-frame1:SetBackdropBorderColor(0, outline.g, outline.b, outline.a)
+local lineSplit1 = CreateSplitFrame(summaryHeaderFrame, summaryFrame)
 
 --local keystoneInfoFrame = CreateKeystoneInfoFrame(summaryHeaderFrame, summaryFrame)
-local affixInfoFrame = CreateAffixInfoFrame(frame1, summaryFrame)
+local affixInfoFrame = CreateAffixInfoFrame(summaryHeaderFrame, summaryFrame)
 local anchor = affixInfoFrame
 for key, value in pairs(addon.affixInfo) do
     anchor = CreateKeystoneInfo1Frame(anchor, affixInfoFrame, key, value.description)
 end
 
-local frame2 = CreateFrame("Frame", "TEST", summaryFrame, "BackdropTemplate")
-frame2:SetPoint("CENTER", affixInfoFrame, "BOTTOM", 0, 0)
-frame2:SetSize(100, 1)
-frame2:SetBackdrop({
-    bgFile = "Interface\\buttons\\white8x8",
-    edgeFile = "Interface\\buttons\\white8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-})
-frame2:SetBackdropColor(0,0,0,1)
-frame2:SetBackdropBorderColor(0, outline.g, outline.b, outline.a)
+local lineSplit2 = CreateSplitFrame(affixInfoFrame, summaryFrame)
 
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
