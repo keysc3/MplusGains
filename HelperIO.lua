@@ -74,7 +74,7 @@ local function CreateHeaderFrame(parentFrame)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER")
-    text:SetText(addonName)
+    text:SetText(addonName .. " LAYOUT V3")
     return frame
 end
 
@@ -464,7 +464,7 @@ end
 local function CreateSummaryHeaderFrame(parentFrame)
     local frame = CreateFrame("Frame", "SummaryHeader", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", parentFrame, "TOP")
-    frame:SetSize(parentFrame:GetWidth(), 80)
+    frame:SetSize(parentFrame:GetWidth(), 62)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -486,8 +486,8 @@ end
 ]]
 local function CreateAffixInfoFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "AffixInfo", parentFrame, "BackdropTemplate")
-    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -10)
-    frame:SetSize(parentFrame:GetWidth(), 140)
+    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -2)
+    frame:SetSize(parentFrame:GetWidth(), 186)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -501,14 +501,14 @@ end
 
 local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
     local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame, "BackdropTemplate")
-    local anchorPoint = "RIGHT"
-    local xOffset = 3
+    local anchorPoint = "BOTTOM"
+    local yOffset = yPadding
     if(parentFrame == anchorFrame) then
-        anchorPoint = "LEFT"
-        xOffset = 0
+        anchorPoint = "TOP"
+        yOffset = 0
     end
-    frame:SetPoint("LEFT", anchorFrame, anchorPoint, xOffset, 0)
-    frame:SetSize((parentFrame:GetWidth()/3) - 2, parentFrame:GetHeight())
+    frame:SetPoint("TOP", anchorFrame, anchorPoint, 0, yOffset)
+    frame:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/3)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -565,7 +565,7 @@ SetDungeonHolderHeight(dungeonHolderFrame)
 local summaryFrame = CreateSummaryFrame(dungeonHolderFrame, mainFrame, headerFrame:GetWidth())
 local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
 local frame1 = CreateFrame("Frame", "TEST", summaryFrame, "BackdropTemplate")
-frame1:SetPoint("CENTER", summaryHeaderFrame, "BOTTOM", 0, -2)
+frame1:SetPoint("CENTER", summaryHeaderFrame, "BOTTOM", 0, -1)
 frame1:SetSize(100, 1)
 frame1:SetBackdrop({
     bgFile = "Interface\\buttons\\white8x8",
@@ -584,7 +584,7 @@ for key, value in pairs(addon.affixInfo) do
 end
 
 local frame2 = CreateFrame("Frame", "TEST", summaryFrame, "BackdropTemplate")
-frame2:SetPoint("CENTER", affixInfoFrame, "BOTTOM", 0, -2)
+frame2:SetPoint("CENTER", affixInfoFrame, "BOTTOM", 0, 0)
 frame2:SetSize(100, 1)
 frame2:SetBackdrop({
     bgFile = "Interface\\buttons\\white8x8",
