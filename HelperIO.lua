@@ -89,7 +89,7 @@ local function CreateDungeonHolderFrame(anchorFrame, parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(1, 0, 0, outline.a)
+    frame:SetBackdropBorderColor(0, 0, 0, 0)
     return frame
 end
 
@@ -452,7 +452,7 @@ local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(1, 0, 0, 1)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     return frame
 end
 
@@ -464,7 +464,7 @@ end
 local function CreateSummaryHeaderFrame(parentFrame)
     local frame = CreateFrame("Frame", "SummaryHeader", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", parentFrame, "TOP")
-    frame:SetSize(parentFrame:GetWidth(), 100)
+    frame:SetSize(parentFrame:GetWidth(), 80)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -472,7 +472,7 @@ local function CreateSummaryHeaderFrame(parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     text:SetPoint("CENTER")
     text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n\n" .. addon.totalRating)
@@ -486,7 +486,7 @@ end
 ]]
 local function CreateAffixInfoFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "AffixInfo", parentFrame, "BackdropTemplate")
-    frame:SetPoint("TOP", anchorFrame, "BOTTOM")
+    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -10)
     frame:SetSize(parentFrame:GetWidth(), 140)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
@@ -495,18 +495,20 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
     return frame
 end
 
 local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
     local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame, "BackdropTemplate")
     local anchorPoint = "RIGHT"
+    local xOffset = 3
     if(parentFrame == anchorFrame) then
         anchorPoint = "LEFT"
+        xOffset = 0
     end
-    frame:SetPoint("LEFT", anchorFrame, anchorPoint)
-    frame:SetSize((parentFrame:GetWidth()/3), parentFrame:GetHeight())
+    frame:SetPoint("LEFT", anchorFrame, anchorPoint, xOffset, 0)
+    frame:SetSize((parentFrame:GetWidth()/3) - 2, parentFrame:GetHeight())
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -514,7 +516,7 @@ local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
     
     local titleFrame = CreateFrame("Frame", "AffixName", frame, "BackdropTemplate")
     titleFrame:SetPoint("TOP", frame, "TOP")
@@ -526,8 +528,8 @@ local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     titleFrame:SetBackdropColor(0, 0, 0, 0)
-    titleFrame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    local text = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleFrame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
+    local text = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text:SetPoint("CENTER")
     text:SetText(affix)
 
@@ -541,12 +543,11 @@ local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     descFrame:SetBackdropColor(0, 0, 0, 0)
-    descFrame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    descFrame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
     local text1 = descFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text1:SetPoint("CENTER")
     text1:ClearAllPoints()
-    text1:SetPoint("LEFT", descFrame, "LEFT")
-    text1:SetPoint("RIGHT", descFrame, "RIGHT")
+    text1:SetPoint("TOPLEFT", descFrame, "TOPLEFT")
+    text1:SetPoint("TOPRIGHT", descFrame, "TOPRIGHT")
     text1:SetJustifyH("LEFT")
     text1:SetText(desc)
     return frame
@@ -563,12 +564,36 @@ CreateAllDungeonRows(dungeonHolderFrame)
 SetDungeonHolderHeight(dungeonHolderFrame)
 local summaryFrame = CreateSummaryFrame(dungeonHolderFrame, mainFrame, headerFrame:GetWidth())
 local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
+local frame1 = CreateFrame("Frame", "TEST", summaryFrame, "BackdropTemplate")
+frame1:SetPoint("CENTER", summaryHeaderFrame, "BOTTOM", 0, -2)
+frame1:SetSize(100, 1)
+frame1:SetBackdrop({
+    bgFile = "Interface\\buttons\\white8x8",
+    edgeFile = "Interface\\buttons\\white8x8",
+    edgeSize = 1,
+    insets = { left = 1, right = 1, top = 1, bottom = 1 },
+})
+frame1:SetBackdropColor(0,0,0,1)
+frame1:SetBackdropBorderColor(0, outline.g, outline.b, outline.a)
+
 --local keystoneInfoFrame = CreateKeystoneInfoFrame(summaryHeaderFrame, summaryFrame)
-local affixInfoFrame = CreateAffixInfoFrame(summaryHeaderFrame, summaryFrame)
+local affixInfoFrame = CreateAffixInfoFrame(frame1, summaryFrame)
 local anchor = affixInfoFrame
 for key, value in pairs(addon.affixInfo) do
     anchor = CreateKeystoneInfo1Frame(anchor, affixInfoFrame, key, value.description)
 end
+
+local frame2 = CreateFrame("Frame", "TEST", summaryFrame, "BackdropTemplate")
+frame2:SetPoint("CENTER", affixInfoFrame, "BOTTOM", 0, -2)
+frame2:SetSize(100, 1)
+frame2:SetBackdrop({
+    bgFile = "Interface\\buttons\\white8x8",
+    edgeFile = "Interface\\buttons\\white8x8",
+    edgeSize = 1,
+    insets = { left = 1, right = 1, top = 1, bottom = 1 },
+})
+frame2:SetBackdropColor(0,0,0,1)
+frame2:SetBackdropBorderColor(0, outline.g, outline.b, outline.a)
 
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
