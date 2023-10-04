@@ -480,12 +480,12 @@ local function CreateSummaryHeaderFrame(parentFrame)
     return frame
 end
 --[[
-    CreateKeystoneInfoFrame - Creates the keystone info frame for the summary section.
-    @param anchorFrame - the anchor frame of the keystone info frame
-    @param parentFrame - the parent frame of the keystone info frame.
-    @return frame - the created keystone info frame.
+    CreateAffixInfoHolderFrame - Creates the affix info parent frame for the summary section.
+    @param anchorFrame - the anchor frame of the affix info holder frame
+    @param parentFrame - the parent frame of the affix info holdder frame.
+    @return frame - the created affix info holer frame.
 ]]
-local function CreateAffixInfoFrame(anchorFrame, parentFrame)
+local function CreateAffixInfoHolderFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "AffixInfo", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth(), 184)
@@ -500,7 +500,15 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame)
     return frame
 end
 
-local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
+--[[
+    CreateAffixInfoFrame - Creates a frame containing affix name and description
+    @param anchorFrame - the frame to anchor to
+    @param parentFrame - the frame to parent to
+    @param affix - the affix name
+    @param desc - the affix description
+    @return frame - the created frame
+--]]
+local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc)
     local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame, "BackdropTemplate")
     local anchorPoint = "BOTTOM"
     local yOffset = yPadding
@@ -554,9 +562,16 @@ local function CreateKeystoneInfo1Frame(anchorFrame, parentFrame, affix, desc)
     return frame
 end
 
+--[[
+    CreateSplitFrame - Creates a frame to mimic a horizontal line.
+    @param anchorFrame - the frame to anchor the line to
+    @param parentFrame - the frame the line is parented to
+    @return frame - the created line frame
+    Note: Used instead of CreateLine() due to buggy/inconsitent behaviour.
+--]]
 local function CreateSplitFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, 0)
+    frame:SetPoint("TOP", anchorFrame, "BOTTOM")
     frame:SetSize(parentFrame:GetWidth()/2, 1)
     frame:SetBackdrop({
     bgFile = "Interface\\buttons\\white8x8",
@@ -565,7 +580,7 @@ local function CreateSplitFrame(anchorFrame, parentFrame)
     insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0,0,0,0)
-    frame:SetBackdropBorderColor(0, outline.g, outline.b, 1)
+    frame:SetBackdropBorderColor(outline.r, outline.b, outline.g, outline.a)
     return frame
 end
 
@@ -584,12 +599,11 @@ local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
 local lineSplit1 = CreateSplitFrame(summaryHeaderFrame, summaryFrame)
 
 --local keystoneInfoFrame = CreateKeystoneInfoFrame(summaryHeaderFrame, summaryFrame)
-local affixInfoFrame = CreateAffixInfoFrame(summaryHeaderFrame, summaryFrame)
+local affixInfoFrame = CreateAffixInfoHolderFrame(summaryHeaderFrame, summaryFrame)
 local anchor = affixInfoFrame
 for key, value in pairs(addon.affixInfo) do
-    anchor = CreateKeystoneInfo1Frame(anchor, affixInfoFrame, key, value.description)
+    anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, key, value.description)
 end
-
 local lineSplit2 = CreateSplitFrame(affixInfoFrame, summaryFrame)
 
 for key, value in pairs(addon.playerDungeonRatings) do
