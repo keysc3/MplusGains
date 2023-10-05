@@ -639,7 +639,7 @@ local function CreateDungeonScoreFrame(dungeonID, anchorFrame, parentFrame)
     scoreFrame:SetBackdropBorderColor(0, 1, outline.b, 0)
     local text = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT", 2, 0)
-    text:SetText(addon.playerDungeonRatings[dungeonID].mapScore)
+    text:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
     return scoreFrame
 end
 
