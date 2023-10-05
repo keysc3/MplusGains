@@ -616,7 +616,12 @@ local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID, anchor
     text:SetPoint("LEFT", affixFrame, "LEFT")
     text:SetPoint("RIGHT", affixFrame, "RIGHT", -2, 0)
     text:SetJustifyH("RIGHT")
-    text:SetText(addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. addon.playerBests[affix][dungeonID].level)
+    local level = addon.playerBests[affix][dungeonID].level
+    local runString = "-"
+    if(level > 1) then 
+        runString = addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. level
+    end
+    text:SetText(runString)
     return affixFrame
 end
 
@@ -667,11 +672,13 @@ local function CreateDungeonBestNameFrame(dungeonID, parentFrame)
 end
 
 local function CreateDungeonSummaryHeader(parentFrame)
-    local holder = CreateFrame("Frame", "DUNGEON_SUMMARY_HEADER", parentFrame, "BackdropTemplate")
+    local holder = CreateFrame("Frame", "DUNGEON_SUMMARY_HEADER", parentFrame)
     holder:SetPoint("TOP", parentFrame, "TOP")
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
 
-    local dungeonHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+    local dungeonHeader = CreateFrame("Frame", nil, holder)
+    dungeonHeader:SetPoint("LEFT", holder, "LEFT")
+    dungeonHeader:SetSize(100, holder:GetHeight())
     local text = dungeonHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text:ClearAllPoints()
     text:SetPoint("LEFT", dungeonHeader, "LEFT", 2, 0)
@@ -679,7 +686,7 @@ local function CreateDungeonSummaryHeader(parentFrame)
     text:SetJustifyH("LEFT")
     text:SetText("DUNGEON")
 
-    local tyranHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+    local tyranHeader = CreateFrame("Frame", nil, holder)
     tyranHeader:SetPoint("RIGHT", holder, "RIGHT")
     tyranHeader:SetSize(60, holder:GetHeight())
     tyranHeader.texture = tyranHeader:CreateTexture()
@@ -687,7 +694,7 @@ local function CreateDungeonSummaryHeader(parentFrame)
     tyranHeader.texture:SetSize(holder:GetHeight()/1.3, holder:GetHeight()/1.3)
     tyranHeader.texture:SetTexture("Interface/Icons/Achievement_Boss_Archaedas.PNG")
     
-    local fortHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+    local fortHeader = CreateFrame("Frame", nil, holder)
     fortHeader:SetPoint("RIGHT", tyranHeader, "LEFT")
     fortHeader:SetSize(60, holder:GetHeight())
     fortHeader.texture = fortHeader:CreateTexture()
@@ -695,7 +702,7 @@ local function CreateDungeonSummaryHeader(parentFrame)
     fortHeader.texture:SetSize(holder:GetHeight()/1.3, holder:GetHeight()/1.3)
     fortHeader.texture:SetTexture("Interface/Icons/ability_toughness.PNG")
 
-    local scoreHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+    local scoreHeader = CreateFrame("Frame", nil, holder)
     scoreHeader:SetPoint("RIGHT", fortHeader, "LEFT")
     scoreHeader:SetSize(60, holder:GetHeight())
     local text = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
