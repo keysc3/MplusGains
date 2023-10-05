@@ -149,3 +149,11 @@ function CalculateRating(runTime, dungeonName)
     end
     return addon:RoundToOneDecimal(rating)
 end
+
+function addon:CalculateChest(dungeonID, timeCompleted)
+    local timeLimit = addon.dungeonInfo[dungeonID].timeLimit
+    if(timeCompleted <= (timeLimit * 0.6)) then return "+++" end
+    if(timeCompleted <= (timeLimit * 0.8)) then return "++" end
+    if(timeCompleted <= timeLimit) then return "+" end
+    return ""
+end
