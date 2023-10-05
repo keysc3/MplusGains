@@ -157,3 +157,17 @@ function addon:CalculateChest(dungeonID, timeCompleted)
     if(timeCompleted <= timeLimit) then return "+" end
     return ""
 end
+
+function addon:SortDungeonsByScore()
+    -- Put mapIDs into an array
+    local array = {}
+    for k, v in pairs(addon.playerDungeonRatings) do
+        table.insert(array, k)
+    end
+    -- Sort the mapIDs by their mapScores
+    table.sort(array, function(id1, id2)
+        return addon.playerDungeonRatings[id1].mapScore > addon.playerDungeonRatings[id2].mapScore
+        end)
+
+    return array
+end

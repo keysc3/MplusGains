@@ -759,7 +759,8 @@ local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
 --local dungeonBestFrame = CreateBestRunRow("Freehold", bestRunsFrame, bestRunsFrame)
 
 local testAnchor = CreateDungeonSummaryHeader(bestRunsFrame)
-for key, value in pairs(addon.dungeonInfo) do
+local sortedScores = addon:SortDungeonsByScore()
+for i, key in pairs(sortedScores) do
     testAnchor = CreateBestRunRow(key, testAnchor, bestRunsFrame)
 end
 
