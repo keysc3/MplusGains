@@ -13,6 +13,7 @@ local buttonWidth = 48
 local xPadding = 20
 local yPadding = -2
 local rowEdgePadding = 4
+local dungeonRowHeight = 64
 
 -- Create keystone button font
 local myFont = CreateFont("Font")
@@ -109,7 +110,7 @@ local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
         anchorPoint = "TOPLEFT"
     end
     frame:SetPoint("TOPLEFT", anchorFrame, anchorPoint, 0, yOffset)
-    frame:SetSize(600, 60)
+    frame:SetSize(600, dungeonRowHeight)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -464,7 +465,7 @@ end
 local function CreateSummaryHeaderFrame(parentFrame)
     local frame = CreateFrame("Frame", "SummaryHeader", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", parentFrame, "TOP")
-    frame:SetSize(parentFrame:GetWidth(), 60)
+    frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -473,7 +474,7 @@ local function CreateSummaryHeaderFrame(parentFrame)
     })
     frame:SetBackdropColor(0, 0, 0, 0)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
     text:SetPoint("CENTER")
     text:SetSpacing(1)
     text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
@@ -488,7 +489,7 @@ end
 local function CreateAffixInfoHolderFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "AffixInfo", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
-    frame:SetSize(parentFrame:GetWidth(), 184)
+    frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 3) + (-yPadding * 2))
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -496,7 +497,7 @@ local function CreateAffixInfoHolderFrame(anchorFrame, parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
+    frame:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     return frame
 end
 
@@ -517,7 +518,7 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc)
         yOffset = 0
     end
     frame:SetPoint("TOP", anchorFrame, anchorPoint, 0, yOffset)
-    frame:SetSize(parentFrame:GetWidth(), 60)
+    frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -587,7 +588,7 @@ end
 local function CreateBestRunsFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "BestRuns", parentFrame, "BackdropTemplate")
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
-    frame:SetSize(parentFrame:GetWidth(), 246)
+    frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 4) + (yPadding * 5))
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -610,7 +611,7 @@ local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID, anchor
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     affixFrame:SetBackdropColor(0, 0, 0, 0)
-    affixFrame:SetBackdropBorderColor(1, 1, 0, 0.5)
+    affixFrame:SetBackdropBorderColor(1, 1, 0, 0)
     local text = affixFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT", affixFrame, "LEFT")
     text:SetPoint("RIGHT", affixFrame, "RIGHT", -2, 0)
@@ -630,7 +631,7 @@ local function CreateDungeonScoreFrame(dungeonID, anchorFrame, parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     scoreFrame:SetBackdropColor(0, 0, 0, 0)
-    scoreFrame:SetBackdropBorderColor(0, 1, outline.b, 0.5)
+    scoreFrame:SetBackdropBorderColor(0, 1, outline.b, 0)
     local text = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("LEFT", 2, 0)
     text:SetText(addon.playerDungeonRatings[dungeonID].mapScore)
@@ -655,7 +656,7 @@ local function CreateDungeonBestNameFrame(dungeonID, parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     nameFrame:SetBackdropColor(0, 0, 0, 0)
-    nameFrame:SetBackdropBorderColor(1, outline.g, outline.b, 0.5)
+    nameFrame:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     local text = nameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:ClearAllPoints()
     text:SetPoint("LEFT", nameFrame, "LEFT", 2, 0)
@@ -665,16 +666,10 @@ local function CreateDungeonBestNameFrame(dungeonID, parentFrame)
     return nameFrame
 end
 
-local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
-    local yOffset = yPadding
-    local anchorPosition = "BOTTOM"
-    if(anchorFrame == parentFrame) then
-        yOffset = 0
-        anchorPosition = "TOP"
-    end
-    local holder = CreateFrame("Frame", dungeonID .. "BEST_RUNS_ROW", parentFrame, "BackdropTemplate")
-    holder:SetPoint("TOP", anchorFrame, anchorPosition, 0, yOffset)
-    holder:SetSize(parentFrame:GetWidth(), 29)
+local function CreateDungeonSummaryHeader(parentFrame)
+    local holder = CreateFrame("Frame", "DUNGEON_SUMMARY_HEADER", parentFrame, "BackdropTemplate")
+    holder:SetPoint("TOP", parentFrame, "TOP")
+    holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
     holder:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -684,6 +679,100 @@ local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
     holder:SetBackdropColor(0, 0, 0, 0)
     holder:SetBackdropBorderColor(1, outline.g, outline.b, 0)
 
+    local dungeonHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+
+    dungeonHeader:SetPoint("LEFT", holder, "LEFT")
+    dungeonHeader:SetSize(100, holder:GetHeight())
+    dungeonHeader:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    dungeonHeader:SetBackdropColor(0, 0, 0, 0)
+    dungeonHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
+    local text = dungeonHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", dungeonHeader, "LEFT", 2, 0)
+    text:SetPoint("RIGHT", dungeonHeader, "RIGHT")
+    text:SetJustifyH("LEFT")
+    text:SetText("DUNGEON")
+
+    local tyranHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+
+    tyranHeader:SetPoint("RIGHT", holder, "RIGHT")
+    tyranHeader:SetSize(60, holder:GetHeight())
+    tyranHeader:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    tyranHeader:SetBackdropColor(0, 0, 0, 0)
+    tyranHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
+    local text = tyranHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", tyranHeader, "LEFT", 2, 0)
+    text:SetPoint("RIGHT", tyranHeader, "RIGHT")
+    text:SetJustifyH("RIGHT")
+    text:SetText("TYRAN")
+    
+    local fortHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+
+    fortHeader:SetPoint("RIGHT", tyranHeader, "LEFT")
+    fortHeader:SetSize(60, holder:GetHeight())
+    fortHeader:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    fortHeader:SetBackdropColor(0, 0, 0, 0)
+    fortHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
+    local text = fortHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", fortHeader, "LEFT", 2, 0)
+    text:SetPoint("RIGHT", fortHeader, "RIGHT")
+    text:SetJustifyH("RIGHT")
+    text:SetText("FORT")
+
+    local scoreHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
+    scoreHeader:SetPoint("RIGHT", fortHeader, "LEFT")
+    scoreHeader:SetSize(60, holder:GetHeight())
+    scoreHeader:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    scoreHeader:SetBackdropColor(0, 0, 0, 0)
+    scoreHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
+    local text = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", scoreHeader, "LEFT", 2, 0)
+    text:SetPoint("RIGHT", scoreHeader, "RIGHT")
+    text:SetJustifyH("LEFT")
+    text:SetText("SCORE")
+    --local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID, "RIGHT")
+   -- local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID, "LEFT")
+    --local scoreFrame = CreateDungeonScoreFrame(dungeonID, fortFrame, holder)
+    --local nameFrame = CreateDungeonBestNameFrame(dungeonID, holder)
+
+    return holder
+end
+
+local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
+    local holder = CreateFrame("Frame", dungeonID .. "BEST_RUNS_ROW", parentFrame, "BackdropTemplate")
+    holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
+    holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
+    holder:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    holder:SetBackdropColor(0, 0, 0, 0)
+    holder:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID, "RIGHT")
     local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID, "LEFT")
     local scoreFrame = CreateDungeonScoreFrame(dungeonID, fortFrame, holder)
@@ -716,7 +805,7 @@ local lineSplit2 = CreateSplitFrame(affixInfoFrame, summaryFrame)
 local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
 --local dungeonBestFrame = CreateBestRunRow("Freehold", bestRunsFrame, bestRunsFrame)
 
-local testAnchor = bestRunsFrame
+local testAnchor = CreateDungeonSummaryHeader(bestRunsFrame)
 for key, value in pairs(addon.dungeonInfo) do
     testAnchor = CreateBestRunRow(key, testAnchor, bestRunsFrame)
 end
