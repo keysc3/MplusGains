@@ -670,27 +670,8 @@ local function CreateDungeonSummaryHeader(parentFrame)
     local holder = CreateFrame("Frame", "DUNGEON_SUMMARY_HEADER", parentFrame, "BackdropTemplate")
     holder:SetPoint("TOP", parentFrame, "TOP")
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
-    holder:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    holder:SetBackdropColor(0, 0, 0, 0)
-    holder:SetBackdropBorderColor(1, outline.g, outline.b, 0)
 
     local dungeonHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
-
-    dungeonHeader:SetPoint("LEFT", holder, "LEFT")
-    dungeonHeader:SetSize(100, holder:GetHeight())
-    dungeonHeader:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    dungeonHeader:SetBackdropColor(0, 0, 0, 0)
-    dungeonHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     local text = dungeonHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text:ClearAllPoints()
     text:SetPoint("LEFT", dungeonHeader, "LEFT", 2, 0)
@@ -699,65 +680,30 @@ local function CreateDungeonSummaryHeader(parentFrame)
     text:SetText("DUNGEON")
 
     local tyranHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
-
     tyranHeader:SetPoint("RIGHT", holder, "RIGHT")
     tyranHeader:SetSize(60, holder:GetHeight())
-    tyranHeader:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    tyranHeader:SetBackdropColor(0, 0, 0, 0)
-    tyranHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
-    local text = tyranHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    text:ClearAllPoints()
-    text:SetPoint("LEFT", tyranHeader, "LEFT", 2, 0)
-    text:SetPoint("RIGHT", tyranHeader, "RIGHT")
-    text:SetJustifyH("RIGHT")
-    text:SetText("TYRAN")
+    tyranHeader.texture = tyranHeader:CreateTexture()
+    tyranHeader.texture:SetPoint("RIGHT", -2, 0)
+    tyranHeader.texture:SetSize(holder:GetHeight()/1.3, holder:GetHeight()/1.3)
+    tyranHeader.texture:SetTexture("Interface/Icons/Achievement_Boss_Archaedas.PNG")
     
     local fortHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
-
     fortHeader:SetPoint("RIGHT", tyranHeader, "LEFT")
     fortHeader:SetSize(60, holder:GetHeight())
-    fortHeader:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    fortHeader:SetBackdropColor(0, 0, 0, 0)
-    fortHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
-    local text = fortHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    text:ClearAllPoints()
-    text:SetPoint("LEFT", fortHeader, "LEFT", 2, 0)
-    text:SetPoint("RIGHT", fortHeader, "RIGHT")
-    text:SetJustifyH("RIGHT")
-    text:SetText("FORT")
+    fortHeader.texture = fortHeader:CreateTexture()
+    fortHeader.texture:SetPoint("RIGHT", -2, 0)
+    fortHeader.texture:SetSize(holder:GetHeight()/1.3, holder:GetHeight()/1.3)
+    fortHeader.texture:SetTexture("Interface/Icons/ability_toughness.PNG")
 
     local scoreHeader = CreateFrame("Frame", nil, holder, "BackdropTemplate")
     scoreHeader:SetPoint("RIGHT", fortHeader, "LEFT")
     scoreHeader:SetSize(60, holder:GetHeight())
-    scoreHeader:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    scoreHeader:SetBackdropColor(0, 0, 0, 0)
-    scoreHeader:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     local text = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text:ClearAllPoints()
     text:SetPoint("LEFT", scoreHeader, "LEFT", 2, 0)
     text:SetPoint("RIGHT", scoreHeader, "RIGHT")
     text:SetJustifyH("LEFT")
     text:SetText("SCORE")
-    --local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID, "RIGHT")
-   -- local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID, "LEFT")
-    --local scoreFrame = CreateDungeonScoreFrame(dungeonID, fortFrame, holder)
-    --local nameFrame = CreateDungeonBestNameFrame(dungeonID, holder)
-
     return holder
 end
 
