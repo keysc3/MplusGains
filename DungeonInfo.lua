@@ -116,9 +116,9 @@ function addon:GetWeeklyAffixInfo()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
     for i, value in ipairs(affixIDs) do
         name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
-        affixInfo[name] = {
+        affixInfo[value.id] = {
             ["description"] = description,
-            ["id"] = value.id,
+            ["name"] = name,
             ["filedataid"] = filedataid,
             ["level"] = GetAffixLevel(name)
         }
@@ -185,7 +185,6 @@ function addon:SortDungeonsByLevel(weeklyAffix)
     local array = {}
     for k, v in pairs(addon.dungeonInfo) do
         table.insert(array, k)
-        print(k)
     end
     -- Sort the mapIDs by their levels then rating for ties
     table.sort(array, function(id1, id2)
@@ -201,7 +200,6 @@ end
 
 function GetAffixLevel(name)
     for key, value in pairs(affixLevels) do
-        print(key, value)
         for _, v in ipairs(value) do
             if(v == string.lower(name)) then
                 return key
@@ -209,4 +207,17 @@ function GetAffixLevel(name)
         end
     end
     return 0
+end
+
+function addon:SortAffixesByLevel()
+    local array = {}
+    for k, v in pairs(addon.affixInfo) do
+        table.insert(array, k)
+    end
+    -- Sort the mapIDs by their mapScores
+    table.sort(array, function(id1, id2)
+        return addon.affixInfo[id1].level < addon.affixInfo[id2].level
+        end)
+
+    return array
 end
