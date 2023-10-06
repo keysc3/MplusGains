@@ -37,22 +37,29 @@ local function CreateNewTexture(red, green, blue, alpha, parent)
     return texture
 end
 
---[[
-    CreateMainFrame- Creates the main frame for the addon.
-    @return frame - the created frame
---]]
-local function CreateMainFrame()
-    local frame = CreateFrame("Frame", "Main", UIParent, "BackdropTemplate")
-    frame:SetPoint("CENTER", nil, 0, 100)
-    frame:SetSize(1000, 600)
+local function CreateFrameWithBackdrop(parentFrame, name)
+    local frame = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
+    frame:SetBackdropColor(0, 0, 0, 0)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    return frame
+end
+
+
+--[[
+    CreateMainFrame- Creates the main frame for the addon.
+    @return frame - the created frame
+--]]
+local function CreateMainFrame()
+    local frame = CreateFrameWithBackdrop(UIParent, "Main")
+    frame:SetPoint("CENTER", nil, 0, 100)
+    frame:SetSize(1000, 600)
+    frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
     return frame
 end
 
