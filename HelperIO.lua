@@ -511,7 +511,7 @@ end
     @param desc - the affix description
     @return frame - the created frame
 --]]
-local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filedataid, affixLevel)
+local function CreateAffixInfoFrame(anchorFrame, parentFrame, affixTable)
     local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame, "BackdropTemplate")
     local anchorPoint = "BOTTOM"
     local yOffset = yPadding
@@ -539,14 +539,14 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filed
     titleFrame:SetSize(frame:GetWidth(), 20)
     local text = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text:SetPoint("CENTER")
-    text:SetText(affix)
+    text:SetText(affixTable.name)
     local text2 = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text2:SetPoint("LEFT", text, "RIGHT", 2, 0)
-    text2:SetText("(+" .. ((affixLevel ~= 0) and affixLevel or "?") .. ")")
+    text2:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
     titleFrame.texture = titleFrame:CreateTexture()
     titleFrame.texture:SetPoint("RIGHT", text, "LEFT", -4, 0)
     titleFrame.texture:SetSize(holderFrame:GetHeight()/1.2, holderFrame:GetHeight()/1.2)
-    titleFrame.texture:SetTexture(filedataid)
+    titleFrame.texture:SetTexture(affixTable.filedataid)
 
     local descFrame = CreateFrame("Frame", "AffixDesc", frame, "BackdropTemplate")
     descFrame:SetPoint("TOP", holderFrame, "BOTTOM")
@@ -564,7 +564,7 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filed
     text1:SetPoint("TOPLEFT", descFrame, "TOPLEFT", 2, 0)
     text1:SetPoint("TOPRIGHT", descFrame, "TOPRIGHT")
     text1:SetJustifyH("LEFT")
-    text1:SetText(desc)
+    text1:SetText(affixTable.description)
     return frame
 end
 
@@ -756,8 +756,9 @@ local lineSplit1 = CreateSplitFrame(summaryHeaderFrame, summaryFrame)
 --local keystoneInfoFrame = CreateKeystoneInfoFrame(summaryHeaderFrame, summaryFrame)
 local affixInfoFrame = CreateAffixInfoHolderFrame(summaryHeaderFrame, summaryFrame)
 local anchor = affixInfoFrame
-for key, value in pairs(addon.affixInfo) do
-    anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, key, value.description, value.filedataid, value.level)
+local sortedAffixes = addon:SortAffixesByLevel()
+for i, key in ipairs(sortedAffixes) do
+    anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, addon.affixInfo[key])
 end
 local lineSplit2 = CreateSplitFrame(affixInfoFrame, summaryFrame)
 local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
