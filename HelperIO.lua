@@ -511,7 +511,7 @@ end
     @param desc - the affix description
     @return frame - the created frame
 --]]
-local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filedataid)
+local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filedataid, affixLevel)
     local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame, "BackdropTemplate")
     local anchorPoint = "BOTTOM"
     local yOffset = yPadding
@@ -542,7 +542,7 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filed
     text:SetText(affix)
     local text2 = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text2:SetPoint("LEFT", text, "RIGHT", 2, 0)
-    text2:SetText("(+2)")
+    text2:SetText("(+" .. ((affixLevel ~= 0) and affixLevel or "?") .. ")")
     titleFrame.texture = titleFrame:CreateTexture()
     titleFrame.texture:SetPoint("RIGHT", text, "LEFT", -4, 0)
     titleFrame.texture:SetSize(holderFrame:GetHeight()/1.2, holderFrame:GetHeight()/1.2)
@@ -757,7 +757,7 @@ local lineSplit1 = CreateSplitFrame(summaryHeaderFrame, summaryFrame)
 local affixInfoFrame = CreateAffixInfoHolderFrame(summaryHeaderFrame, summaryFrame)
 local anchor = affixInfoFrame
 for key, value in pairs(addon.affixInfo) do
-    anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, key, value.description, value.filedataid)
+    anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, key, value.description, value.filedataid, value.level)
 end
 local lineSplit2 = CreateSplitFrame(affixInfoFrame, summaryFrame)
 local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
