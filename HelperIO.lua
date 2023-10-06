@@ -407,10 +407,12 @@ end
 --]]
 local function CreateAllDungeonRows(parentFrame)
     local row = parentFrame
-    for key, value in pairs(addon.dungeonInfo) do
-        row = CreateDungeonRowFrame(value.name, row, parentFrame)
-        row.dungeonNameFrame = CreateDungeonNameFrame(value.name, row)
-        row.dungeonTimerFrame = CreateDungeonTimerFrame(value.timeLimit, row)
+    local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
+    for i, key in ipairs(sortedLevels) do
+        local name = addon.dungeonInfo[key].name
+        row = CreateDungeonRowFrame(name, row, parentFrame)
+        row.dungeonNameFrame = CreateDungeonNameFrame(name, row)
+        row.dungeonTimerFrame = CreateDungeonTimerFrame(addon.dungeonInfo[key].timeLimit, row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
         CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
@@ -760,7 +762,7 @@ local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
 
 local testAnchor = CreateDungeonSummaryHeader(bestRunsFrame)
 local sortedScores = addon:SortDungeonsByScore()
-for i, key in pairs(sortedScores) do
+for i, key in ipairs(sortedScores) do
     testAnchor = CreateBestRunRow(key, testAnchor, bestRunsFrame)
 end
 
