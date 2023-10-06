@@ -68,10 +68,10 @@ function addon:GetPlayerDungeonBests()
         if(affixScores ~= nil) then
             for i, affix in ipairs(affixScores) do
                 dungeonBest = {
-                ["level"] = affix.level,
-                ["rating"] = scorePerLevel[affix.level] + CalculateRating(affix.durationSec, key),
-                ["time"] = affix.durationSec,
-                ["name"] = value.name
+                    ["level"] = affix.level,
+                    ["rating"] = scorePerLevel[affix.level] + CalculateRating(affix.durationSec, key),
+                    ["time"] = affix.durationSec,
+                    ["name"] = value.name
                 }
                 if(string.lower(affix.name) == "tyrannical") then
                     playerBests.tyrannical[key] = dungeonBest
@@ -112,7 +112,8 @@ function addon:GetWeeklyAffixInfo()
         name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
         affixInfo[name] = {
             ["description"] = description,
-            ["id"] = id
+            ["id"] = value.id,
+            ["filedataid"] = filedataid
         }
         if(string.lower(name) == "tyrannical" or string.lower(name) == "fortified") then
             weeklyAffix = string.lower(name)
