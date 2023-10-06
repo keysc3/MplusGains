@@ -4,13 +4,14 @@ local myButtons = {}
 local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
-local outline = { r = 0, g = 0, b = 0, a = 1 }
+local outline = { r = 0, g = 0, b = 0 }
 local lastX, lastY
 local origX, origY
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
-local xPadding = 20
+local xColPadding = 20
+local xPadding = 2
 local yPadding = -2
 local rowEdgePadding = 4
 local dungeonRowHeight = 64
@@ -37,7 +38,8 @@ local function CreateNewTexture(red, green, blue, alpha, parent)
     return texture
 end
 
-local function CreateFrameWithBackdrop(parentFrame, name)
+local function CreateFrameWithBackdrop(parentFrame, name, hasOutline)
+    local alpha = 0
     local frame = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
@@ -46,7 +48,8 @@ local function CreateFrameWithBackdrop(parentFrame, name)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    if(hasOutline) then alpha = 1 end
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, alpha)
     return frame
 end
 
@@ -56,7 +59,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
-    local frame = CreateFrameWithBackdrop(UIParent, "Main")
+    local frame = CreateFrameWithBackdrop(UIParent, "Main", true)
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -69,35 +72,20 @@ end
     @return frame - the created frame
 --]]
 local function CreateHeaderFrame(parentFrame)
-    local frame = CreateFrame("Frame", "Header", parentFrame, "BackdropTemplate")
-    frame:SetPoint("TOP", parentFrame, "TOP", 0, -4)
-    frame:SetSize(parentFrame:GetWidth() - 8, 40)
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("CENTER")
-    text:SetText(addonName .. " AFFIX-ICON-LAYOUT-V2")
+    local headerWidthDiff = 8
+    local frame = CreateFrameWithBackdrop(parentFrame, "Header", true)
+    frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
+    frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, 40)
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text:SetPoint("CENTER")
+    frame.text:SetText(addonName)
     return frame
 end
 
 local function CreateDungeonHolderFrame(anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", "DungeonHolder", parentFrame, "BackdropTemplate")
+    local frame = CreateFrameWithBackdrop(parentFrame, "DungeonHolder", false)
     frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, yPadding)
     frame:SetSize(1, 1)
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(0, 0, 0, 0)
     return frame
 end
 
@@ -109,7 +97,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", name .. "_ROW", parentFrame, "BackdropTemplate")
+    local frame = CreateFrameWithBackdrop(parentFrame, name .. "_ROW", true)
     local yOffset = yPadding
     local anchorPoint = "BOTTOMLEFT"
     if(anchorFrame == parentFrame) then
@@ -118,14 +106,6 @@ local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
     end
     frame:SetPoint("TOPLEFT", anchorFrame, anchorPoint, 0, yOffset)
     frame:SetSize(600, dungeonRowHeight)
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     return frame
 end
 
@@ -139,13 +119,12 @@ local function CreateDungeonNameFrame(name, parentRow)
     local frame = CreateFrame("Frame", name .. "_TEXT", parentRow)
     frame:SetPoint("LEFT", rowEdgePadding, 0)
     frame:SetSize(150, parentRow:GetHeight())
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetText(name)
-    text:ClearAllPoints()
-    text:SetPoint("LEFT", frame, "LEFT")
-    text:SetPoint("RIGHT", frame, "RIGHT")
-    text:SetJustifyH("LEFT")
-
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text:SetText(name)
+    frame.text:ClearAllPoints()
+    frame.text:SetPoint("LEFT", frame, "LEFT")
+    frame.text:SetPoint("RIGHT", frame, "RIGHT")
+    frame.text:SetJustifyH("LEFT")
     return frame
 end
 
@@ -158,10 +137,10 @@ local function CreateDungeonTimerFrame(dungeonTimeLimit, parentRow)
     local plusTwo = addon:FormatTimer(dungeonTimeLimit * 0.8)
     local plusThree = addon:FormatTimer(dungeonTimeLimit * 0.6)
     local frame = CreateFrame("Frame", nil, parentRow)
-    frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT", xPadding, 0)
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("LEFT")
-    text:SetText(addon:FormatTimer(dungeonTimeLimit))
+    frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT", xColPadding, 0)
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text:SetPoint("LEFT")
+    frame.text:SetText(addon:FormatTimer(dungeonTimeLimit))
     frame:SetSize(40, parentRow:GetHeight())
 
     frame:SetScript("OnEnter", function(self, motion)
@@ -288,11 +267,11 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             local diff = math.abs(lastX - currX) * 1.36
             -- If attempting to scroll left and haven't reached the minimum scroll range yet set the value.
             if(lastX < currX and parentScroll:GetHorizontalScroll() > parentScroll.minScrollRange) then
-                newPos = parentScroll:GetHorizontalScroll() - diff
+                local newPos = parentScroll:GetHorizontalScroll() - diff
                 parentScroll:SetHorizontalScroll((newPos < parentScroll.minScrollRange) and parentScroll.minScrollRange or newPos)
             -- If attempting to scroll right and haven't reached the moximum scroll range yet set the value.
             elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentScroll.maxScrollRange) then
-                newPos = parentScroll:GetHorizontalScroll() + diff
+                local newPos = parentScroll:GetHorizontalScroll() + diff
                 parentScroll:SetHorizontalScroll((newPos > parentScroll.maxScrollRange) and parentScroll.maxScrollRange or newPos)
             end
             lastX = currX
@@ -322,7 +301,7 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLeve
     -- Create the buttons and add them to the parent frames buttons table
     for i = 0, maxLevel  - startingLevel do
         button = CreateButton(startingLevel, button, scrollHolderFrame.scrollChild)
-        keystoneButton = addon:CreateKeystoneButton(startingLevel, button, i)
+        local keystoneButton = addon:CreateKeystoneButton(startingLevel, button, i)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
         startingLevel = startingLevel + 1
@@ -359,18 +338,10 @@ end
 --]]
 local function CreateScrollHolderFrame(parentRow)
     local widthMulti = 6
-    local scrollHolderFrame = CreateFrame("Frame", parentRow:GetName() .. "_SCROLLHOLDER", parentRow, "BackdropTemplate")  
-    scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xPadding, 0)
+    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, parentRow:GetName() .. "_SCROLLHOLDER", true) 
+    scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xColPadding, 0)
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((widthMulti * buttonWidth) - widthMulti, parentRow:GetHeight())
-    scrollHolderFrame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    scrollHolderFrame:SetBackdropColor(0, 0, 0, 0)
-    scrollHolderFrame:SetBackdropBorderColor(0, 0, 0, 1)
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
@@ -386,7 +357,7 @@ end
 --]]
 local function CreateGainedScoreFrame(parentRow)
     local frame = CreateFrame("Frame", nil, parentRow)
-    frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT", xPadding, 0)
+    frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT", xColPadding, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
@@ -403,7 +374,7 @@ local function CalculateRowWidth(row)
     local totalWidth = 0
     local children = { row:GetChildren() }
     for _, child in ipairs(children) do
-        totalWidth = totalWidth + child:GetWidth() + xPadding
+        totalWidth = totalWidth + child:GetWidth() + xColPadding
     end
     return totalWidth
 end
@@ -452,17 +423,9 @@ end
     @return frame - the created summary frame.
 ]]
 local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
-    local frame = CreateFrame("Frame", "Summary", parentFrame, "BackdropTemplate")
-    frame:SetPoint("LEFT", anchorFrame, "RIGHT", 2, 0)
-    frame:SetSize(headerWidth - anchorFrame:GetWidth() - 2 , anchorFrame:GetHeight())
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 1)
+    local frame = CreateFrameWithBackdrop(parentFrame, "Summary", true)
+    frame:SetPoint("LEFT", anchorFrame, "RIGHT", xPadding, 0)
+    frame:SetSize(headerWidth - anchorFrame:GetWidth() - xPadding , anchorFrame:GetHeight())
     return frame
 end
 
@@ -472,21 +435,12 @@ end
     @return frame - the created summary header frame.
 ]]
 local function CreateSummaryHeaderFrame(parentFrame)
-    local frame = CreateFrame("Frame", "SummaryHeader", parentFrame, "BackdropTemplate")
+    local frame = CreateFrameWithBackdrop(parentFrame, "SummaryHeader", false)
     frame:SetPoint("TOP", parentFrame, "TOP")
     frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
-    text:SetPoint("CENTER")
-    text:SetSpacing(1)
-    text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
+    frame.text:SetPoint("CENTER")
+    frame.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
     return frame
 end
 --[[
@@ -496,17 +450,9 @@ end
     @return frame - the created affix info holer frame.
 ]]
 local function CreateAffixInfoHolderFrame(anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", "AffixInfo", parentFrame, "BackdropTemplate")
+    local frame = CreateFrameWithBackdrop(parentFrame, "AffixInfo", false)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 3) + (-yPadding * 2))
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     return frame
 end
 
@@ -519,59 +465,44 @@ end
     @return frame - the created frame
 --]]
 local function CreateAffixInfoFrame(anchorFrame, parentFrame, affixTable)
-    local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame, "BackdropTemplate")
+    -- Holder frame
+    local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame)
     local anchorPoint = "BOTTOM"
     local yOffset = yPadding
     if(parentFrame == anchorFrame) then
         anchorPoint = "TOP"
         yOffset = 0
     end
+    local frameWidth = parentFrame:GetWidth()
     frame:SetPoint("TOP", anchorFrame, anchorPoint, 0, yOffset)
-    frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, 1, outline.b, 0)
+    frame:SetSize(frameWidth, dungeonRowHeight)
 
-    local holderFrame = CreateFrame("Frame", nil, frame)
-    holderFrame:SetPoint("TOP")
-    holderFrame:SetSize(frame:GetWidth(), 20)
-
-    local titleFrame = CreateFrame("Frame", "AffixName", holderFrame)
-    titleFrame:SetPoint("TOP", holderFrame, "TOP")
-    titleFrame:SetSize(frame:GetWidth(), 20)
-    local text = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    text:SetPoint("CENTER")
-    text:SetText(affixTable.name)
-    local text2 = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    text2:SetPoint("LEFT", text, "RIGHT", 2, 0)
-    text2:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
+    -- Header with icon, name of affix, level it starts at.
+    local titleFrame = CreateFrame("Frame", "AffixHeader", frame)
+    titleFrame:SetPoint("TOP")
+    local titleFrameHeight = 20
+    titleFrame:SetSize(frameWidth, titleFrameHeight)
+    titleFrame.nameText = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    titleFrame.nameText:SetPoint("CENTER")
+    titleFrame.nameText:SetText(affixTable.name)
+    titleFrame.levelText = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    titleFrame.levelText:SetPoint("LEFT", titleFrame.nameText, "RIGHT", xPadding, 0)
+    titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
     titleFrame.texture = titleFrame:CreateTexture()
-    titleFrame.texture:SetPoint("RIGHT", text, "LEFT", -4, 0)
-    titleFrame.texture:SetSize(holderFrame:GetHeight()/1.2, holderFrame:GetHeight()/1.2)
+    titleFrame.texture:SetPoint("RIGHT", titleFrame.nameText, "LEFT", -4, 0)
+    local iconSize = titleFrameHeight/1.2
+    titleFrame.texture:SetSize(iconSize, iconSize)
     titleFrame.texture:SetTexture(affixTable.filedataid)
-
-    local descFrame = CreateFrame("Frame", "AffixDesc", frame, "BackdropTemplate")
-    descFrame:SetPoint("TOP", holderFrame, "BOTTOM")
-    descFrame:SetSize(frame:GetWidth(), frame:GetHeight() - holderFrame:GetHeight())
-    descFrame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    descFrame:SetBackdropColor(0, 0, 0, 0)
-    descFrame:SetBackdropBorderColor(1, 1, outline.b, 0)
-    local text1 = descFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text1:ClearAllPoints()
-    text1:SetPoint("TOPLEFT", descFrame, "TOPLEFT", 2, 0)
-    text1:SetPoint("TOPRIGHT", descFrame, "TOPRIGHT")
-    text1:SetJustifyH("LEFT")
-    text1:SetText(affixTable.description)
+    -- Description
+    local descFrame = CreateFrame("Frame", "AffixDesc", frame)
+    descFrame:SetPoint("TOP", titleFrame, "BOTTOM")
+    descFrame:SetSize(frameWidth, frame:GetHeight() - titleFrameHeight)
+    descFrame.descText = descFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descFrame.descText:ClearAllPoints()
+    descFrame.descText:SetPoint("TOPLEFT", descFrame, "TOPLEFT", xPadding, 0)
+    descFrame.descText:SetPoint("TOPRIGHT", descFrame, "TOPRIGHT")
+    descFrame.descText:SetJustifyH("LEFT")
+    descFrame.descText:SetText(affixTable.description)
     return frame
 end
 
