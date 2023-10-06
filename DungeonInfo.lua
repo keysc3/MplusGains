@@ -5,6 +5,12 @@ local maxModifier = 0.4
 local scorePerLevel  = {0, 40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
 142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
 
+local affixLevels = {
+    [2] = {"fortified", "tyrannical"},
+    [7] = {"afflicted", "incorporeal", "volcanic", "entangling", "storming"},
+    [14] = {"spiteful", "raging", "bolstering", "bursting", "sanguine"}
+}
+
 addon.scorePerLevel = scorePerLevel
 
 --[[
@@ -113,7 +119,8 @@ function addon:GetWeeklyAffixInfo()
         affixInfo[name] = {
             ["description"] = description,
             ["id"] = value.id,
-            ["filedataid"] = filedataid
+            ["filedataid"] = filedataid,
+            ["level"] = GetAffixLevel(name)
         }
         if(string.lower(name) == "tyrannical" or string.lower(name) == "fortified") then
             weeklyAffix = string.lower(name)
@@ -190,4 +197,16 @@ function addon:SortDungeonsByLevel(weeklyAffix)
         return addon.playerBests[weeklyAffix][id1].rating < addon.playerBests[weeklyAffix][id2].rating
         end)
     return array
+end
+
+function GetAffixLevel(name)
+    for key, value in pairs(affixLevels) do
+        print(key, value)
+        for _, v in ipairs(value) do
+            if(v == string.lower(name)) then
+                return key
+            end
+        end
+    end
+    return 0
 end
