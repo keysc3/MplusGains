@@ -75,7 +75,7 @@ local function CreateHeaderFrame(parentFrame)
     frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER")
-    text:SetText(addonName .. " AFFIX-ICON-LAYOUT-V1")
+    text:SetText(addonName .. " AFFIX-ICON-LAYOUT-V2")
     return frame
 end
 
@@ -529,40 +529,28 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affix, desc, filed
     })
     frame:SetBackdropColor(0, 0, 0, 0)
     frame:SetBackdropBorderColor(outline.r, 1, outline.b, 0)
-    
-    local titleFrame = CreateFrame("Frame", "AffixName", frame, "BackdropTemplate")
-    titleFrame:SetPoint("TOP", frame, "TOP")
+
+    local holderFrame = CreateFrame("Frame", nil, frame)
+    holderFrame:SetPoint("TOP")
+    holderFrame:SetSize(frame:GetWidth(), 20)
+
+    local titleFrame = CreateFrame("Frame", "AffixName", holderFrame)
+    titleFrame:SetPoint("TOP", holderFrame, "TOP")
     titleFrame:SetSize(frame:GetWidth(), 20)
-    titleFrame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    titleFrame:SetBackdropColor(0, 0, 0, 0)
-    titleFrame:SetBackdropBorderColor(1, outline.g, outline.b, 0)
     local text = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
     text:SetPoint("CENTER")
     text:SetText(affix)
-    local text2 = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text2:SetPoint("LEFT", 2, 0)
-    text2:SetText("+2")
+    local text2 = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    text2:SetPoint("LEFT", text, "RIGHT", 2, 0)
+    text2:SetText("(+2)")
+    titleFrame.texture = titleFrame:CreateTexture()
+    titleFrame.texture:SetPoint("RIGHT", text, "LEFT", -4, 0)
+    titleFrame.texture:SetSize(holderFrame:GetHeight()/1.2, holderFrame:GetHeight()/1.2)
+    titleFrame.texture:SetTexture(filedataid)
 
-    local holderFrame = CreateFrame("Frame", nil, frame)
-    holderFrame:SetPoint("TOP", titleFrame, "BOTTOM")
-    holderFrame:SetSize(frame:GetWidth(), frame:GetHeight() - titleFrame:GetHeight())
-
-    local affixIcon = CreateFrame("Frame", nil, holderFrame)
-    affixIcon:SetPoint("LEFT", holderFrame, "LEFT")
-    affixIcon:SetSize(holderFrame:GetHeight(), holderFrame:GetHeight())
-    affixIcon.texture = affixIcon:CreateTexture()
-    affixIcon.texture:SetPoint("TOPLEFT", 2, 0)
-    affixIcon.texture:SetSize(holderFrame:GetHeight()/1.1, holderFrame:GetHeight()/1.1)
-    affixIcon.texture:SetTexture(filedataid)
-
-    local descFrame = CreateFrame("Frame", "AffixDesc", holderFrame, "BackdropTemplate")
-    descFrame:SetPoint("LEFT", affixIcon, "RIGHT")
-    descFrame:SetSize(holderFrame:GetWidth() - affixIcon:GetWidth(), holderFrame:GetHeight())
+    local descFrame = CreateFrame("Frame", "AffixDesc", frame, "BackdropTemplate")
+    descFrame:SetPoint("TOP", holderFrame, "BOTTOM")
+    descFrame:SetSize(frame:GetWidth(), frame:GetHeight() - holderFrame:GetHeight())
     descFrame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
