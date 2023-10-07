@@ -15,6 +15,7 @@ local xPadding = 2
 local yPadding = -2
 local rowEdgePadding = 4
 local dungeonRowHeight = 64
+local dungeonRunsChildWidth = 60
 
 -- Create keystone button font
 local myFont = CreateFont("Font")
@@ -476,7 +477,6 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affixTable)
     local frameWidth = parentFrame:GetWidth()
     frame:SetPoint("TOP", anchorFrame, anchorPoint, 0, yOffset)
     frame:SetSize(frameWidth, dungeonRowHeight)
-
     -- Header with icon, name of affix, level it starts at.
     local titleFrame = CreateFrame("Frame", "AffixHeader", frame)
     titleFrame:SetPoint("TOP")
@@ -514,103 +514,89 @@ end
     Note: Used instead of CreateLine() due to buggy/inconsitent behaviour.
 --]]
 local function CreateSplitFrame(anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    local frame = CreateFrameWithBackdrop(parentFrame, nil, true)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM")
     frame:SetSize(parentFrame:GetWidth()/2, 1)
-    frame:SetBackdrop({
-    bgFile = "Interface\\buttons\\white8x8",
-    edgeFile = "Interface\\buttons\\white8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0,0,0,0)
     frame:SetBackdropBorderColor(outline.r, outline.b, outline.g, outline.a)
     return frame
 end
 
+--[[
+    CreateBestRunsFrame - Creates the holder frame for best dungeon runs summary
+    @param anchorFrame - the frames anchor
+    @param parentFrame - the frames parent
+    @return - the created frame
+--]]
 local function CreateBestRunsFrame(anchorFrame, parentFrame)
-    local frame = CreateFrame("Frame", "BestRuns", parentFrame, "BackdropTemplate")
+    local frame = CreateFrameWithBackdrop(parentFrame, "BestRuns", false)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 4) + (yPadding * 5))
-    frame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 0)
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, 0)
     return frame
 end
 
+--[[
+    CreateRunFrame - Creates a frame to display the given affixes best run for a dungeon
+    @param anchorFrame - the frames anchor
+    @param parentFrame - the frames parent
+    @param affix - the affixes name
+    @param dungeonID - the dungeonID of the dungeon
+    @param anchorPosition - the anchorPosition of the frame
+    @return - the created frame
+]]
 local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID, anchorPosition)
-    local affixFrame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    local parentFrameHeight = parentFrame:GetHeight()
+    local affixFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
     affixFrame:SetPoint("RIGHT", anchorFrame, anchorPosition)
-    affixFrame:SetSize(60, parentFrame:GetHeight())
-    affixFrame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    affixFrame:SetBackdropColor(0, 0, 0, 0)
-    affixFrame:SetBackdropBorderColor(1, 1, 0, 0)
-    local text = affixFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("LEFT", affixFrame, "LEFT")
-    text:SetPoint("RIGHT", affixFrame, "RIGHT", -2, 0)
-    text:SetJustifyH("RIGHT")
+    affixFrame:SetSize(dungeonRunsChildWidth, parentFrameHeight)
+    affixFrame.keyLevelText = affixFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    affixFrame.keyLevelText:SetPoint("LEFT", affixFrame, "LEFT")
+    affixFrame.keyLevelText:SetPoint("RIGHT", affixFrame, "RIGHT", -xPadding, 0)
+    affixFrame.keyLevelText:SetJustifyH("RIGHT")
     local level = addon.playerBests[affix][dungeonID].level
     local runString = "-"
     if(level > 1) then 
         runString = addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. level
     end
-    text:SetText(runString)
+    affixFrame.keyLevelText:SetText(runString)
     return affixFrame
 end
 
+--[[
+    CreateDungeonScoreFrame - Creates a frame to display a dungeons total score.
+    @param dungeonID - the id of the dungeon
+    @param anchorFrame - the frame to anchor to
+    @param parentFrame - the frames parent
+    @return - the created frame
+--]]
 local function CreateDungeonScoreFrame(dungeonID, anchorFrame, parentFrame)
-    local scoreFrame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    local scoreFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
     scoreFrame:SetPoint("RIGHT", anchorFrame, "LEFT")
-    scoreFrame:SetSize(60, parentFrame:GetHeight())
-    scoreFrame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    scoreFrame:SetBackdropColor(0, 0, 0, 0)
-    scoreFrame:SetBackdropBorderColor(0, 1, outline.b, 0)
-    local text = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("LEFT", 2, 0)
-    text:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
+    scoreFrame:SetSize(dungeonRunsChildWidth, parentFrame:GetHeight())
+    scoreFrame.scoreText = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    scoreFrame.scoreText:SetPoint("LEFT", xPadding, 0)
+    scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
     return scoreFrame
 end
 
-local function CreateDungeonBestNameFrame(dungeonID, parentFrame)
+--[[
+    CreateDungeonBestNameFrame - Creates the name frame for a dungeon in the best dungeon runs frame
+    @param name - the name of the dungeon
+    @param parentFrame - the parent frame
+    @return - the created frame
+--]]
+local function CreateDungeonBestNameFrame(name, parentFrame)
     local children = { parentFrame:GetChildren() }
-    local totalWidth = 0
-    for _, child in ipairs(children) do
-        totalWidth = totalWidth + child:GetWidth()
-    end
+    local totalWidth = dungeonRunsChildWidth * #children
 
-    local nameFrame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-    
+    local nameFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
     nameFrame:SetPoint("LEFT", parentFrame, "LEFT")
     nameFrame:SetSize(parentFrame:GetWidth() - totalWidth, parentFrame:GetHeight())
-    nameFrame:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    nameFrame:SetBackdropColor(0, 0, 0, 0)
-    nameFrame:SetBackdropBorderColor(1, outline.g, outline.b, 0)
-    local text = nameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:ClearAllPoints()
-    text:SetPoint("LEFT", nameFrame, "LEFT", 2, 0)
-    text:SetPoint("RIGHT", nameFrame, "RIGHT")
-    text:SetJustifyH("LEFT")
-    text:SetText(addon.dungeonInfo[dungeonID].name)
+    nameFrame.nameText = nameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    nameFrame.nameText:ClearAllPoints()
+    nameFrame.nameText:SetPoint("LEFT", nameFrame, "LEFT", 2, 0)
+    nameFrame.nameText:SetPoint("RIGHT", nameFrame, "RIGHT")
+    nameFrame.nameText:SetJustifyH("LEFT")
+    nameFrame.nameText:SetText(name)
     return nameFrame
 end
 
@@ -672,7 +658,7 @@ local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
     local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID, "RIGHT")
     local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID, "LEFT")
     local scoreFrame = CreateDungeonScoreFrame(dungeonID, fortFrame, holder)
-    local nameFrame = CreateDungeonBestNameFrame(dungeonID, holder)
+    local nameFrame = CreateDungeonBestNameFrame(addon.dungeonInfo[dungeonID].name, holder)
 
     return holder
 end
