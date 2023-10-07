@@ -15,7 +15,6 @@ local xPadding = 2
 local yPadding = -2
 local rowEdgePadding = 4
 local dungeonRowHeight = 64
-local dungeonRunsChildWidth = 60
 
 -- Create keystone button font
 local myFont = CreateFont("Font")
@@ -39,6 +38,14 @@ local function CreateNewTexture(red, green, blue, alpha, parent)
     return texture
 end
 
+
+--[[
+    CreateFrameWithBackdrop - Creates a frame using the backdrop template.
+    @param parentFrame - the parent frame
+    @param name - the name of the frame
+    @param hasOutline - bool for if the frame should have an outline or not
+    @return - the created frame
+--]]
 local function CreateFrameWithBackdrop(parentFrame, name, hasOutline)
     local alpha = 0
     local frame = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
@@ -531,6 +538,7 @@ local function CreateBestRunsFrame(anchorFrame, parentFrame)
     local frame = CreateFrameWithBackdrop(parentFrame, "BestRuns", false)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 4) + (yPadding * 5))
+    frame.smallColumnWidth = 60
     return frame
 end
 
@@ -540,14 +548,15 @@ end
     @param parentFrame - the frames parent
     @param affix - the affixes name
     @param dungeonID - the dungeonID of the dungeon
-    @param anchorPosition - the anchorPosition of the frame
     @return - the created frame
 ]]
-local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID, anchorPosition)
+local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID)
     local parentFrameHeight = parentFrame:GetHeight()
     local affixFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
+    local anchorPosition = "LEFT"
+    if(affix == "tyrannical") then anchorPosition = "RIGHT" end
     affixFrame:SetPoint("RIGHT", anchorFrame, anchorPosition)
-    affixFrame:SetSize(dungeonRunsChildWidth, parentFrameHeight)
+    affixFrame:SetSize(parentFrame:GetParent().smallColumnWidth, parentFrameHeight)
     affixFrame.keyLevelText = affixFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     affixFrame.keyLevelText:SetPoint("LEFT", affixFrame, "LEFT")
     affixFrame.keyLevelText:SetPoint("RIGHT", affixFrame, "RIGHT", -xPadding, 0)
@@ -571,7 +580,7 @@ end
 local function CreateDungeonScoreFrame(dungeonID, anchorFrame, parentFrame)
     local scoreFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
     scoreFrame:SetPoint("RIGHT", anchorFrame, "LEFT")
-    scoreFrame:SetSize(dungeonRunsChildWidth, parentFrame:GetHeight())
+    scoreFrame:SetSize(parentFrame:GetParent().smallColumnWidth, parentFrame:GetHeight())
     scoreFrame.scoreText = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     scoreFrame.scoreText:SetPoint("LEFT", xPadding, 0)
     scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
@@ -586,7 +595,7 @@ end
 --]]
 local function CreateDungeonBestNameFrame(name, parentFrame)
     local children = { parentFrame:GetChildren() }
-    local totalWidth = dungeonRunsChildWidth * #children
+    local totalWidth = parentFrame:GetParent().smallColumnWidth * #children
 
     local nameFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
     nameFrame:SetPoint("LEFT", parentFrame, "LEFT")
@@ -600,66 +609,73 @@ local function CreateDungeonBestNameFrame(name, parentFrame)
     return nameFrame
 end
 
+--[[
+    CreateDungeonSummaryHeader - Creates the header with column titles for the dungeon summary frame.
+    @param parentFrame - the parent frame
+    @return - the created frame
+--]]
 local function CreateDungeonSummaryHeader(parentFrame)
+    -- 9 rows in the frame
+    local holderHeight = parentFrame:GetHeight()/9
+    local iconSize = holderHeight/1.3
     local holder = CreateFrame("Frame", "DUNGEON_SUMMARY_HEADER", parentFrame)
     holder:SetPoint("TOP", parentFrame, "TOP")
-    holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
-
-    local dungeonHeader = CreateFrame("Frame", nil, holder)
-    dungeonHeader:SetPoint("LEFT", holder, "LEFT")
-    dungeonHeader:SetSize(100, holder:GetHeight())
-    local text = dungeonHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    text:ClearAllPoints()
-    text:SetPoint("LEFT", dungeonHeader, "LEFT", 2, 0)
-    text:SetPoint("RIGHT", dungeonHeader, "RIGHT")
-    text:SetJustifyH("LEFT")
-    text:SetText("DUNGEON")
-
+    holder:SetSize(parentFrame:GetWidth(), holderHeight)
+    -- Tyrannical column
     local tyranHeader = CreateFrame("Frame", nil, holder)
     tyranHeader:SetPoint("RIGHT", holder, "RIGHT")
-    tyranHeader:SetSize(60, holder:GetHeight())
+    tyranHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
     tyranHeader.texture = tyranHeader:CreateTexture()
-    tyranHeader.texture:SetPoint("RIGHT", -2, 0)
-    tyranHeader.texture:SetSize(holder:GetHeight()/1.3, holder:GetHeight()/1.3)
+    tyranHeader.texture:SetPoint("RIGHT", -xPadding, 0)
+    tyranHeader.texture:SetSize(iconSize, iconSize)
     tyranHeader.texture:SetTexture("Interface/Icons/Achievement_Boss_Archaedas.PNG")
-    
+    -- Fortified column
     local fortHeader = CreateFrame("Frame", nil, holder)
     fortHeader:SetPoint("RIGHT", tyranHeader, "LEFT")
-    fortHeader:SetSize(60, holder:GetHeight())
+    fortHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
     fortHeader.texture = fortHeader:CreateTexture()
-    fortHeader.texture:SetPoint("RIGHT", -2, 0)
-    fortHeader.texture:SetSize(holder:GetHeight()/1.3, holder:GetHeight()/1.3)
+    fortHeader.texture:SetPoint("RIGHT", -xPadding, 0)
+    fortHeader.texture:SetSize(iconSize, iconSize)
     fortHeader.texture:SetTexture("Interface/Icons/ability_toughness.PNG")
-
+    -- Score column
     local scoreHeader = CreateFrame("Frame", nil, holder)
     scoreHeader:SetPoint("RIGHT", fortHeader, "LEFT")
-    scoreHeader:SetSize(60, holder:GetHeight())
-    local text = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    text:ClearAllPoints()
-    text:SetPoint("LEFT", scoreHeader, "LEFT", 2, 0)
-    text:SetPoint("RIGHT", scoreHeader, "RIGHT")
-    text:SetJustifyH("LEFT")
-    text:SetText("SCORE")
+    scoreHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
+    scoreHeader.text = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    scoreHeader.text:ClearAllPoints()
+    scoreHeader.text:SetPoint("LEFT", scoreHeader, "LEFT", xPadding, 0)
+    scoreHeader.text:SetPoint("RIGHT", scoreHeader, "RIGHT")
+    scoreHeader.text:SetJustifyH("LEFT")
+    scoreHeader.text:SetText("SCORE")
+    -- Dungeon name column
+    local dungeonHeader = CreateFrame("Frame", nil, holder)
+    dungeonHeader:SetPoint("LEFT", holder, "LEFT")
+    dungeonHeader:SetSize(parentFrame:GetWidth() - (parentFrame.smallColumnWidth * 3), holderHeight)
+    dungeonHeader.text = dungeonHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    dungeonHeader.text:ClearAllPoints()
+    dungeonHeader.text:SetPoint("LEFT", dungeonHeader, "LEFT", xPadding, 0)
+    dungeonHeader.text:SetPoint("RIGHT", dungeonHeader, "RIGHT")
+    dungeonHeader.text:SetJustifyH("LEFT")
+    dungeonHeader.text:SetText("DUNGEON")
+
     return holder
 end
 
+--[[
+    CreateBestRunRow - Creates a frame for a dungeon summary row.
+    @param dungeonID - the ID of the dungeon
+    @param anchorFrame - the frames anchor
+    @param parentFrame - the frames parent
+    @retun - the created frame
+--]]
 local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
-    local holder = CreateFrame("Frame", dungeonID .. "BEST_RUNS_ROW", parentFrame, "BackdropTemplate")
+    local holder = CreateFrameWithBackdrop(parentFrame, dungeonID .. "BEST_RUNS_ROW", false)
     holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
-    holder:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    holder:SetBackdropColor(0, 0, 0, 0)
-    holder:SetBackdropBorderColor(1, outline.g, outline.b, 0)
-    local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID, "RIGHT")
-    local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID, "LEFT")
+    local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID)
+    local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID)
     local scoreFrame = CreateDungeonScoreFrame(dungeonID, fortFrame, holder)
     local nameFrame = CreateDungeonBestNameFrame(addon.dungeonInfo[dungeonID].name, holder)
-
     return holder
 end
 
