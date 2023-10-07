@@ -95,6 +95,10 @@ function addon:GetPlayerDungeonBests()
     addon.playerBests = playerBests
 end
 
+--[[
+    CreateNoRunsEntry - Creates a default table for use when a dungeon doens't have a run for an associated week.
+    @return - the created default run table.
+--]]
 function CreateNoRunsEntry(name)
     local dungeonBest = {
         ["level"] = 1,
@@ -131,6 +135,9 @@ function addon:GetWeeklyAffixInfo()
     return weeklyAffix
 end
 
+--[[
+    CalculateTotalRating - Calculates the players overall score for mythic+
+--]]
 function CalculateTotalRating()
     local total = 0
     for key, value in pairs(addon.playerDungeonRatings) do
@@ -158,6 +165,12 @@ function CalculateRating(runTime, dungeonName)
     return addon:RoundToOneDecimal(rating)
 end
 
+--[[
+    CalculateChest - Calculates the dungeon runs performance based on its timer thresholds. 
+    @param dungeonID - the id of the dungeon
+    @param timeCompleted - the runs time in seconds
+    @return - string of the performance
+--]]
 function addon:CalculateChest(dungeonID, timeCompleted)
     local timeLimit = addon.dungeonInfo[dungeonID].timeLimit
     if(timeCompleted <= (timeLimit * 0.6)) then return "+++" end
@@ -166,6 +179,10 @@ function addon:CalculateChest(dungeonID, timeCompleted)
     return ""
 end
 
+--[[
+    SortDungeonByScore - Sorts the dungeons by their total contributing score.
+    return - an array of dungeonIDs indexed by descending score.
+--]]
 function addon:SortDungeonsByScore()
     -- Put mapIDs into an array
     local array = {}
@@ -180,6 +197,12 @@ function addon:SortDungeonsByScore()
     return array
 end
 
+--[[
+    SortDungeonByLevl - Sorts the dungeons by their best completed levels
+    @param weeklyAffix - the weekly affix for the runs being sorted.
+    return - an array of dungeonIDs indexed by ascending completed level.
+    Note: Ties are sorted by score.
+--]]
 function addon:SortDungeonsByLevel(weeklyAffix)
     -- Put mapIDs into an array
     local array = {}
@@ -198,6 +221,11 @@ function addon:SortDungeonsByLevel(weeklyAffix)
     return array
 end
 
+--[[
+    GetAffixLevel - Gets the level an affix starts at given its name
+    @param name - name of the affix
+    @return - level the affix starts at.
+--]]
 function GetAffixLevel(name)
     for key, value in pairs(affixLevels) do
         for _, v in ipairs(value) do
@@ -209,12 +237,15 @@ function GetAffixLevel(name)
     return 0
 end
 
+--[[
+    SortAffixesByLevel - Sorts affixes by the level they are added to the keystone in ascending order.
+--]]
 function addon:SortAffixesByLevel()
     local array = {}
     for k, v in pairs(addon.affixInfo) do
         table.insert(array, k)
     end
-    -- Sort the mapIDs by their mapScores
+    -- Sort the affixIds by their level
     table.sort(array, function(id1, id2)
         return addon.affixInfo[id1].level < addon.affixInfo[id2].level
         end)
