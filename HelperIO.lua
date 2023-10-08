@@ -324,17 +324,29 @@ local function CreateScrollFrame(scrollHolderFrame)
     local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
     scrollFrame.minScrollRange = 1
     scrollFrame.maxScrollRange = 0
+    -- up left, down right
+    -- scroll to the nearest button edge in the direction the user inputed.
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local newPos = self:GetHorizontalScroll() - (delta * buttonWidth)
-        if(newPos <= 0) then 
-            self:SetHorizontalScroll((newPos < self.minScrollRange) and self.minScrollRange or newPos)
-        else
-            self:SetHorizontalScroll((newPos > self.maxScrollRange) and self.maxScrollRange or newPos)
+        local numButtonsPrior = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)/(buttonWidth-scrollFrame.minScrollRange))
+        local remainder = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)%(buttonWidth-scrollFrame.minScrollRange))
+        if(delta == -1) then 
+            numButtonsPrior = numButtonsPrior + 1  
+        else 
+            if(remainder == 0) then
+                numButtonsPrior = numButtonsPrior - 1 
+            end
         end
+        local newPos = 1 + (numButtonsPrior * (buttonWidth - scrollFrame.minScrollRange))
+        if(newPos > self.maxScrollRange) then 
+            newPos = self.maxScrollRange 
+        elseif(newPos < self.minScrollRange) then 
+            newPos = self.minScrollRange 
+        end
+        self:SetHorizontalScroll(newPos)
     end)
     scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
     scrollFrame:SetSize(scrollHolderFrame:GetWidth() - 2, scrollHolderFrame:GetHeight())
-    scrollFrame:SetHorizontalScroll(1)
+    scrollFrame:SetHorizontalScroll(scrollFrame.minScrollRange)
     return scrollFrame
 end
 
