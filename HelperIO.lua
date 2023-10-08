@@ -246,10 +246,8 @@ end
 local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll, rowGainedScoreFrame)
     -- OnMouseUp
     keystoneButton.button:SetScript("OnMouseUp", function(self, btn)
-        keystoneButton.mouseDown = false
-        local currX, currY = GetCursorPosition()
-        -- If the cursor was not used for scrolling.
-        if(math.ceil(origX) == math.ceil(currX)) then 
+        if(btn == "RightButton") then keystoneButton.mouseDown = false end
+        if(btn == "LeftButton") then
             -- If the clicked button is not the currently selected button then select necessary buttons.
             if(keystoneButton.level ~= parentFrame.selectedLevel) then
                 SelectButtons(parentFrame, keystoneButton)
@@ -261,10 +259,11 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
     end)
     -- OnMouseDown
     keystoneButton.button:SetScript("OnMouseDown", function(self, btn)
-        keystoneButton.mouseDown = true
-        -- Store the mouse position on function call for use with other events.
-        origX, origY = GetCursorPosition()
-        lastX, lastY = origX, origY
+        if(btn == "RightButton") then
+            keystoneButton.mouseDown = true
+            -- Store the mouse position on function call for use with other events.
+            lastX, lastY = GetCursorPosition()
+        end
     end)
     -- OnUpdate
     keystoneButton.button:SetScript("OnUpdate", function(self, btn, down)
