@@ -308,7 +308,6 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLeve
     local button = nil
     -- Create the buttons and add them to the parent frames buttons table
     for i = startingLevel, maxLevel do
-        print("i =", i)
         button = CreateButton(i, button, scrollHolderFrame.scrollChild)
         local keystoneButton = addon:CreateKeystoneButton(i, button)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
