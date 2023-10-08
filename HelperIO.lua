@@ -5,8 +5,6 @@ local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0 }
-local lastX, lastY
-local origX, origY
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
@@ -244,6 +242,7 @@ end
     @param rowGainedScoreFrame - the rows gained score frame
 --]]
 local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll, rowGainedScoreFrame)
+    local lastX, lastY = 0, 0
     -- OnMouseUp
     keystoneButton.button:SetScript("OnMouseUp", function(self, btn)
         if(btn == "RightButton") then keystoneButton.mouseDown = false end
@@ -326,6 +325,7 @@ local function CreateScrollFrame(scrollHolderFrame)
     -- up left, down right
     -- scroll to the nearest button edge in the direction the user inputed.
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+        if(IsMouseButtonDown("RightButton")) then return end
         local numButtonsPrior = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)/(buttonWidth-scrollFrame.minScrollRange))
         local remainder = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)%(buttonWidth-scrollFrame.minScrollRange))
         if(delta == -1) then 
