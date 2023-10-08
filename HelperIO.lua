@@ -322,6 +322,16 @@ end
 --]]
 local function CreateScrollFrame(scrollHolderFrame)
     local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
+    scrollFrame.minScrollRange = 1
+    scrollFrame.maxScrollRange = 0
+    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+        local newPos = self:GetHorizontalScroll() - (delta * buttonWidth)
+        if(newPos <= 0) then 
+            self:SetHorizontalScroll((newPos < self.minScrollRange) and self.minScrollRange or newPos)
+        else
+            self:SetHorizontalScroll((newPos > self.maxScrollRange) and self.maxScrollRange or newPos)
+        end
+    end)
     scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
     scrollFrame:SetSize(scrollHolderFrame:GetWidth() - 2, scrollHolderFrame:GetHeight())
     scrollFrame:SetHorizontalScroll(1)
@@ -352,7 +362,6 @@ local function CreateScrollHolderFrame(parentRow)
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
-    scrollHolderFrame.scrollFrame.minScrollRange = 1
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     return scrollHolderFrame
 end
