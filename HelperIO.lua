@@ -206,20 +206,20 @@ end
 --]]
 local function SelectButtons(parentFrame, keystoneButton)
     -- If the clicked button is a higher keystone level than the currently selected button.
-    if(keystoneButton.index > parentFrame.selectedIndex) then
+    if(keystoneButton.level > parentFrame.selectedLevel) then
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
-        for i = parentFrame.selectedIndex + 1, keystoneButton.index do
+        for i = parentFrame.selectedLevel + 1, keystoneButton.level do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
         end
     end
     -- If the clicked button is a lower keystone level than the currently selected button.
-    if(keystoneButton.index < parentFrame.selectedIndex) then
+    if(keystoneButton.level < parentFrame.selectedLevel) then
         -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
-        for i = parentFrame.selectedIndex, keystoneButton.index + 1, -1 do
+        for i = parentFrame.selectedLevel, keystoneButton.level + 1, -1 do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         end
     end
-    parentFrame.selectedIndex = keystoneButton.index
+    parentFrame.selectedLevel = keystoneButton.level
 end
 
 --[[
@@ -251,7 +251,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
         -- If the cursor was not used for scrolling.
         if(math.ceil(origX) == math.ceil(currX)) then 
             -- If the clicked button is not the currently selected button then select necessary buttons.
-            if(keystoneButton.index ~= parentFrame.selectedIndex) then
+            if(keystoneButton.level ~= parentFrame.selectedLevel) then
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
                 local gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
@@ -297,7 +297,7 @@ end
 local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLevel, dungeonID)
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
     scrollHolderFrame.scrollChild.startingLevel = startingLevel
-    scrollHolderFrame.scrollChild.selectedIndex = 0
+    scrollHolderFrame.scrollChild.selectedLevel = startingLevel
     -- Calculate the row width and max scroll range.
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
     local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
@@ -307,12 +307,12 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLeve
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     local button = nil
     -- Create the buttons and add them to the parent frames buttons table
-    for i = 0, maxLevel  - startingLevel do
-        button = CreateButton(startingLevel, button, scrollHolderFrame.scrollChild)
-        local keystoneButton = addon:CreateKeystoneButton(startingLevel, button, i)
+    for i = startingLevel, maxLevel do
+        print("i =", i)
+        button = CreateButton(i, button, scrollHolderFrame.scrollChild)
+        local keystoneButton = addon:CreateKeystoneButton(i, button)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
-        startingLevel = startingLevel + 1
     end
 end
 
