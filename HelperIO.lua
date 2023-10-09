@@ -4,7 +4,7 @@ local myButtons = {}
 local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
-local outline = { r = 0, g = 0, b = 0 }
+local outline = { r = 0, g = 0, b = 0, a = 1 }
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
@@ -44,8 +44,7 @@ end
     @param hasOutline - bool for if the frame should have an outline or not
     @return - the created frame
 --]]
-local function CreateFrameWithBackdrop(parentFrame, name, hasOutline)
-    local alpha = 0
+local function CreateFrameWithBackdrop(parentFrame, name)
     local frame = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
@@ -54,8 +53,7 @@ local function CreateFrameWithBackdrop(parentFrame, name, hasOutline)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame:SetBackdropColor(0, 0, 0, 0)
-    if(hasOutline) then alpha = 1 end
-    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, alpha)
+    frame:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     return frame
 end
 
@@ -65,7 +63,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
-    local frame = CreateFrameWithBackdrop(UIParent, "Main", true)
+    local frame = CreateFrameWithBackdrop(UIParent, "Main")
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -79,7 +77,7 @@ end
 --]]
 local function CreateHeaderFrame(parentFrame)
     local headerWidthDiff = 8
-    local frame = CreateFrameWithBackdrop(parentFrame, "Header", true)
+    local frame = CreateFrameWithBackdrop(parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, 40)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -89,7 +87,7 @@ local function CreateHeaderFrame(parentFrame)
 end
 
 local function CreateDungeonHolderFrame(anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, "DungeonHolder", false)
+    local frame = CreateFrame("Frame", "DungeonHolder", parentFrame)
     frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, yPadding)
     frame:SetSize(1, 1)
     return frame
@@ -103,7 +101,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, name .. "_ROW", true)
+    local frame = CreateFrameWithBackdrop(parentFrame, name .. "_ROW")
     local yOffset = yPadding
     local anchorPoint = "BOTTOMLEFT"
     if(anchorFrame == parentFrame) then
@@ -366,7 +364,7 @@ end
 --]]
 local function CreateScrollHolderFrame(parentRow)
     local widthMulti = 6
-    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, parentRow:GetName() .. "_SCROLLHOLDER", true) 
+    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, parentRow:GetName() .. "_SCROLLHOLDER") 
     scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xColPadding, 0)
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((widthMulti * buttonWidth) - widthMulti, parentRow:GetHeight())
@@ -450,7 +448,7 @@ end
     @return frame - the created summary frame.
 ]]
 local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
-    local frame = CreateFrameWithBackdrop(parentFrame, "Summary", true)
+    local frame = CreateFrameWithBackdrop(parentFrame, "Summary")
     frame:SetPoint("LEFT", anchorFrame, "RIGHT", xPadding, 0)
     frame:SetSize(headerWidth - anchorFrame:GetWidth() - xPadding , anchorFrame:GetHeight())
     return frame
@@ -462,7 +460,7 @@ end
     @return frame - the created summary header frame.
 ]]
 local function CreateSummaryHeaderFrame(parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, "SummaryHeader", false)
+    local frame = CreateFrame("Frame", "SummaryHeader", parentFrame)
     frame:SetPoint("TOP", parentFrame, "TOP")
     frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
@@ -477,7 +475,7 @@ end
     @return frame - the created affix info holer frame.
 ]]
 local function CreateAffixInfoHolderFrame(anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, "AffixInfo", false)
+    local frame = CreateFrame("Frame", "AffixInfo", parentFrame)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 3) + (-yPadding * 2))
     return frame
@@ -540,7 +538,7 @@ end
     Note: Used instead of CreateLine() due to buggy/inconsitent behaviour.
 --]]
 local function CreateSplitFrame(anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, nil, true)
+    local frame = CreateFrameWithBackdrop(parentFrame, nil)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM")
     frame:SetSize(parentFrame:GetWidth()/2, 1)
     frame:SetBackdropBorderColor(outline.r, outline.b, outline.g, outline.a)
@@ -554,7 +552,7 @@ end
     @return - the created frame
 --]]
 local function CreateBestRunsFrame(anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, "BestRuns", false)
+    local frame = CreateFrame("Frame", "BestRuns", parentFrame)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth(), (dungeonRowHeight * 4) + (yPadding * 5))
     frame.smallColumnWidth = 60
@@ -571,7 +569,7 @@ end
 ]]
 local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID)
     local parentFrameHeight = parentFrame:GetHeight()
-    local affixFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
+    local affixFrame = CreateFrame("Frame", nil, parentFrame)
     local anchorPosition = "LEFT"
     if(affix == "tyrannical") then anchorPosition = "RIGHT" end
     affixFrame:SetPoint("RIGHT", anchorFrame, anchorPosition)
@@ -597,7 +595,7 @@ end
     @return - the created frame
 --]]
 local function CreateDungeonScoreFrame(dungeonID, anchorFrame, parentFrame)
-    local scoreFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
+    local scoreFrame = CreateFrame("Frame", nil, parentFrame)
     scoreFrame:SetPoint("RIGHT", anchorFrame, "LEFT")
     scoreFrame:SetSize(parentFrame:GetParent().smallColumnWidth, parentFrame:GetHeight())
     scoreFrame.scoreText = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -615,8 +613,7 @@ end
 local function CreateDungeonBestNameFrame(name, parentFrame)
     local children = { parentFrame:GetChildren() }
     local totalWidth = parentFrame:GetParent().smallColumnWidth * #children
-
-    local nameFrame = CreateFrameWithBackdrop(parentFrame, nil, false)
+    local nameFrame = CreateFrame("Frame", nil, parentFrame)
     nameFrame:SetPoint("LEFT", parentFrame, "LEFT")
     nameFrame:SetSize(parentFrame:GetWidth() - totalWidth, parentFrame:GetHeight())
     nameFrame.nameText = nameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -688,7 +685,7 @@ end
     @retun - the created frame
 --]]
 local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
-    local holder = CreateFrameWithBackdrop(parentFrame, dungeonID .. "BEST_RUNS_ROW", false)
+    local holder = CreateFrame("Frame", dungeonID .. "BEST_RUNS_ROW", parentFrame)
     holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
     local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID)
