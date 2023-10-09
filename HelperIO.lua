@@ -534,7 +534,6 @@ end
     CreateSplitFrame - Creates a frame to mimic a horizontal line.
     @param anchorFrame - the frame to anchor the line to
     @param parentFrame - the frame the line is parented to
-    @return frame - the created line frame
     Note: Used instead of CreateLine() due to buggy/inconsitent behaviour.
 --]]
 local function CreateSplitFrame(anchorFrame, parentFrame)
@@ -542,7 +541,6 @@ local function CreateSplitFrame(anchorFrame, parentFrame)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM")
     frame:SetSize(parentFrame:GetWidth()/2, 1)
     frame:SetBackdropBorderColor(outline.r, outline.b, outline.g, outline.a)
-    --return frame
 end
 
 --[[
@@ -673,7 +671,6 @@ local function CreateDungeonSummaryHeader(parentFrame)
     dungeonHeader.text:SetPoint("RIGHT", dungeonHeader, "RIGHT")
     dungeonHeader.text:SetJustifyH("LEFT")
     dungeonHeader.text:SetText("DUNGEON")
-
     return holder
 end
 
@@ -695,16 +692,16 @@ local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
     return holder
 end
 
-local function CreateRatingHelper(mainFrame, headerFrame)
+local function CreateDungeonHelper(mainFrame, headerFrame)
     local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
     CreateAllDungeonRows(dungeonHolderFrame)
     SetDungeonHolderHeight(dungeonHolderFrame)
     return dungeonHolderFrame
 end
 
-local function CreateSummary(mainFrame, ratingHelperFrame, width)
+local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     -- Holder and header
-    local summaryFrame = CreateSummaryFrame(ratingHelperFrame, mainFrame, width)
+    local summaryFrame = CreateSummaryFrame(dungeonHelperFrame, mainFrame, width)
     local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
     CreateSplitFrame(summaryHeaderFrame, summaryFrame)
     -- Affix info
@@ -735,7 +732,7 @@ local function StartUp()
     -- UI setup
     local mainFrame = CreateMainFrame()
     local headerFrame = CreateHeaderFrame(mainFrame)
-    local dungeonHolderFrame = CreateRatingHelper(mainFrame, headerFrame)
+    local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     return mainFrame
 end
