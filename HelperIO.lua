@@ -726,6 +726,12 @@ for i, key in ipairs(sortedScores) do
     testAnchor = CreateBestRunRow(key, testAnchor, bestRunsFrame)
 end
 
+SLASH_HELPERIO1 = "/helperio"
+SLASH_HELPERIO2 = "/hio"
+SlashCmdList["HELPERIO"] = function()
+   if(mainFrame:IsShown()) then mainFrame:Hide() else mainFrame:Show() end
+end
+
 for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
 end
