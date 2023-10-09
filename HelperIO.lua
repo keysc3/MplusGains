@@ -542,7 +542,7 @@ local function CreateSplitFrame(anchorFrame, parentFrame)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM")
     frame:SetSize(parentFrame:GetWidth()/2, 1)
     frame:SetBackdropBorderColor(outline.r, outline.b, outline.g, outline.a)
-    return frame
+    --return frame
 end
 
 --[[
@@ -695,36 +695,52 @@ local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
     return holder
 end
 
+local function CreateRatingHelper(mainFrame, headerFrame)
+    local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
+    CreateAllDungeonRows(dungeonHolderFrame)
+    SetDungeonHolderHeight(dungeonHolderFrame)
+    return dungeonHolderFrame
+end
+
+local function CreateSummary(mainFrame, ratingHelperFrame, width)
+    -- Holder and header
+    local summaryFrame = CreateSummaryFrame(ratingHelperFrame, mainFrame, width)
+    local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
+    CreateSplitFrame(summaryHeaderFrame, summaryFrame)
+    -- Affix info
+    local affixInfoFrame = CreateAffixInfoHolderFrame(summaryHeaderFrame, summaryFrame)
+    local anchor = affixInfoFrame
+    local sortedAffixes = addon:SortAffixesByLevel()
+    for i, key in ipairs(sortedAffixes) do
+        anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, addon.affixInfo[key])
+    end
+    CreateSplitFrame(affixInfoFrame, summaryFrame)
+    -- Best runs
+    local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
+    anchor = CreateDungeonSummaryHeader(bestRunsFrame)
+    local sortedScores = addon:SortDungeonsByScore()
+    for i, key in ipairs(sortedScores) do
+        anchor = CreateBestRunRow(key, anchor, bestRunsFrame)
+    end
+    return summaryFrame
+end
+
 -- Addon startup.
-addon:GetGeneralDungeonInfo()
-addon:GetPlayerDungeonBests()
-addon:CalculateDungeonRatings()
-weeklyAffix = addon:GetWeeklyAffixInfo()
-local mainFrame = CreateMainFrame()
-local headerFrame = CreateHeaderFrame(mainFrame)
-local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
-CreateAllDungeonRows(dungeonHolderFrame)
-SetDungeonHolderHeight(dungeonHolderFrame)
-local summaryFrame = CreateSummaryFrame(dungeonHolderFrame, mainFrame, headerFrame:GetWidth())
-local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
-local lineSplit1 = CreateSplitFrame(summaryHeaderFrame, summaryFrame)
-
---local keystoneInfoFrame = CreateKeystoneInfoFrame(summaryHeaderFrame, summaryFrame)
-local affixInfoFrame = CreateAffixInfoHolderFrame(summaryHeaderFrame, summaryFrame)
-local anchor = affixInfoFrame
-local sortedAffixes = addon:SortAffixesByLevel()
-for i, key in ipairs(sortedAffixes) do
-    anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, addon.affixInfo[key])
+local function StartUp()
+    -- Dungeon Info
+    addon:GetGeneralDungeonInfo()
+    addon:GetPlayerDungeonBests()
+    addon:CalculateDungeonRatings()
+    weeklyAffix = addon:GetWeeklyAffixInfo()
+    -- UI setup
+    local mainFrame = CreateMainFrame()
+    local headerFrame = CreateHeaderFrame(mainFrame)
+    local dungeonHolderFrame = CreateRatingHelper(mainFrame, headerFrame)
+    local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+    return mainFrame
 end
-local lineSplit2 = CreateSplitFrame(affixInfoFrame, summaryFrame)
-local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
---local dungeonBestFrame = CreateBestRunRow("Freehold", bestRunsFrame, bestRunsFrame)
 
-local testAnchor = CreateDungeonSummaryHeader(bestRunsFrame)
-local sortedScores = addon:SortDungeonsByScore()
-for i, key in ipairs(sortedScores) do
-    testAnchor = CreateBestRunRow(key, testAnchor, bestRunsFrame)
-end
+local mainFrame = StartUp()
 
 SLASH_HELPERIO1 = "/helperio"
 SLASH_HELPERIO2 = "/hio"
