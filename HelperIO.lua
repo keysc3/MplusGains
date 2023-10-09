@@ -14,11 +14,6 @@ local yPadding = -2
 local rowEdgePadding = 4
 local dungeonRowHeight = 64
 
--- Create keystone button font
-local myFont = CreateFont("Font")
-myFont:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE, MONOCHROME")
-myFont:SetTextColor(1, 1, 1, 1)
-
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -86,6 +81,12 @@ local function CreateHeaderFrame(parentFrame)
     return frame
 end
 
+--[[
+    CreateDungeonHolderFrame - Creates the parent frame for all dungeons rows.
+    @param anchorFrame - the frame to anchor to
+    @param parentFrame- the frames parent
+    @return - the created frame
+--]]
 local function CreateDungeonHolderFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "DungeonHolder", parentFrame)
     frame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, yPadding)
@@ -191,6 +192,10 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     end
     btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
+    -- Create keystone button font
+    local myFont = CreateFont("Font")
+    myFont:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE, MONOCHROME")
+    myFont:SetTextColor(1, 1, 1, 1)
     btn:SetNormalFontObject(myFont)
     return btn
 end
@@ -692,6 +697,12 @@ local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
     return holder
 end
 
+--[[
+    CreateDungeonHelper - Creates the Dungeon Helper panel of the addon
+    @param mainFrame - the main addon frame
+    @param headerFrame - the header frame of the addon
+    @return - the dungeon helper panel frame
+--]]
 local function CreateDungeonHelper(mainFrame, headerFrame)
     local dungeonHolderFrame = CreateDungeonHolderFrame(headerFrame, mainFrame)
     CreateAllDungeonRows(dungeonHolderFrame)
@@ -699,6 +710,12 @@ local function CreateDungeonHelper(mainFrame, headerFrame)
     return dungeonHolderFrame
 end
 
+--[[
+    CreateSummary - Creates the Summary panel of the addon
+    @param mainFrame - the main addon frame
+    @param dungeonHelperFrame - the dungeon helper panels parent frame
+    @param width - the width of the summary panel frame to be
+--]]
 local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     -- Holder and header
     local summaryFrame = CreateSummaryFrame(dungeonHelperFrame, mainFrame, width)
@@ -719,10 +736,13 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     for i, key in ipairs(sortedScores) do
         anchor = CreateBestRunRow(key, anchor, bestRunsFrame)
     end
-    return summaryFrame
+    --return summaryFrame
 end
 
--- Addon startup.
+--[[
+    StartUp - Handles necessary start up actions.
+    @return - the main addon frame
+--]]
 local function StartUp()
     -- Dungeon Info
     addon:GetGeneralDungeonInfo()
@@ -733,7 +753,7 @@ local function StartUp()
     local mainFrame = CreateMainFrame()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
-    local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+    CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     return mainFrame
 end
 
@@ -745,18 +765,18 @@ SlashCmdList["HELPERIO"] = function()
    if(mainFrame:IsShown()) then mainFrame:Hide() else mainFrame:Show() end
 end
 
-for key, value in pairs(addon.playerDungeonRatings) do
+--[[for key, value in pairs(addon.playerDungeonRatings) do
     print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
-end
+end--]]
 
 -- Debug prints
-print(string.format("Welcome to %s.", addonName))
+--print(string.format("Welcome to %s.", addonName))
 
-for key, value in pairs(addon.dungeonInfo) do
+--[[for key, value in pairs(addon.dungeonInfo) do
     print(string.format("MapInfo: %s %s!", value.name, addon:FormatTimer(value.timeLimit)))
-end
+end--]]
 
-for key, value in pairs(addon.playerBests) do
+--[[for key, value in pairs(addon.playerBests) do
     print(string.format("Best for %s:", key))
     for k, v in pairs(value) do
         rating = v.rating
@@ -765,4 +785,4 @@ for key, value in pairs(addon.playerBests) do
         end
         print(v.name , v.level, rating, v.time)
     end
-end
+end--]]
