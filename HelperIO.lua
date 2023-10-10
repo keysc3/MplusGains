@@ -487,6 +487,10 @@ local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
     return frame
 end
 
+local function SetOverallRating(frame)
+    frame.text:SetText(frame.text:GetText() .. addon.totalRating)
+end
+
 --[[
     CreateSummaryHeaderFrame - Creates the header frame for the summary section.
     @param parentFrame - the parent frame of the summary header frame.
@@ -498,7 +502,7 @@ local function CreateSummaryHeaderFrame(parentFrame)
     frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
     frame.text:SetPoint("CENTER")
-    frame.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+    frame.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n")
     return frame
 end
 --[[
@@ -747,10 +751,10 @@ end
 local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     -- Holder and header
     local summaryFrame = CreateSummaryFrame(dungeonHelperFrame, mainFrame, width)
-    local summaryHeaderFrame = CreateSummaryHeaderFrame(summaryFrame)
-    CreateSplitFrame(summaryHeaderFrame, summaryFrame)
+    summaryFrame.header  = CreateSummaryHeaderFrame(summaryFrame)
+    CreateSplitFrame(summaryFrame.header, summaryFrame)
     -- Affix info
-    local affixInfoFrame = CreateAffixInfoHolderFrame(summaryHeaderFrame, summaryFrame)
+    local affixInfoFrame = CreateAffixInfoHolderFrame(summaryFrame.header, summaryFrame)
     local anchor = affixInfoFrame
     local sortedAffixes = addon:SortAffixesByLevel()
     for i, key in ipairs(sortedAffixes) do
@@ -764,7 +768,7 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     for i, key in ipairs(sortedScores) do
         anchor = CreateBestRunRow(key, anchor, bestRunsFrame)
     end
-    --return summaryFrame
+    return summaryFrame
 end
 
 local function LoadData()
@@ -787,12 +791,13 @@ local function StartUp()
     local mainFrame = CreateMainFrame()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
-    dungeonHolderFrame:RegisterEvent("PLAYER_LOGIN")
-    dungeonHolderFrame:SetScript("OnEvent", function(self, event, ...)
+    local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+    mainFrame:RegisterEvent("PLAYER_LOGIN")
+    mainFrame:SetScript("OnEvent", function(self, event, ...)
         LoadData()
-        PopulateAllDungeonRows(self)
+        PopulateAllDungeonRows(dungeonHolderFrame)
+        SetOverallRating(summaryFrame.header)
     end)
-    CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     return mainFrame
 end
 
