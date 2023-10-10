@@ -761,16 +761,23 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     --return summaryFrame
 end
 
+local function LoadData()
+    addon:GetGeneralDungeonInfo()
+    addon:GetPlayerDungeonBests()
+    addon:CalculateDungeonRatings()
+    weeklyAffix = addon:GetWeeklyAffixInfo()
+end
+
 --[[
     StartUp - Handles necessary start up actions.
     @return - the main addon frame
 --]]
 local function StartUp()
     -- Dungeon Info
-    addon:GetGeneralDungeonInfo()
-    addon:GetPlayerDungeonBests()
-    addon:CalculateDungeonRatings()
-    weeklyAffix = addon:GetWeeklyAffixInfo()
+    --addon:GetGeneralDungeonInfo()
+    --addon:GetPlayerDungeonBests()
+    --addon:CalculateDungeonRatings()
+    --weeklyAffix = addon:GetWeeklyAffixInfo()
     -- UI setup
     local mainFrame = CreateMainFrame()
     local headerFrame = CreateHeaderFrame(mainFrame)
