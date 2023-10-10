@@ -742,6 +742,13 @@ local function CreateDungeonHelper(mainFrame, headerFrame)
     return dungeonHolderFrame
 end
 
+local function PopulateAllBestRunsRows(anchorFrame, parentFrame)
+    local sortedScores = addon:SortDungeonsByScore()
+    for i, key in ipairs(sortedScores) do
+        anchorFrame = CreateBestRunRow(key, anchorFrame, parentFrame)
+    end
+end
+
 --[[
     CreateSummary - Creates the Summary panel of the addon
     @param mainFrame - the main addon frame
@@ -762,12 +769,8 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     end
     CreateSplitFrame(affixInfoFrame, summaryFrame)
     -- Best runs
-    local bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
-    anchor = CreateDungeonSummaryHeader(bestRunsFrame)
-    local sortedScores = addon:SortDungeonsByScore()
-    for i, key in ipairs(sortedScores) do
-        anchor = CreateBestRunRow(key, anchor, bestRunsFrame)
-    end
+    summaryFrame.bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
+    summaryFrame.bestRunsHeader = CreateDungeonSummaryHeader(summaryFrame.bestRunsFrame)
     return summaryFrame
 end
 
@@ -797,6 +800,7 @@ local function StartUp()
         LoadData()
         PopulateAllDungeonRows(dungeonHolderFrame)
         SetOverallRating(summaryFrame.header)
+        PopulateAllBestRunsRows(summaryFrame.bestRunsHeader, summaryFrame.bestRunsFrame)
     end)
     return mainFrame
 end
