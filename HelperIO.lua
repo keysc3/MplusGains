@@ -40,7 +40,7 @@ end
     @return - the created frame
 --]]
 local function CreateFrameWithBackdrop(parentFrame, name)
-    local frame = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    local frame = CreateFrame("Frame", ((name ~= nil) and name or nil), parentFrame, "BackdropTemplate")
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -118,13 +118,12 @@ end
 
 --[[
     CreateDungeonRowFrame - Creates a frame for a new dungeon row.
-    @param name - name of the dungeon
     @param anchorFrame - frame to anchor the new row to
     @param parentFrame - parent frame of the new row
     @return frame - the created frame
 --]]
-local function CreateDungeonRowFrame(name, anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, name .. "_ROW")
+local function CreateDungeonRowFrame(anchorFrame, parentFrame)
+    local frame = CreateFrameWithBackdrop(parentFrame, nil)
     local yOffset = yPadding
     local anchorPoint = "BOTTOMLEFT"
     if(anchorFrame == parentFrame) then
@@ -138,16 +137,15 @@ end
 
 --[[
     CreateDungeonNameFrame- Creates a frame for displaying a rows dungeon name.
-    @param name - name of the dungeon
     @param parentRow - the frames parent row frame
     @return frame - the created frame
 --]]
-local function CreateDungeonNameFrame(name, parentRow)
-    local frame = CreateFrame("Frame", name .. "_TEXT", parentRow)
+local function CreateDungeonNameFrame(parentRow)
+    local frame = CreateFrame("Frame", string.upper(name), parentRow)
     frame:SetPoint("LEFT", rowEdgePadding, 0)
     frame:SetSize(150, parentRow:GetHeight())
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    frame.text:SetText(name)
+    frame.text:SetText("Default Dungeon")
     frame.text:ClearAllPoints()
     frame.text:SetPoint("LEFT", frame, "LEFT")
     frame.text:SetPoint("RIGHT", frame, "RIGHT")
@@ -160,24 +158,24 @@ end
     @param parentRow - the frames parent row frame
     @return frame - the created frame
 --]]
-local function CreateDungeonTimerFrame(dungeonTimeLimit, parentRow)
-    local plusTwo = addon:FormatTimer(dungeonTimeLimit * 0.8)
-    local plusThree = addon:FormatTimer(dungeonTimeLimit * 0.6)
-    local frame = CreateFrame("Frame", nil, parentRow)
+local function CreateDungeonTimerFrame(parentRow)
+    --local plusTwo = addon:FormatTimer(dungeonTimeLimit * 0.8)
+    --local plusThree = addon:FormatTimer(dungeonTimeLimit * 0.6)
+    local frame = CreateFrame("Frame", "DUNGEON_TIMER", parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT", xColPadding, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
-    frame.text:SetText(addon:FormatTimer(dungeonTimeLimit))
+    frame.text:SetText("xx:xx")
     frame:SetSize(40, parentRow:GetHeight())
 
-    frame:SetScript("OnEnter", function(self, motion)
+    --[[frame:SetScript("OnEnter", function(self, motion)
         GameTooltip:SetOwner(parentRow, "ANCHOR_NONE")
         GameTooltip:SetPoint("RIGHT", parentRow, "LEFT", -3, 0)
         GameTooltip:SetText(string.format("+2: %s\n+3: %s", plusTwo, plusThree))
     end)
     frame:SetScript("OnLeave", function(self, motion)
         GameTooltip:Hide()
-    end)
+    end)--]]
 
     return frame
 end
@@ -391,7 +389,7 @@ end
 --]]
 local function CreateScrollHolderFrame(parentRow)
     local widthMulti = 6
-    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, parentRow:GetName() .. "_SCROLLHOLDER") 
+    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, nil) 
     scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xColPadding, 0)
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((widthMulti * buttonWidth) - widthMulti, parentRow:GetHeight())
@@ -408,7 +406,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateGainedScoreFrame(parentRow)
-    local frame = CreateFrame("Frame", nil, parentRow)
+    local frame = CreateFrame("Frame", "GAINED_SCORE", parentRow)
     frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT", xColPadding, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
@@ -431,21 +429,29 @@ local function CalculateRowWidth(row)
     return totalWidth
 end
 
+local function PopulateAllDungeonRows(parentFrame)
+    local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
+    local rows = { parentFrame:GetChildren() }
+    for i, key in ipairs(sortedLevels) do
+        local value = addon.dungeonInfo[key]
+        rows[i].dungeonNameFrame.text:SetText(value.name)
+        rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
+        CreateButtonRow(rows[i].scrollHolderFrame, rows[i].gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
+    end
+end
+
 --[[
     CreateAllDungeonRows - Creates a row frame for each mythic+ dungeon.
     @param parentFrame - the parent frame for the rows
 --]]
 local function CreateAllDungeonRows(parentFrame)
     local row = parentFrame
-    local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
-    for i, key in ipairs(sortedLevels) do
-        local name = addon.dungeonInfo[key].name
-        row = CreateDungeonRowFrame(name, row, parentFrame)
-        row.dungeonNameFrame = CreateDungeonNameFrame(name, row)
-        row.dungeonTimerFrame = CreateDungeonTimerFrame(addon.dungeonInfo[key].timeLimit, row)
+    for n in pairs(addon.dungeonInfo) do
+        row = CreateDungeonRowFrame(row, parentFrame)
+        row.dungeonNameFrame = CreateDungeonNameFrame(row)
+        row.dungeonTimerFrame = CreateDungeonTimerFrame(row)
         row.scrollHolderFrame = CreateScrollHolderFrame(row)
         row.gainedScoreFrame = CreateGainedScoreFrame(row)
-        CreateButtonRow(row.scrollHolderFrame, row.gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
     end
     -- Set frame widths
     local totalWidth = CalculateRowWidth(row)
@@ -762,10 +768,9 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
 end
 
 local function LoadData()
-    addon:GetGeneralDungeonInfo()
+    -- Player dungeon info
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
-    weeklyAffix = addon:GetWeeklyAffixInfo()
 end
 
 --[[
@@ -773,15 +778,20 @@ end
     @return - the main addon frame
 --]]
 local function StartUp()
-    -- Dungeon Info
-    --addon:GetGeneralDungeonInfo()
-    --addon:GetPlayerDungeonBests()
-    --addon:CalculateDungeonRatings()
-    --weeklyAffix = addon:GetWeeklyAffixInfo()
+    -- Non-player dungeon info
+    addon:GetGeneralDungeonInfo()
+    addon:GetPlayerDungeonBests()
+    addon:CalculateDungeonRatings()
+    weeklyAffix = addon:GetWeeklyAffixInfo()
     -- UI setup
     local mainFrame = CreateMainFrame()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
+    dungeonHolderFrame:RegisterEvent("PLAYER_LOGIN")
+    dungeonHolderFrame:SetScript("OnEvent", function(self, event, ...)
+        LoadData()
+        PopulateAllDungeonRows(self)
+    end)
     CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     return mainFrame
 end
