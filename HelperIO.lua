@@ -72,12 +72,34 @@ end
 --]]
 local function CreateHeaderFrame(parentFrame)
     local headerWidthDiff = 8
+    local headerHeight = 40
     local frame = CreateFrameWithBackdrop(parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
-    frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, 40)
+    frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("CENTER")
     frame.text:SetText(addonName)
+
+    local exitButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
+    local r, g, b, a = 207/255, 170/255, 0, 1
+    exitButton:SetPoint("RIGHT", frame, "RIGHT")
+    exitButton:SetSize(headerHeight, headerHeight)
+    exitButton.text = exitButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    exitButton.text:ClearAllPoints()
+    exitButton.text:SetPoint("CENTER")
+    exitButton.text:SetText("x")
+    exitButton.text:SetTextScale(1.4)
+    local _r, _g, _b, _a = exitButton.text:GetTextColor()
+    exitButton.text:SetTextColor(r, g, b, a)
+    exitButton:SetScript("OnMouseUp", function(self, btn)
+        if(btn == "LeftButton") then parentFrame:Hide() end
+    end)
+    exitButton:SetScript("OnEnter", function(self, motion)
+        self.text:SetTextColor(_r, _g, _b, _a)
+    end)
+    exitButton:SetScript("OnLeave", function(self, motion)
+        self.text:SetTextColor(r, g, b, a)
+    end)
     return frame
 end
 
