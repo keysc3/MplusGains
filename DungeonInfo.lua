@@ -210,15 +210,18 @@ function addon:SortDungeonsByLevel(weeklyAffix)
     for k, v in pairs(addon.dungeonInfo) do
         table.insert(array, k)
     end
-    -- Sort the mapIDs by their levels then rating for ties
+    -- Sort the mapIDs by their levels, ratings if ties, overall map rating if no run for both the dungeons
     table.sort(array, function(id1, id2)
         id1_level = addon.playerBests[weeklyAffix][id1].level
         id2_level = addon.playerBests[weeklyAffix][id2].level
-        if(id1_level ~= id2_level) then
-            return id1_level < id2_level
+        if(id1_level ~= 1 and id2_level ~= 1) then
+            if(id1_level ~= id2_level) then
+                return id1_level < id2_level
+            end
+            return addon.playerBests[weeklyAffix][id1].rating < addon.playerBests[weeklyAffix][id2].rating
         end
-        return addon.playerBests[weeklyAffix][id1].rating < addon.playerBests[weeklyAffix][id2].rating
-        end)
+        return addon.playerDungeonRatings[id1].mapScore < addon.playerDungeonRatings[id2].mapScore
+    end)
     return array
 end
 

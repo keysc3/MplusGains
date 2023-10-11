@@ -796,7 +796,6 @@ end
     LoadData - Loads player dungeon data. Called on player entering world event.
 --]]
 local function LoadData()
-    -- Player dungeon info
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
 end
@@ -811,7 +810,6 @@ local function StartUp()
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
     weeklyAffix = addon:GetWeeklyAffixInfo()
-    weeklyAffix = "fortified"
     -- UI setup
     local mainFrame = CreateMainFrame()
     mainFrame:Hide()
