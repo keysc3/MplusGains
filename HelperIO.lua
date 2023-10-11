@@ -228,6 +228,7 @@ end
     @param keystoneButton - the keystonebutton object that was clicked.
 --]]
 local function SelectButtons(parentFrame, keystoneButton)
+    print("HERE")
     -- If the clicked button is a higher keystone level than the currently selected button.
     if(keystoneButton.level > parentFrame.selectedLevel) then
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
@@ -276,7 +277,10 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             if(keystoneButton.level ~= parentFrame.selectedLevel) then
                 SelectButtons(parentFrame, keystoneButton)
                 -- Set gained from selected key completion
-                local gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
+                local gained = 0
+                if(keystoneButton.level ~= parentFrame.startingLevel) then
+                    gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
+                end
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
             end
         end
@@ -355,8 +359,8 @@ local function CreateScrollFrame(scrollHolderFrame)
     -- scroll to the nearest button edge in the direction the user inputed.
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
         if(IsMouseButtonDown("RightButton")) then return end
-        local numButtonsPrior = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)/(buttonWidth-scrollFrame.minScrollRange))
-        local remainder = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)%(buttonWidth-scrollFrame.minScrollRange))
+        local numButtonsPrior = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)/(buttonWidth - 1))
+        local remainder = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)%(buttonWidth - 1))
         if(delta == -1) then 
             numButtonsPrior = numButtonsPrior + 1  
         else 
@@ -364,7 +368,7 @@ local function CreateScrollFrame(scrollHolderFrame)
                 numButtonsPrior = numButtonsPrior - 1 
             end
         end
-        local newPos = 1 + (numButtonsPrior * (buttonWidth - scrollFrame.minScrollRange))
+        local newPos = scrollFrame.minScrollRange + (numButtonsPrior * (buttonWidth - 1))
         if(newPos > self.maxScrollRange) then 
             newPos = self.maxScrollRange 
         elseif(newPos < self.minScrollRange) then 
@@ -435,6 +439,14 @@ local function CalculateRowWidth(row)
     return totalWidth
 end
 
+local function UpdateDungeonRow(scrollHolderFrame, newLevel, oldLevel)
+    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
+    local newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+    scrollHolderFrame.scrollFrame.minScrollRange = newPos
+    scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
+    scrollHolderFrame.scrollChild.startingLevel = newLevel
+end
+
 --[[
     PopulateAllDungeonRows - Populates the dungeon rows with the proper data. Called on player entering world.
     @param parentFrame - the parent frame
@@ -442,11 +454,33 @@ end
 local function PopulateAllDungeonRows(parentFrame)
     local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
     local rows = { parentFrame:GetChildren() }
+    parentFrame.myRows = {}
+    parentFrame:RegisterEvent("PLAYER_STARTED_MOVING")
+    parentFrame:SetScript("OnEvent", function(self, event, ...)
+        print("moving!")
+        local id, ms, level = 251, 1500000, 22
+        if(level > addon.playerBests[weeklyAffix][id].level) then
+            print("better")
+            -- Update new best
+            UpdateDungeonRow(parentFrame.myRows[id].scrollHolderFrame, level, addon.playerBests[weeklyAffix][id].level)
+            --addon:GetPlayerDungeonBests()
+            addon.playerBests[weeklyAffix][id].level = level
+        elseif(level == addon.playerBests[weeklyAffix][id].level) then
+            print("same")
+            if((ms/1000) < addon.playerBests[weeklyAffix][id].time) then
+                print("better on time")
+            end
+            return
+        end
+        print("worse")
+        --local myRow = parentFrame.rows[id]
+    end)
     for i, key in ipairs(sortedLevels) do
         local value = addon.dungeonInfo[key]
         rows[i].dungeonNameFrame.text:SetText(value.name)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
         CreateButtonRow(rows[i].scrollHolderFrame, rows[i].gainedScoreFrame, key)
+        parentFrame.myRows[key] = rows[i]
     end
 end
 
