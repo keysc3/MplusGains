@@ -274,7 +274,9 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 -- Set gained from selected key completion
                 local gained = 0
                 if(keystoneButton.level ~= parentFrame.selectedLevel) then
-                    gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
+                    if(keystoneButton.level ~= parentFrame.startingLevel or parentFrame.overTime) then
+                        gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
+                    end
                 end
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
                 SelectButtons(parentFrame, keystoneButton)
@@ -435,12 +437,25 @@ local function CalculateRowWidth(row)
     return totalWidth
 end
 
-local function UpdateDungeonRow(scrollHolderFrame, newLevel, oldLevel)
+local function UpdateDungeonButtons(scrollHolderFrame)
+    local dungeonID = scrollHolderFrame.scrollChild.dungeonID
+    --addon:GetPlayerDungeonBests()
+    local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level 
+    local newLevel = 22
+    addon.playerBests[weeklyAffix][dungeonID].overTime = true
+    print(oldLevel, newLevel)
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
     local newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
     scrollHolderFrame.scrollChild.startingLevel = newLevel
+    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
+    if(addon.playerBests[weeklyAffix][dungeonID].overTime) then
+        scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+        scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
+        return
+    end
+    scrollHolderFrame.scrollChild.selectedLevel = newLevel
 end
 
 --[[
@@ -454,22 +469,11 @@ local function PopulateAllDungeonRows(parentFrame)
     parentFrame:RegisterEvent("PLAYER_STARTED_MOVING")
     parentFrame:SetScript("OnEvent", function(self, event, ...)
         print("moving!")
-        local id, ms, level = 251, 1500000, 22
-        if(level > addon.playerBests[weeklyAffix][id].level) then
-            print("better")
-            -- Update new best
-            UpdateDungeonRow(parentFrame.myRows[id].scrollHolderFrame, level, addon.playerBests[weeklyAffix][id].level)
-            --addon:GetPlayerDungeonBests()
-            addon.playerBests[weeklyAffix][id].level = level
-        elseif(level == addon.playerBests[weeklyAffix][id].level) then
-            print("same")
-            if((ms/1000) < addon.playerBests[weeklyAffix][id].time) then
-                print("better on time")
-            end
-            return
-        end
-        print("worse")
-        --local myRow = parentFrame.rows[id]
+        local id, ms, level = 438, 1500000, 22
+        -- Update new best
+        UpdateDungeonButtons(parentFrame.myRows[id].scrollHolderFrame)
+        parentFrame.myRows[id].gainedScoreFrame.text:SetText("+0.0")
+        addon.playerBests[weeklyAffix][id].level = level
     end)
     for i, key in ipairs(sortedLevels) do
         local value = addon.dungeonInfo[key]
