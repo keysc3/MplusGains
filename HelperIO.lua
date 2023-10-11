@@ -396,11 +396,11 @@ end
     @return scrollHolderFrame - the created frame
 --]]
 local function CreateScrollHolderFrame(parentRow)
-    local widthMulti = 6
-    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, nil) 
+    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, nil)
+    scrollHolderFrame.widthMulti = 6
     scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xColPadding, 0)
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
-    scrollHolderFrame:SetSize((widthMulti * buttonWidth) - widthMulti, parentRow:GetHeight())
+    scrollHolderFrame:SetSize((scrollHolderFrame.widthMulti * buttonWidth) - scrollHolderFrame.widthMulti, parentRow:GetHeight())
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
@@ -441,12 +441,16 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     --addon:GetPlayerDungeonBests()
     local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level 
-    local newLevel = 22
-    addon.playerBests[weeklyAffix][dungeonID].overTime = true
+    local newLevel = 28
+    addon.playerBests[weeklyAffix][dungeonID].overTime = false
+    addon.playerBests[weeklyAffix][dungeonID].time = 100
     print(oldLevel, newLevel)
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
     local newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
+    if((maxLevel - newLevel) <= scrollHolderFrame.widthMulti) then
+        scrollHolderFrame.scrollFrame.maxScrollRange = newPos 
+    end
     scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
     scrollHolderFrame.scrollChild.startingLevel = newLevel
     scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
@@ -455,6 +459,7 @@ local function UpdateDungeonButtons(scrollHolderFrame)
         scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
         return
     end
+    scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
     scrollHolderFrame.scrollChild.selectedLevel = newLevel
 end
 
@@ -465,22 +470,13 @@ end
 local function PopulateAllDungeonRows(parentFrame)
     local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
     local rows = { parentFrame:GetChildren() }
-    parentFrame.myRows = {}
-    parentFrame:RegisterEvent("PLAYER_STARTED_MOVING")
-    parentFrame:SetScript("OnEvent", function(self, event, ...)
-        print("moving!")
-        local id, ms, level = 438, 1500000, 22
-        -- Update new best
-        UpdateDungeonButtons(parentFrame.myRows[id].scrollHolderFrame)
-        parentFrame.myRows[id].gainedScoreFrame.text:SetText("+0.0")
-        addon.playerBests[weeklyAffix][id].level = level
-    end)
+    parentFrame.rows = {}
     for i, key in ipairs(sortedLevels) do
         local value = addon.dungeonInfo[key]
         rows[i].dungeonNameFrame.text:SetText(value.name)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
         CreateButtonRow(rows[i].scrollHolderFrame, rows[i].gainedScoreFrame, key)
-        parentFrame.myRows[key] = rows[i]
+        parentFrame.rows[key] = rows[i]
     end
 end
 
@@ -786,6 +782,16 @@ local function GetDungeonLevelString(affix, dungeonID)
     return runString
 end
 
+local function UpdateDungeonBests(parentFrame, dungeonID)
+    if(weeklyAffix == "tyrannical") then 
+        parentFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", dungeonID))
+    else
+        parentFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", dungeonID))
+    end
+    print(tostring(addon.playerDungeonRatings[dungeonID].mapScore))
+    parentFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
+end
+
 --[[
     PopulateAllBestRunsRows - Sets players best runs per dungeon data. Called on player entering world.
     @param parentFrame - the parent frame
@@ -793,12 +799,14 @@ end
 local function PopulateAllBestRunsRows(parentFrame)
     local sortedScores = addon:SortDungeonsByScore()
     local rows = { parentFrame:GetChildren() }
+    parentFrame.rows = {}
     for i, key in ipairs(sortedScores) do
         local index = i + 1
         rows[index].tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", key))
         rows[index].fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", key))
         rows[index].scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[key].mapScore))
         rows[index].nameFrame.nameText:SetText(addon.dungeonInfo[key].name)
+        parentFrame.rows[key] = rows[index]
     end
 end
 
@@ -857,11 +865,26 @@ local function StartUp()
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_LOGIN")
+    mainFrame:RegisterEvent("PLAYER_STARTED_MOVING")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
-        LoadData()
-        PopulateAllDungeonRows(dungeonHolderFrame)
-        summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
-        PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
+        if(event == "PLAYER_LOGIN") then
+            LoadData()
+            PopulateAllDungeonRows(dungeonHolderFrame)
+            summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+            PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
+        end
+        if(event == "PLAYER_STARTED_MOVING") then
+            print("moving!")
+            local id, ms, level = 438, 1500000, 28
+            -- Update new best
+            UpdateDungeonButtons(dungeonHolderFrame.rows[id].scrollHolderFrame)
+            dungeonHolderFrame.rows[id].gainedScoreFrame.text:SetText("+0.0")
+            addon.playerBests[weeklyAffix][id].level = level
+            addon.playerBests[weeklyAffix][id].rating = 226
+            addon:CalculateDungeonRatings()
+            print("moving2!")
+            UpdateDungeonBests(summaryFrame.bestRunsFrame.rows[id], id)
+        end
     end)
     return mainFrame
 end
