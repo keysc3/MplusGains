@@ -77,7 +77,7 @@ function addon:GetPlayerDungeonBests()
                     ["level"] = affix.level,
                     ["rating"] = scorePerLevel[affix.level] + CalculateRating(affix.durationSec, key),
                     ["time"] = affix.durationSec,
-                    ["name"] = affix.name,
+                    ["name"] = value.name,
                     ["overTime"]  = affix.overTime
                 }
                 if(string.lower(affix.name) == "tyrannical") then
