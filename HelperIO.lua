@@ -220,7 +220,6 @@ end
     @param keystoneButton - the keystonebutton object that was clicked.
 --]]
 local function SelectButtons(parentFrame, keystoneButton)
-    print("HERE")
     -- If the clicked button is a higher keystone level than the currently selected button.
     if(keystoneButton.level > parentFrame.selectedLevel) then 
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
