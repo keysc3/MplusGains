@@ -36,7 +36,6 @@ end
     CreateFrameWithBackdrop - Creates a frame using the backdrop template.
     @param parentFrame - the parent frame
     @param name - the name of the frame
-    @param hasOutline - bool for if the frame should have an outline or not
     @return - the created frame
 --]]
 local function CreateFrameWithBackdrop(parentFrame, name)
@@ -54,7 +53,7 @@ end
 
 
 --[[
-    CreateMainFrame- Creates the main frame for the addon.
+    CreateMainFrame - Creates the main frame for the addon.
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
@@ -79,7 +78,7 @@ local function CreateHeaderFrame(parentFrame)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("CENTER")
     frame.text:SetText(addonName)
-
+    -- Exit button
     local exitButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
     local r, g, b, a = 207/255, 170/255, 0, 1
     exitButton:SetPoint("RIGHT", frame, "RIGHT")
@@ -136,7 +135,7 @@ local function CreateDungeonRowFrame(anchorFrame, parentFrame)
 end
 
 --[[
-    CreateDungeonNameFrame- Creates a frame for displaying a rows dungeon name.
+    CreateDungeonNameFrame - Creates a frame for displaying a rows dungeon name.
     @param parentRow - the frames parent row frame
     @return frame - the created frame
 --]]
@@ -154,7 +153,7 @@ local function CreateDungeonNameFrame(parentRow)
 end
 
 --[[
-    CreateDungeonTimerFrame- Creates a frame for displaying the dungeons timer for the row.
+    CreateDungeonTimerFrame - Creates a frame for displaying the dungeons timer for the row.
     @param parentRow - the frames parent row frame
     @return frame - the created frame
 --]]
@@ -429,6 +428,10 @@ local function CalculateRowWidth(row)
     return totalWidth
 end
 
+--[[
+    PopulateAllDungeonRows - Populates the dungeon rows with the proper data. Called on player entering world.
+    @param parentFrame - the parent frame
+--]]
 local function PopulateAllDungeonRows(parentFrame)
     local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
     local rows = { parentFrame:GetChildren() }
@@ -487,10 +490,6 @@ local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
     return frame
 end
 
-local function SetOverallRating(frame)
-    frame.text:SetText(frame.text:GetText() .. addon.totalRating)
-end
-
 --[[
     CreateSummaryHeaderFrame - Creates the header frame for the summary section.
     @param parentFrame - the parent frame of the summary header frame.
@@ -522,8 +521,7 @@ end
     CreateAffixInfoFrame - Creates a frame containing affix name and description
     @param anchorFrame - the frame to anchor to
     @param parentFrame - the frame to parent to
-    @param affix - the affix name
-    @param desc - the affix description
+    @param affixTable - the affix name
     @return frame - the created frame
 --]]
 local function CreateAffixInfoFrame(anchorFrame, parentFrame, affixTable)
@@ -733,6 +731,12 @@ local function CreateDungeonHelper(mainFrame, headerFrame)
     return dungeonHolderFrame
 end
 
+--[[
+    GetDungeonLevelString - Creates a string representing the best dungeon run for a affix.
+    @param affix - the affix to get the run for
+    @param dungeonID - the dungeon to get the run for
+    @return - formatted string representing the run.
+--]]
 local function GetDungeonLevelString(affix, dungeonID)
     local runString = "-"
     local level = addon.playerBests[affix][dungeonID].level
@@ -743,7 +747,8 @@ local function GetDungeonLevelString(affix, dungeonID)
 end
 
 --[[
-    PopulateAllBestRunsRows - Sets players best runs per dungeon data. Called on player login event.
+    PopulateAllBestRunsRows - Sets players best runs per dungeon data. Called on player entering world.
+    @param parentFrame - the parent frame
 --]]
 local function PopulateAllBestRunsRows(parentFrame)
     local sortedScores = addon:SortDungeonsByScore()
@@ -787,7 +792,7 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
 end
 
 --[[
-    LoadData - Loads player dungeon data. Called on player login event.
+    LoadData - Loads player dungeon data. Called on player entering world event.
 --]]
 local function LoadData()
     -- Player dungeon info
@@ -810,11 +815,12 @@ local function StartUp()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
-    mainFrame:RegisterEvent("PLAYER_LOGIN")
+    -- Data setup. Player_entering_world used instead of player_login so that data can be updated after a key completion.
+    mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         LoadData()
         PopulateAllDungeonRows(dungeonHolderFrame)
-        SetOverallRating(summaryFrame.header)
+        summaryFrame.header.text:SetText(summaryFrame.header.text:GetText() .. addon.totalRating)
         PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
     end)
     return mainFrame
