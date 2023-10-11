@@ -705,13 +705,12 @@ end
 
 --[[
     CreateBestRunRow - Creates a frame for a dungeon summary row.
-    @param dungeonID - the ID of the dungeon
     @param anchorFrame - the frames anchor
     @param parentFrame - the frames parent
     @retun - the created frame
 --]]
-local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
-    local holder = CreateFrame("Frame", dungeonID .. "BEST_RUNS_ROW", parentFrame)
+local function CreateBestRunRow(anchorFrame, parentFrame)
+    local holder = CreateFrame("Frame", nil, parentFrame)
     holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
     holder.tyrFrame = CreateRunFrame(holder, holder, "tyrannical")
@@ -763,6 +762,7 @@ end
     @param mainFrame - the main addon frame
     @param dungeonHelperFrame - the dungeon helper panels parent frame
     @param width - the width of the summary panel frame to be
+    @return - the created frame
 --]]
 local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     -- Holder and header
@@ -780,9 +780,8 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     -- Best runs
     summaryFrame.bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
     anchor = CreateDungeonSummaryHeader(summaryFrame.bestRunsFrame)
-    local sortedScores = addon:SortDungeonsByScore()
-    for i, key in ipairs(sortedScores) do
-        anchor = CreateBestRunRow(key, anchor, summaryFrame.bestRunsFrame)
+    for n in pairs(addon.dungeonInfo) do
+        anchor = CreateBestRunRow(anchor, summaryFrame.bestRunsFrame)
     end
     return summaryFrame
 end
