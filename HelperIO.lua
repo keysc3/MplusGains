@@ -158,23 +158,12 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonTimerFrame(parentRow)
-    --local plusTwo = addon:FormatTimer(dungeonTimeLimit * 0.8)
-    --local plusThree = addon:FormatTimer(dungeonTimeLimit * 0.6)
     local frame = CreateFrame("Frame", "DUNGEON_TIMER", parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT", xColPadding, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
     frame.text:SetText("xx:xx")
     frame:SetSize(40, parentRow:GetHeight())
-
-    --[[frame:SetScript("OnEnter", function(self, motion)
-        GameTooltip:SetOwner(parentRow, "ANCHOR_NONE")
-        GameTooltip:SetPoint("RIGHT", parentRow, "LEFT", -3, 0)
-        GameTooltip:SetText(string.format("+2: %s\n+3: %s", plusTwo, plusThree))
-    end)
-    frame:SetScript("OnLeave", function(self, motion)
-        GameTooltip:Hide()
-    end)--]]
 
     return frame
 end
@@ -345,9 +334,6 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
     end
-    --[[if(overTime) then
-        scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetText(startingLevel + 1)
-    end--]]
 end
 
 --[[
@@ -850,25 +836,3 @@ SLASH_HELPERIO2 = "/hio"
 SlashCmdList["HELPERIO"] = function()
    if(mainFrame:IsShown()) then mainFrame:Hide() else mainFrame:Show() end
 end
-
---[[for key, value in pairs(addon.playerDungeonRatings) do
-    print("Totals: " .. addon.dungeonInfo[key].name .. " " .. value.mapScore)
-end--]]
-
--- Debug prints
---print(string.format("Welcome to %s.", addonName))
-
---[[for key, value in pairs(addon.dungeonInfo) do
-    print(string.format("MapInfo: %s %s!", value.name, addon:FormatTimer(value.timeLimit)))
-end--]]
-
---[[for key, value in pairs(addon.playerBests) do
-    print(string.format("Best for %s:", key))
-    for k, v in pairs(value) do
-        rating = v.rating
-        if(not string.match(rating, "%.")) then
-            rating = rating .. ".0"
-        end
-        print(v.name , v.level, rating, v.time)
-    end
-end--]]
