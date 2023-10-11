@@ -61,6 +61,12 @@ local function CreateMainFrame()
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     return frame
 end
 
@@ -502,7 +508,6 @@ local function CreateSummaryHeaderFrame(parentFrame)
     frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
     frame.text:SetPoint("CENTER")
-    frame.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n")
     return frame
 end
 --[[
@@ -816,12 +821,12 @@ local function StartUp()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
-    -- Data setup. Player_entering_world used instead of player_login so that data can be updated after a key completion.
-    mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    -- Data setup.
+    mainFrame:RegisterEvent("PLAYER_LOGIN")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         LoadData()
         PopulateAllDungeonRows(dungeonHolderFrame)
-        summaryFrame.header.text:SetText(summaryFrame.header.text:GetText() .. addon.totalRating)
+        summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
         PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
     end)
     return mainFrame
