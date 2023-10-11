@@ -199,20 +199,12 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     })
     btn:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     -- If the button being created is the first/highest key level button for the dungeon it is for. Set it to the selected color.
-    if(keyLevel ~= parentFrame.startingLevel) then
+    if(keyLevel ~= parentFrame.startingLevel or (keyLevel == parentFrame.startingLevel and parentFrame.overTime)) then
         btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     else
         btn:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
     end
-    local buttonText = "-"
-    if(keyLevel > 1) then
-        if(parentFrame.startingLevel == keyLevel and parentFrame.overTime) then
-            buttonText = keyLevel + 1
-        else
-            buttonText = "+" .. keyLevel
-        end
-    end
-    btn:SetText(buttonText)
+    btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
     local myFont = CreateFont("Font")
@@ -230,17 +222,22 @@ end
 local function SelectButtons(parentFrame, keystoneButton)
     print("HERE")
     -- If the clicked button is a higher keystone level than the currently selected button.
-    if(keystoneButton.level > parentFrame.selectedLevel) then
+    if(keystoneButton.level > parentFrame.selectedLevel) then 
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
         for i = parentFrame.selectedLevel + 1, keystoneButton.level do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
         end
-    end
     -- If the clicked button is a lower keystone level than the currently selected button.
-    if(keystoneButton.level < parentFrame.selectedLevel) then
+    elseif(keystoneButton.level < parentFrame.selectedLevel) then
         -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
         for i = parentFrame.selectedLevel, keystoneButton.level + 1, -1 do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+        end
+    else
+        if(parentFrame.overTime) then
+            parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+            parentFrame.selectedLevel = keystoneButton.level - 1
+            return
         end
     end
     parentFrame.selectedLevel = keystoneButton.level
@@ -274,14 +271,14 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
         if(btn == "RightButton") then keystoneButton.mouseDown = false end
         if(btn == "LeftButton") then
             -- If the clicked button is not the currently selected button then select necessary buttons.
-            if(keystoneButton.level ~= parentFrame.selectedLevel) then
-                SelectButtons(parentFrame, keystoneButton)
+            if(keystoneButton.level ~= parentFrame.selectedLevel or (keystoneButton.level == parentFrame.startingLevel and keystoneButton.level == parentFrame.selectedLevel and parentFrame.overTime)) then
                 -- Set gained from selected key completion
                 local gained = 0
-                if(keystoneButton.level ~= parentFrame.startingLevel) then
+                if(keystoneButton.level ~= parentFrame.selectedLevel) then
                     gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
                 end
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
+                SelectButtons(parentFrame, keystoneButton)
             end
         end
     end)
@@ -323,12 +320,12 @@ end
 local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
     local startingLevel = addon.playerBests[weeklyAffix][dungeonID].level
     scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
-    if(scrollHolderFrame.scrollChild.overTime) then
+    --[[if(scrollHolderFrame.scrollChild.overTime) then
         startingLevel = startingLevel - 1
-    end
+    end--]]
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
     scrollHolderFrame.scrollChild.startingLevel = startingLevel
-    scrollHolderFrame.scrollChild.selectedLevel = startingLevel
+    scrollHolderFrame.scrollChild.selectedLevel = (scrollHolderFrame.scrollChild.overTime) and startingLevel - 1 or startingLevel
     -- Calculate the row width and max scroll range.
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
     local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
