@@ -209,7 +209,15 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     else
         btn:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
     end
-    btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
+    local buttonText = "-"
+    if(keyLevel > 1) then
+        if(parentFrame.startingLevel == keyLevel and parentFrame.overTime) then
+            buttonText = keyLevel + 1
+        else
+            buttonText = "+" .. keyLevel
+        end
+    end
+    btn:SetText(buttonText)
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
     local myFont = CreateFont("Font")
@@ -311,13 +319,12 @@ end
     CreateButtonRow - Creates the buttons for a row frame.
     @param scrollHolderFrame - the scroll holder frame for the buttons.
     @param gainedScoreFrame - the gained score frame for the buttons respective row.
-    @param startingLevel - the keystone level to start creating buttons at.
     @param dungeonID - the dungeonID the row is for.
 --]]
 local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
     local startingLevel = addon.playerBests[weeklyAffix][dungeonID].level
-    local overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
-    if(overTime) then
+    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
+    if(scrollHolderFrame.scrollChild.overTime) then
         startingLevel = startingLevel - 1
     end
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
@@ -338,11 +345,9 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
     end
-    if(overTime) then
-        local firstButton = scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button
-        firstButton:SetText(startingLevel + 1)
-        firstButton:SetBackdropColor(125/255, 60/255, 2/255, 1)
-    end
+    --[[if(overTime) then
+        scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetText(startingLevel + 1)
+    end--]]
 end
 
 --[[
