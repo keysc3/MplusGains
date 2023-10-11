@@ -314,7 +314,12 @@ end
     @param startingLevel - the keystone level to start creating buttons at.
     @param dungeonID - the dungeonID the row is for.
 --]]
-local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLevel, dungeonID)
+local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
+    local startingLevel = addon.playerBests[weeklyAffix][dungeonID].level
+    local overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
+    if(overTime) then
+        startingLevel = startingLevel - 1
+    end
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
     scrollHolderFrame.scrollChild.startingLevel = startingLevel
     scrollHolderFrame.scrollChild.selectedLevel = startingLevel
@@ -332,6 +337,11 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, startingLeve
         local keystoneButton = addon:CreateKeystoneButton(i, button)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
+    end
+    if(overTime) then
+        local firstButton = scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button
+        firstButton:SetText(startingLevel + 1)
+        firstButton:SetBackdropColor(125/255, 60/255, 2/255, 1)
     end
 end
 
@@ -439,7 +449,7 @@ local function PopulateAllDungeonRows(parentFrame)
         local value = addon.dungeonInfo[key]
         rows[i].dungeonNameFrame.text:SetText(value.name)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
-        CreateButtonRow(rows[i].scrollHolderFrame, rows[i].gainedScoreFrame, addon.playerBests[weeklyAffix][key].level, key)
+        CreateButtonRow(rows[i].scrollHolderFrame, rows[i].gainedScoreFrame, key)
     end
 end
 
@@ -810,6 +820,7 @@ local function StartUp()
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
     weeklyAffix = addon:GetWeeklyAffixInfo()
+    weeklyAffix = "fortified"
     -- UI setup
     local mainFrame = CreateMainFrame()
     mainFrame:Hide()
