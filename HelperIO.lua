@@ -812,6 +812,7 @@ local function StartUp()
     weeklyAffix = addon:GetWeeklyAffixInfo()
     -- UI setup
     local mainFrame = CreateMainFrame()
+    mainFrame:Hide()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
