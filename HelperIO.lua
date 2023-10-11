@@ -599,10 +599,9 @@ end
     @param anchorFrame - the frames anchor
     @param parentFrame - the frames parent
     @param affix - the affixes name
-    @param dungeonID - the dungeonID of the dungeon
     @return - the created frame
 ]]
-local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID)
+local function CreateRunFrame(anchorFrame, parentFrame, affix)
     local parentFrameHeight = parentFrame:GetHeight()
     local affixFrame = CreateFrame("Frame", nil, parentFrame)
     local anchorPosition = "LEFT"
@@ -613,39 +612,32 @@ local function CreateRunFrame(anchorFrame, parentFrame, affix, dungeonID)
     affixFrame.keyLevelText:SetPoint("LEFT", affixFrame, "LEFT")
     affixFrame.keyLevelText:SetPoint("RIGHT", affixFrame, "RIGHT", -xPadding, 0)
     affixFrame.keyLevelText:SetJustifyH("RIGHT")
-    local level = addon.playerBests[affix][dungeonID].level
-    local runString = "-"
-    if(level > 1) then 
-        runString = addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. level
-    end
-    affixFrame.keyLevelText:SetText(runString)
+    affixFrame.keyLevelText:SetText("-")
     return affixFrame
 end
 
 --[[
     CreateDungeonScoreFrame - Creates a frame to display a dungeons total score.
-    @param dungeonID - the id of the dungeon
     @param anchorFrame - the frame to anchor to
     @param parentFrame - the frames parent
     @return - the created frame
 --]]
-local function CreateDungeonScoreFrame(dungeonID, anchorFrame, parentFrame)
+local function CreateDungeonScoreFrame(anchorFrame, parentFrame)
     local scoreFrame = CreateFrame("Frame", nil, parentFrame)
     scoreFrame:SetPoint("RIGHT", anchorFrame, "LEFT")
     scoreFrame:SetSize(parentFrame:GetParent().smallColumnWidth, parentFrame:GetHeight())
     scoreFrame.scoreText = scoreFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     scoreFrame.scoreText:SetPoint("LEFT", xPadding, 0)
-    scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
+    scoreFrame.scoreText:SetText("-")
     return scoreFrame
 end
 
 --[[
     CreateDungeonBestNameFrame - Creates the name frame for a dungeon in the best dungeon runs frame
-    @param name - the name of the dungeon
     @param parentFrame - the parent frame
     @return - the created frame
 --]]
-local function CreateDungeonBestNameFrame(name, parentFrame)
+local function CreateDungeonBestNameFrame(parentFrame)
     local children = { parentFrame:GetChildren() }
     local totalWidth = parentFrame:GetParent().smallColumnWidth * #children
     local nameFrame = CreateFrame("Frame", nil, parentFrame)
@@ -656,7 +648,7 @@ local function CreateDungeonBestNameFrame(name, parentFrame)
     nameFrame.nameText:SetPoint("LEFT", nameFrame, "LEFT", 2, 0)
     nameFrame.nameText:SetPoint("RIGHT", nameFrame, "RIGHT")
     nameFrame.nameText:SetJustifyH("LEFT")
-    nameFrame.nameText:SetText(name)
+    nameFrame.nameText:SetText("Default Dungeon")
     return nameFrame
 end
 
@@ -722,10 +714,10 @@ local function CreateBestRunRow(dungeonID, anchorFrame, parentFrame)
     local holder = CreateFrame("Frame", dungeonID .. "BEST_RUNS_ROW", parentFrame)
     holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
-    local tyrFrame = CreateRunFrame(holder, holder, "tyrannical", dungeonID)
-    local fortFrame = CreateRunFrame(tyrFrame, holder, "fortified", dungeonID)
-    local scoreFrame = CreateDungeonScoreFrame(dungeonID, fortFrame, holder)
-    local nameFrame = CreateDungeonBestNameFrame(addon.dungeonInfo[dungeonID].name, holder)
+    holder.tyrFrame = CreateRunFrame(holder, holder, "tyrannical")
+    holder.fortFrame = CreateRunFrame(holder.tyrFrame, holder, "fortified")
+    holder.scoreFrame = CreateDungeonScoreFrame(holder.fortFrame, holder)
+    holder.nameFrame = CreateDungeonBestNameFrame(holder)
     return holder
 end
 
@@ -742,10 +734,27 @@ local function CreateDungeonHelper(mainFrame, headerFrame)
     return dungeonHolderFrame
 end
 
-local function PopulateAllBestRunsRows(anchorFrame, parentFrame)
+local function GetDungeonLevelString(affix, dungeonID)
+    local runString = "-"
+    local level = addon.playerBests[affix][dungeonID].level
+    if(level > 1) then 
+        runString = addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. level
+    end
+    return runString
+end
+
+--[[
+    PopulateAllBestRunsRows - Sets players best runs per dungeon data. Called on player login event.
+--]]
+local function PopulateAllBestRunsRows(parentFrame)
     local sortedScores = addon:SortDungeonsByScore()
+    local rows = { parentFrame:GetChildren() }
     for i, key in ipairs(sortedScores) do
-        anchorFrame = CreateBestRunRow(key, anchorFrame, parentFrame)
+        local index = i + 1
+        rows[index].tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", key))
+        rows[index].fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", key))
+        rows[index].scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[key].mapScore))
+        rows[index].nameFrame.nameText:SetText(addon.dungeonInfo[key].name)
     end
 end
 
@@ -770,10 +779,17 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     CreateSplitFrame(affixInfoFrame, summaryFrame)
     -- Best runs
     summaryFrame.bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
-    summaryFrame.bestRunsHeader = CreateDungeonSummaryHeader(summaryFrame.bestRunsFrame)
+    anchor = CreateDungeonSummaryHeader(summaryFrame.bestRunsFrame)
+    local sortedScores = addon:SortDungeonsByScore()
+    for i, key in ipairs(sortedScores) do
+        anchor = CreateBestRunRow(key, anchor, summaryFrame.bestRunsFrame)
+    end
     return summaryFrame
 end
 
+--[[
+    LoadData - Loads player dungeon data. Called on player login event.
+--]]
 local function LoadData()
     -- Player dungeon info
     addon:GetPlayerDungeonBests()
@@ -800,7 +816,7 @@ local function StartUp()
         LoadData()
         PopulateAllDungeonRows(dungeonHolderFrame)
         SetOverallRating(summaryFrame.header)
-        PopulateAllBestRunsRows(summaryFrame.bestRunsHeader, summaryFrame.bestRunsFrame)
+        PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
     end)
     return mainFrame
 end
