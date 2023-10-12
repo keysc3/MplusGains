@@ -160,9 +160,13 @@ function addon:CalculateRating(runTime, dungeonID, level)
     numerator = dungeonTimeLimit - runTime
     denominator = dungeonTimeLimit * maxModifier
     quotient = numerator/denominator
-    bonusRating = (quotient >= 1) and 5 or (quotient * 5)
+    
+    if(quotient >= 1) then bonusRating = 5
+    elseif(quotient <= -1) then bonusRating = -5
+    else bonusRating = quotient * 5 end
+
     if(runTime > dungeonTimeLimit) then
-        bonusRating  = bonusRating  - 5
+        bonusRating  = bonusRating - 5
     end
     return scorePerLevel[level] + addon:RoundToOneDecimal(bonusRating)
 end

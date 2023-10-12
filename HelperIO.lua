@@ -437,14 +437,10 @@ local function CalculateRowWidth(row)
     return totalWidth
 end
 
-local function UpdateDungeonButtons(scrollHolderFrame)
+local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
-    --addon:GetPlayerDungeonBests()
-    local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level 
-    local newLevel = 28
-    addon.playerBests[weeklyAffix][dungeonID].overTime = false
-    addon.playerBests[weeklyAffix][dungeonID].time = 100
-    print(oldLevel, newLevel)
+    local newLevel = addon.playerBests[weeklyAffix][dungeonID].level
+    print("NEW: ", addon.playerBests[weeklyAffix][dungeonID].level, addon.dungeonInfo[dungeonID].name, addon.playerBests[weeklyAffix][dungeonID].time, addon.playerBests[weeklyAffix][dungeonID].rating)
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
     local newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
@@ -783,12 +779,12 @@ local function GetDungeonLevelString(affix, dungeonID)
 end
 
 local function UpdateDungeonBests(parentFrame, dungeonID)
+    addon:CalculateDungeonRatings()
     if(weeklyAffix == "tyrannical") then 
         parentFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", dungeonID))
     else
         parentFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", dungeonID))
     end
-    print(tostring(addon.playerDungeonRatings[dungeonID].mapScore))
     parentFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
 end
 
@@ -847,6 +843,18 @@ local function LoadData()
     addon:CalculateDungeonRatings()
 end
 
+local function CheckForNewBest(dungeonID, level, time)
+    local completionRating = addon:CalculateRating((time/1000), dungeonID, level)
+    if(level > 1) then
+        if(completionRating > addon.playerBests[weeklyAffix][dungeonID].rating) then
+            print("NEW BEST!!!!\nNEW BEST!!!!\nNEW BEST!!!!\nNEW BEST!!!!\n")
+            return true
+        end
+    end
+    print("Get better????\nGet better????\nGet better????\nGet better????\n")
+    return false
+end
+
 --[[
     StartUp - Handles necessary start up actions.
     @return - the main addon frame
@@ -865,6 +873,8 @@ local function StartUp()
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_LOGIN")
+    mainFrame:RegisterEvent("MYTHIC_PLUS_NEW_WEEKLY_RECORD")
+    mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     mainFrame:RegisterEvent("PLAYER_STARTED_MOVING")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         if(event == "PLAYER_LOGIN") then
@@ -873,17 +883,41 @@ local function StartUp()
             summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
             PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
         end
-        if(event == "PLAYER_STARTED_MOVING") then
-            print("moving!")
-            local id, ms, level = 438, 1500000, 28
+        if(event == "MYTHIC_PLUS_NEW_WEEKLY_RECORD") then
+            print("NEWBEST!!!!\nNEWBEST!!!!\nNEWBEST!!!!\nNEWBEST!!!!\n")
+            local dungeonID = ...
             -- Update new best
-            UpdateDungeonButtons(dungeonHolderFrame.rows[id].scrollHolderFrame)
-            dungeonHolderFrame.rows[id].gainedScoreFrame.text:SetText("+0.0")
-            addon.playerBests[weeklyAffix][id].level = level
-            addon.playerBests[weeklyAffix][id].rating = 226
-            addon:CalculateDungeonRatings()
-            print("moving2!")
-            UpdateDungeonBests(summaryFrame.bestRunsFrame.rows[id], id)
+            --UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
+            --dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:SetText("+0.0")
+            --addon.playerBests[weeklyAffix][id].level = level
+            --addon.playerBests[weeklyAffix][id].rating = 226
+            --print("moving2!")
+            --UpdateDungeonBests(summaryFrame.bestRunsFrame.rows[dungeonID], dungeonID)
+            --summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+        end
+        if(event == "PLAYER_STARTED_MOVING") then
+            print("M+ COMPLETED")
+            local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
+                oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
+                PrimaryAffix, isEligibleForScore, members
+                    = C_ChallengeMode.GetCompletionInfo()
+            print(dungeonID, level, time, onTime, IsMapRecord, IsAffixRecord, PrimaryAffix, isEligibleForScore)
+            dungeonID = 206
+            level = 26
+            time = 5000000
+            onTime = false
+            if(CheckForNewBest(dungeonID, level, time)) then
+                local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
+                print("OLD: ", addon.playerBests[weeklyAffix][dungeonID].level, addon.dungeonInfo[dungeonID].name, addon.playerBests[weeklyAffix][dungeonID].time, addon.playerBests[weeklyAffix][dungeonID].rating)
+                addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
+                UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame, oldLevel)
+                dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:SetText("+0.0")
+                print("in")
+                UpdateDungeonBests(summaryFrame.bestRunsFrame.rows[dungeonID], dungeonID)
+                print("in1")
+                summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+            end
+            print("end")
         end
     end)
     return mainFrame
