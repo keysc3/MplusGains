@@ -325,6 +325,7 @@ local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
         startingLevel = startingLevel - 1
     end--]]
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
+    scrollHolderFrame.scrollChild.baseLevel = startingLevel
     scrollHolderFrame.scrollChild.startingLevel = startingLevel
     scrollHolderFrame.scrollChild.selectedLevel = (scrollHolderFrame.scrollChild.overTime) and startingLevel - 1 or startingLevel
     -- Calculate the row width and max scroll range.
@@ -440,8 +441,31 @@ end
 local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     local newLevel = addon.playerBests[weeklyAffix][dungeonID].level
+    if(newLevel < oldLevel and newLevel < scrollHolderFrame.scrollChild.baseLevel) then
+        --Create new button
+        local totalRowWidth = (((maxLevel + 1) - newLevel) * buttonWidth) - (maxLevel - newLevel)
+        local diff = totalRowWidth - scrollHolderFrame:GetWidth()
+        scrollHolderFrame.scrollFrame.maxScrollRange = (diff > scrollHolderFrame.scrollFrame.minScrollRange) and diff or scrollHolderFrame.scrollFrame.minScrollRange
+        scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
+        local button = nil
+        -- Create the buttons and add them to the parent frames buttons table
+        for i = newLevel, oldLevel - 1 do
+            button = CreateButton(i, button, scrollHolderFrame.scrollChild)
+            local keystoneButton = addon:CreateKeystoneButton(i, button)
+            SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, scrollHolderFrame:GetParent().gainedScoreFrame)
+            scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
+        end
+        scrollHolderFrame.scrollChild.keystoneButtons[oldLevel].button:ClearAllPoints()
+        scrollHolderFrame.scrollChild.keystoneButtons[oldLevel].button:SetPoint("LEFT", button, "RIGHT", -1, 0)
+    end
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
-    local newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+    local newPos
+    if(newLevel < oldLevel and newLevel < scrollHolderFrame.scrollChild.baseLevel) then
+        newPos = 1
+    else
+        newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+    end
+    scrollHolderFrame.scrollChild.baseLevel = newLevel
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     if((maxLevel - newLevel) <= scrollHolderFrame.widthMulti) then
         scrollHolderFrame.scrollFrame.maxScrollRange = newPos 
