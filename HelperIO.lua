@@ -275,9 +275,10 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 local gained = 0
                 if(keystoneButton.level ~= parentFrame.selectedLevel) then
                     if(keystoneButton.level ~= parentFrame.startingLevel or parentFrame.overTime) then
-                        gained = CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID)
+                        gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
                     end
                 end
+                print("gained:", gained)
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
                 SelectButtons(parentFrame, keystoneButton)
             end

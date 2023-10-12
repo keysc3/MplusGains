@@ -168,7 +168,7 @@ function addon:CalculateRating(runTime, dungeonID, level)
     if(runTime > dungeonTimeLimit) then
         bonusRating  = bonusRating - 5
     end
-    return scorePerLevel[level] + addon:RoundToOneDecimal(bonusRating)
+    return scorePerLevel[level] + bonusRating
 end
 
 --[[
