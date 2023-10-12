@@ -262,6 +262,14 @@ function addon:SortAffixesByLevel()
     return array
 end
 
+--[[
+    SetNewBest - Sets a dungeons best run to the given one.
+    @param dungeonID - the dungeons ID
+    @param level - the completed level
+    @param time - the time completed in
+    @param weeklyAffix - the weekly affix
+    @param onTime - bool for if the key was completed on time
+--]]
 function addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
     local entry = addon.playerBests[weeklyAffix][dungeonID]
     entry.level = level

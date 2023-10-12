@@ -438,6 +438,11 @@ local function CalculateRowWidth(row)
     return totalWidth
 end
 
+--[[
+    UpdateDungeonButtons - Updates the position and selected buttons of a dungeon row based on a given level. Adds new buttons if needed.
+    @param scrollHolderFrame - the rows scroll holder frame
+    @param oldLevel - the old level to update from
+--]]
 local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     local newLevel = addon.playerBests[weeklyAffix][dungeonID].level
@@ -801,6 +806,11 @@ local function GetDungeonLevelString(affix, dungeonID)
     return runString
 end
 
+--[[
+    UpdateDungeonBests - Updates a given dungeons dungeon best row.
+    @param parentFrame - the row being updated
+    @param dungeonID - the dungeon being updated
+--]]
 local function UpdateDungeonBests(parentFrame, dungeonID)
     addon:CalculateDungeonRatings()
     if(weeklyAffix == "tyrannical") then 
@@ -866,6 +876,9 @@ local function LoadData()
     addon:CalculateDungeonRatings()
 end
 
+--[[
+    CheckForNewBest - Checks to see if a dungeon run is better than the current best for that dungeon.
+--]]
 local function CheckForNewBest(dungeonID, level, time)
     local completionRating = addon:CalculateRating((time/1000), dungeonID, level)
     if(level > 1) then
@@ -908,6 +921,7 @@ local function StartUp()
                 PrimaryAffix, isEligibleForScore, members
                     = C_ChallengeMode.GetCompletionInfo()
             if(CheckForNewBest(dungeonID, level, time)) then
+                -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
                 local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
                 addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
                 UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame, oldLevel)
