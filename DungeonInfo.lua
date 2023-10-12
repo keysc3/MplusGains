@@ -75,9 +75,8 @@ function addon:GetPlayerDungeonBests()
             for i, affix in ipairs(affixScores) do
                 dungeonBest = {
                     ["level"] = affix.level,
-                    ["rating"] = scorePerLevel[affix.level] + CalculateRating(affix.durationSec, key),
+                    ["rating"] = addon:CalculateRating(affix.durationSec, key, affix.level),
                     ["time"] = affix.durationSec,
-                    ["name"] = value.name,
                     ["overTime"]  = affix.overTime
                 }
                 if(string.lower(affix.name) == "tyrannical") then
@@ -105,7 +104,7 @@ function CreateNoRunsEntry(name)
         ["level"] = 1,
         ["rating"] = 0,
         ["time"] = 0,
-        ["name"] = name
+        ["overTime"] = false
     }
     return dungeonBest
 end
@@ -150,20 +149,22 @@ end
 --[[
     CalculateRating - Calculates the exact rating for a dungeon run based on timer.
     @param runTime - the runs time in seconds
-    @param dungeonName - the dungeon name the run is from.
+    @param dungeonID - the dungeonID the run is from.
+    @param level - the level of the dungeon
     @return rating - the score from the run
 --]]
-function CalculateRating(runTime, dungeonName)
+function addon:CalculateRating(runTime, dungeonID, level)
     -- ((totaltime - runTime)/(totaltime * maxModifier)) * 5 = bonusScore
     -- Subtract 5 if overtime
-    dungeonTimeLimit = addon.dungeonInfo[dungeonName].timeLimit
+    dungeonTimeLimit = addon.dungeonInfo[dungeonID].timeLimit
     numerator = dungeonTimeLimit - runTime
     denominator = dungeonTimeLimit * maxModifier
-    rating = (numerator/denominator) * 5
+    quotient = numerator/denominator
+    bonusRating = (quotient >= 1) and 5 or (quotient * 5)
     if(runTime > dungeonTimeLimit) then
-        rating = rating - 5
+        bonusRating  = bonusRating  - 5
     end
-    return addon:RoundToOneDecimal(rating)
+    return scorePerLevel[level] + addon:RoundToOneDecimal(bonusRating)
 end
 
 --[[
@@ -255,4 +256,12 @@ function addon:SortAffixesByLevel()
         end)
 
     return array
+end
+
+function addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
+    local entry = addon.playerBests[weeklyAffix][dungeonID]
+    entry.level = level
+    entry.time = time/1000
+    entry.rating = addon:CalculateRating(time/1000, dungeonID, level)
+    entry.overTime = not onTime
 end
