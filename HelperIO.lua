@@ -467,7 +467,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     end
     scrollHolderFrame.scrollChild.baseLevel = newLevel
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
-    if((maxLevel - newLevel) <= scrollHolderFrame.widthMulti) then
+    if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
         scrollHolderFrame.scrollFrame.maxScrollRange = newPos 
     end
     scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
