@@ -278,7 +278,6 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                         gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
                     end
                 end
-                print("gained:", gained)
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
                 SelectButtons(parentFrame, keystoneButton)
             end
