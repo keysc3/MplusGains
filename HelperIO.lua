@@ -352,6 +352,28 @@ local function CreateButtonRow(scrollHolderFrame, dungeonID)
     CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
 end
 
+local function ScrollButtonRow(self, delta)
+    if(IsMouseButtonDown("RightButton")) then return end
+    -- Find the number of buttons before the new to be set scroll position
+    local numButtonsPrior = math.floor((self:GetHorizontalScroll()-self.minScrollRange)/(buttonWidth - 1))
+    local remainder = math.floor((self:GetHorizontalScroll()-self.minScrollRange)%(buttonWidth - 1))
+    if(delta == -1) then 
+        numButtonsPrior = numButtonsPrior + 1  
+    else 
+        if(remainder == 0) then
+            numButtonsPrior = numButtonsPrior - 1 
+        end
+    end
+    -- New scroll pos
+    local newPos = self.minScrollRange + (numButtonsPrior * (buttonWidth - 1))
+    if(newPos > self.maxScrollRange) then 
+        newPos = self.maxScrollRange 
+    elseif(newPos < self.minScrollRange) then 
+        newPos = self.minScrollRange 
+    end
+    self:SetHorizontalScroll(newPos)
+end
+
 --[[
     CreateScrollFrame - Creates a scroll frame for holding a scroll child to scroll.
     @param scrollHolderFrame - the parent frame.
@@ -363,27 +385,7 @@ local function CreateScrollFrame(scrollHolderFrame)
     scrollFrame.maxScrollRange = 0
     -- up left, down right
     -- scroll to the nearest button edge in the direction the user inputed.
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        if(IsMouseButtonDown("RightButton")) then return end
-        -- Find the number of buttons before the new to be set scroll position
-        local numButtonsPrior = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)/(buttonWidth - 1))
-        local remainder = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)%(buttonWidth - 1))
-        if(delta == -1) then 
-            numButtonsPrior = numButtonsPrior + 1  
-        else 
-            if(remainder == 0) then
-                numButtonsPrior = numButtonsPrior - 1 
-            end
-        end
-        -- New scroll pos
-        local newPos = scrollFrame.minScrollRange + (numButtonsPrior * (buttonWidth - 1))
-        if(newPos > self.maxScrollRange) then 
-            newPos = self.maxScrollRange 
-        elseif(newPos < self.minScrollRange) then 
-            newPos = self.minScrollRange 
-        end
-        self:SetHorizontalScroll(newPos)
-    end)
+    scrollFrame:SetScript("OnMouseWheel", ScrollButtonRow)
     scrollFrame:SetPoint("LEFT", scrollHolderFrame, "LEFT", 1, 0)
     scrollFrame:SetSize(scrollHolderFrame:GetWidth() - 2, scrollHolderFrame:GetHeight())
     scrollFrame:SetHorizontalScroll(scrollFrame.minScrollRange)
