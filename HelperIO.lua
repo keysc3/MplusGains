@@ -450,6 +450,9 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton:SetScript("OnLeave", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, downAlpha)
     end)
+    scrollButton:SetScript("OnMouseUp", function(self, btn)
+        ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
+    end)
     return scrollButton
 end
 
