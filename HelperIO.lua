@@ -13,6 +13,7 @@ local xPadding = 2
 local yPadding = -2
 local rowEdgePadding = 4
 local dungeonRowHeight = 64
+local scrollButtonPadding = 4
 
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
@@ -402,6 +403,34 @@ local function CreateScrollChildFrame(scrollHolderFrame)
     return scrollChildFrame
 end
 
+local function CreateScrollButton(parentFrame, anchorFrame, direction)
+    local downAlpha = 0.7
+    local textureName = "Interface/MONEYFRAME/Arrow-" .. direction .. "-Down.PNG"
+    local scrollButton = CreateFrame("Button", nil, parentFrame)
+    scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (direction == "Left") and scrollButtonPadding or -1, 0)
+    scrollButton:SetSize(20, parentFrame:GetHeight())
+    -- Set texture up and texture down.
+    scrollButton.textureUp = scrollButton:CreateTexture()
+    scrollButton.textureUp:SetTexture(textureName)
+    scrollButton.textureUp:ClearAllPoints()
+    scrollButton.textureUp:SetPoint("CENTER")
+    scrollButton.textureUp:SetVertexColor(1, 1, 1, downAlpha)
+    scrollButton.textureDown = scrollButton:CreateTexture()
+    scrollButton.textureDown:SetTexture(textureName)
+    scrollButton.textureDown:ClearAllPoints()
+    scrollButton.textureDown:SetPoint("CENTER")
+    scrollButton.textureDown:SetScale(0.9)
+    scrollButton:SetNormalTexture(scrollButton.textureUp)
+    scrollButton:SetPushedTexture(scrollButton.textureDown)
+    scrollButton:SetScript("OnEnter", function(self, motion)
+        self.textureUp:SetVertexColor(1, 1, 1, 1)
+    end)
+    scrollButton:SetScript("OnLeave", function(self, motion)
+        self.textureUp:SetVertexColor(1, 1, 1, downAlpha)
+    end)
+    return scrollButton
+end
+
 --[[
     CreateScrollHolderFrame - Creates a scroll holder frame for a scroll frame.
     @param parentRow - the parent row frame
@@ -410,13 +439,18 @@ end
 local function CreateScrollHolderFrame(parentRow)
     local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, nil)
     scrollHolderFrame.widthMulti = 6
-    scrollHolderFrame:SetPoint("LEFT", parentRow.dungeonTimerFrame, "RIGHT", xColPadding, 0)
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((scrollHolderFrame.widthMulti * buttonWidth) - scrollHolderFrame.widthMulti, parentRow:GetHeight())
     scrollHolderFrame.scrollFrame = CreateScrollFrame(scrollHolderFrame)
     scrollHolderFrame.scrollChild = CreateScrollChildFrame(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
+    local leftScrollButton = CreateScrollButton(parentRow, parentRow.dungeonTimerFrame, "Left")
+    scrollHolderFrame:SetPoint("LEFT", leftScrollButton, "RIGHT")
+    scrollHolderFrame.leftScrollButton = leftScrollButton
+
+    local rightScrollButton = CreateScrollButton(parentRow, scrollHolderFrame, "Right")
+    scrollHolderFrame.rightScrollButton = rightScrollButton
     return scrollHolderFrame
 end
 
@@ -427,11 +461,11 @@ end
 --]]
 local function CreateGainedScoreFrame(parentRow)
     local frame = CreateFrame("Frame", "GAINED_SCORE", parentRow)
-    frame:SetPoint("LEFT", parentRow.scrollHolderFrame, "RIGHT", xColPadding, 0)
+    frame:SetPoint("LEFT", parentRow.scrollHolderFrame.rightScrollButton, "RIGHT", scrollButtonPadding, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
-    frame:SetSize(40, parentRow:GetHeight())
+    frame:SetSize(32, parentRow:GetHeight())
     return frame
 end
 
@@ -444,8 +478,10 @@ local function CalculateRowWidth(row)
     local totalWidth = 0
     local children = { row:GetChildren() }
     for _, child in ipairs(children) do
-        totalWidth = totalWidth + child:GetWidth() + xColPadding
+        totalWidth = totalWidth + child:GetWidth()
     end
+    -- xCol and scroll padding used twice each
+    totalWidth = totalWidth + (2 * xColPadding) + (2 * scrollButtonPadding)
     return totalWidth
 end
 
