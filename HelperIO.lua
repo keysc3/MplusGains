@@ -312,37 +312,44 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
     end)
 end
 
---[[
-    CreateButtonRow - Creates the buttons for a row frame.
-    @param scrollHolderFrame - the scroll holder frame for the buttons.
-    @param gainedScoreFrame - the gained score frame for the buttons respective row.
-    @param dungeonID - the dungeonID the row is for.
---]]
-local function CreateButtonRow(scrollHolderFrame, gainedScoreFrame, dungeonID)
-    local startingLevel = addon.playerBests[weeklyAffix][dungeonID].level
-    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
-    --[[if(scrollHolderFrame.scrollChild.overTime) then
-        startingLevel = startingLevel - 1
-    end--]]
-    scrollHolderFrame.scrollChild.dungeonID = dungeonID
-    scrollHolderFrame.scrollChild.baseLevel = startingLevel
-    scrollHolderFrame.scrollChild.startingLevel = startingLevel
-    scrollHolderFrame.scrollChild.selectedLevel = (scrollHolderFrame.scrollChild.overTime) and startingLevel - 1 or startingLevel
+local function CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
     -- Calculate the row width and max scroll range.
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
     local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
     local diff = totalRowWidth - scrollHolderFrame:GetWidth()
     scrollHolderFrame.scrollFrame.maxScrollRange = (diff > scrollHolderFrame.scrollFrame.minScrollRange) and diff or scrollHolderFrame.scrollFrame.minScrollRange
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
-    scrollHolderFrame.scrollChild.keystoneButtons = {}
+end
+
+local function CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
     local button = nil
     -- Create the buttons and add them to the parent frames buttons table
     for i = startingLevel, maxLevel do
         button = CreateButton(i, button, scrollHolderFrame.scrollChild)
         local keystoneButton = addon:CreateKeystoneButton(i, button)
-        SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, gainedScoreFrame)
+        SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, scrollHolderFrame:GetParent().gainedScoreFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
     end
+end
+
+--[[
+    CreateButtonRow - Creates the buttons for a row frame.
+    @param scrollHolderFrame - the scroll holder frame for the buttons.
+    @param dungeonID - the dungeonID the row is for.
+--]]
+local function CreateButtonRow(scrollHolderFrame, dungeonID)
+    local startingLevel = addon.playerBests[weeklyAffix][dungeonID].level
+    -- Setup base values
+    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
+    scrollHolderFrame.scrollChild.dungeonID = dungeonID
+    scrollHolderFrame.scrollChild.baseLevel = startingLevel
+    scrollHolderFrame.scrollChild.startingLevel = startingLevel
+    scrollHolderFrame.scrollChild.selectedLevel = (scrollHolderFrame.scrollChild.overTime) and startingLevel - 1 or startingLevel
+    scrollHolderFrame.scrollChild.keystoneButtons = {}
+    -- Setup UI values
+    CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
+    -- Create the buttons and add them to the parent frames buttons table
+    CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
 end
 
 --[[
@@ -358,6 +365,7 @@ local function CreateScrollFrame(scrollHolderFrame)
     -- scroll to the nearest button edge in the direction the user inputed.
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
         if(IsMouseButtonDown("RightButton")) then return end
+        -- Find the number of buttons before the new to be set scroll position
         local numButtonsPrior = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)/(buttonWidth - 1))
         local remainder = math.floor((self:GetHorizontalScroll()-scrollFrame.minScrollRange)%(buttonWidth - 1))
         if(delta == -1) then 
@@ -367,6 +375,7 @@ local function CreateScrollFrame(scrollHolderFrame)
                 numButtonsPrior = numButtonsPrior - 1 
             end
         end
+        -- New scroll pos
         local newPos = scrollFrame.minScrollRange + (numButtonsPrior * (buttonWidth - 1))
         if(newPos > self.maxScrollRange) then 
             newPos = self.maxScrollRange 
@@ -446,45 +455,39 @@ end
 local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     local newLevel = addon.playerBests[weeklyAffix][dungeonID].level
-    if(newLevel < oldLevel and newLevel < scrollHolderFrame.scrollChild.baseLevel) then
-        --Create new button
-        local totalRowWidth = (((maxLevel + 1) - newLevel) * buttonWidth) - (maxLevel - newLevel)
-        local diff = totalRowWidth - scrollHolderFrame:GetWidth()
-        scrollHolderFrame.scrollFrame.maxScrollRange = (diff > scrollHolderFrame.scrollFrame.minScrollRange) and diff or scrollHolderFrame.scrollFrame.minScrollRange
-        scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
-        local button = nil
-        -- Create the buttons and add them to the parent frames buttons table
-        for i = newLevel, oldLevel - 1 do
-            button = CreateButton(i, button, scrollHolderFrame.scrollChild)
-            local keystoneButton = addon:CreateKeystoneButton(i, button)
-            SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, scrollHolderFrame:GetParent().gainedScoreFrame)
-            scrollHolderFrame.scrollChild.keystoneButtons[i] = keystoneButton
-        end
-        scrollHolderFrame.scrollChild.keystoneButtons[oldLevel].button:ClearAllPoints()
-        scrollHolderFrame.scrollChild.keystoneButtons[oldLevel].button:SetPoint("LEFT", button, "RIGHT", -1, 0)
-    end
-    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
+    local oldBase = scrollHolderFrame.scrollChild.baseLevel
+    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
+    scrollHolderFrame.scrollChild.startingLevel = newLevel
+    -- Setup new scroll range and pos values
     local newPos
-    if(newLevel < oldLevel and newLevel < scrollHolderFrame.scrollChild.baseLevel) then
+    if(newLevel <= oldBase) then
         newPos = 1
     else
         newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     end
-    scrollHolderFrame.scrollChild.baseLevel = newLevel
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
         scrollHolderFrame.scrollFrame.maxScrollRange = newPos 
     end
     scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
-    scrollHolderFrame.scrollChild.startingLevel = newLevel
-    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
-    if(addon.playerBests[weeklyAffix][dungeonID].overTime) then
+    -- Need new buttons if the newLevel is lower than the base level.
+    if(newLevel < oldBase) then
+        -- Setup new values and new buttons
+        scrollHolderFrame.scrollChild.baseLevel = newLevel
+        CalculateScrollHolderUIValues(scrollHolderFrame, newLevel)
+        CreateAllButtons(scrollHolderFrame, newLevel, oldBase - 1)
+        -- Set new anchor point for old level
+        scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
+        scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
+    end
+    -- Select/Deselect necessary buttons
+    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
+    if(scrollHolderFrame.scrollChild.overTime) then
         scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
-        return
+    else
+        scrollHolderFrame.scrollChild.selectedLevel = newLevel
     end
-    scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
-    scrollHolderFrame.scrollChild.selectedLevel = newLevel
 end
 
 --[[
@@ -499,7 +502,7 @@ local function PopulateAllDungeonRows(parentFrame)
         local value = addon.dungeonInfo[key]
         rows[i].dungeonNameFrame.text:SetText(value.name)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
-        CreateButtonRow(rows[i].scrollHolderFrame, rows[i].gainedScoreFrame, key)
+        CreateButtonRow(rows[i].scrollHolderFrame, key)
         parentFrame.rows[key] = rows[i]
     end
 end
