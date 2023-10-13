@@ -313,6 +313,11 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
     end)
 end
 
+--[[
+    CalculateScrollHolderUIValues - Calculates and sets the width and max scroll range values of a scrollframe
+    @param scrollHolderFrame - the scroll holder frame that is being adjusted
+    @param startingLevel - the starting keystone level to set the scroll to
+--]]
 local function CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
     -- Calculate the row width and max scroll range.
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
@@ -322,6 +327,12 @@ local function CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
 end
 
+--[[
+    CreateAllButtons - Create a number of keystone buttons.
+    @param scrollHolderFrame - the frame the buttons are a part of
+    @param startingLevel - the keystone level to start making buttons at
+    @param maxLevel - the keystone level to stop making buttons at.
+--]]
 local function CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
     local button = nil
     -- Create the buttons and add them to the parent frames buttons table
@@ -353,6 +364,11 @@ local function CreateButtonRow(scrollHolderFrame, dungeonID)
     CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
 end
 
+--[[
+    ScrollButtonRow - Handles the scroll action of a dungeon helper rows scroll frame.
+    @param self - the scroll frame being scrolled
+    @param delta - the direction of the scroll, 1 for up and -1 for down
+--]]
 local function ScrollButtonRow(self, delta)
     if(IsMouseButtonDown("RightButton")) then return end
     -- Find the number of buttons before the new to be set scroll position
@@ -403,6 +419,12 @@ local function CreateScrollChildFrame(scrollHolderFrame)
     return scrollChildFrame
 end
 
+--[[
+    CreateScrollButton - Creates a scroll button with an arrow texture.
+    @param parentFrame - the parent frome of the button
+    @param anchorFrame - the buttons anchor
+    @param direciont - the direction to point the arrow in.
+--]]
 local function CreateScrollButton(parentFrame, anchorFrame, direction)
     local downAlpha = 0.7
     local textureName = "Interface/MONEYFRAME/Arrow-" .. direction .. "-Down.PNG"
