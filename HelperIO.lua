@@ -70,6 +70,7 @@ local function CreateMainFrame()
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     _G["MainHelperIOFrame"] = frame
     tinsert(UISpecialFrames, frame:GetName())
+    frame:SetFrameStrata("HIGH")
     return frame
 end
 
