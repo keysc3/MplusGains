@@ -156,10 +156,15 @@ end
 function addon:CalculateRating(runTime, dungeonID, level)
     -- ((totaltime - runTime)/(totaltime * maxModifier)) * 5 = bonusScore
     -- Subtract 5 if overtime
-    dungeonTimeLimit = addon.dungeonInfo[dungeonID].timeLimit
-    numerator = dungeonTimeLimit - runTime
-    denominator = dungeonTimeLimit * maxModifier
-    quotient = numerator/denominator
+    local bonusRating = 0
+    local dungeonTimeLimit = addon.dungeonInfo[dungeonID].timeLimit
+    -- Runs over time by 40% are a 0 score.
+    if(runTime > (dungeonTimeLimit + (dungeonTimeLimit * maxModifier))) then
+        return 0
+    end
+    local numerator = dungeonTimeLimit - runTime
+    local denominator = dungeonTimeLimit * maxModifier
+    local quotient = numerator/denominator
     
     if(quotient >= 1) then bonusRating = 5
     elseif(quotient <= -1) then bonusRating = -5
