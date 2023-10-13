@@ -58,7 +58,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
-    local frame = CreateFrameWithBackdrop(UIParent, "Main")
+    local frame = CreateFrameWithBackdrop(UIParent, "MainHelperIOFrame")
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -68,6 +68,8 @@ local function CreateMainFrame()
     frame:SetScript("OnDragStart", frame.StartMoving)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    _G["MainHelperIOFrame"] = frame
+    tinsert(UISpecialFrames, frame:GetName())
     return frame
 end
 
