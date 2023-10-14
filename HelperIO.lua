@@ -957,6 +957,51 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     return summaryFrame
 end
 
+local function CreateFooter(anchorFrame, parentFrame, headerFrame)
+    local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
+    local hover_r, hover_g, hover_b, hover_a = 144/255, 144/255, 144/255, 1
+    local frame = CreateFrameWithBackdrop(parentFrame, nil)
+    frame:SetBackdropBorderColor(0, 0, 0, 1)
+    frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
+    frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    frame.text:ClearAllPoints()
+    frame.text:SetPoint("LEFT", frame, "LEFT")
+    frame.text:SetTextColor(_r, _g, _b, _a)
+    frame.text:SetText("Made by ExplodingMuffins")
+    local bugButton = CreateFrame("Button", nil, frame)
+    bugButton.mouseDown = false
+    bugButton:SetPoint("RIGHT", frame, "RIGHT")
+    bugButton.text = bugButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bugButton.text:ClearAllPoints()
+    bugButton.text:SetPoint("RIGHT", bugButton, "RIGHT")
+    bugButton.text:SetTextColor(_r, _g, _b, _a)
+    bugButton.text:SetText("Bug Report")
+    bugButton:SetSize(math.ceil(bugButton.text:GetWidth()), frame:GetHeight())
+    bugButton:SetScript("OnMouseUp", function(self, btn)
+        if(self:IsMouseMotionFocus()) then
+            self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
+        else
+            self.text:SetTextColor(_r, _g, _b, _a)
+        end
+        self.mouseDown = false
+    end)
+    bugButton:SetScript("OnEnter", function(self, motion)
+        if(not self.mouseDown) then
+            self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
+        end
+    end)
+    bugButton:SetScript("OnLeave", function(self, motion)
+        if(not self.mouseDown) then
+            self.text:SetTextColor(_r, _g, _b, _a)
+        end
+    end)
+    bugButton:SetScript("OnMouseDown", function(self, btn)
+        self.mouseDown = true
+        self.text:SetTextColor(188/255, 188/255, 188/255, 1)
+    end)
+end
+
 --[[
     LoadData - Loads player dungeon data. Called on player entering world event.
 --]]
@@ -996,6 +1041,7 @@ local function StartUp()
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
     mainFrame.summaryFrame = summaryFrame
     mainFrame.dungeonHolderFrame = dungeonHolderFrame
+    CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_LOGIN")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
