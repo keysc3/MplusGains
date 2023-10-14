@@ -14,7 +14,8 @@ local yPadding = -2
 local rowEdgePadding = 4
 local dungeonRowHeight = 64
 local scrollButtonPadding = 4
-
+local totalGained = 0
+local mainFrame = nil
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -279,9 +280,12 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 local gained = 0
                 if(keystoneButton.level ~= parentFrame.selectedLevel) then
                     if(keystoneButton.level ~= parentFrame.startingLevel or parentFrame.overTime) then
+                        --parentFrame:GetParent():GetParent():GetParent().summaryFrame.scoreHeader.gainText
                         gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
                     end
                 end
+                totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
+                mainFrame.summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
                 SelectButtons(parentFrame, keystoneButton)
             end
@@ -629,8 +633,24 @@ local function CreateSummaryHeaderFrame(parentFrame)
     local frame = CreateFrame("Frame", "SummaryHeader", parentFrame)
     frame:SetPoint("TOP", parentFrame, "TOP")
     frame:SetSize(parentFrame:GetWidth(), dungeonRowHeight)
-    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
-    frame.text:SetPoint("CENTER")
+    local playerName = CreateFrame("Frame", "PlayerHeader", frame)
+    playerName:SetPoint("TOP", frame, "TOP")
+    playerName:SetSize(frame:GetWidth(), frame:GetHeight()/2)
+    playerName.playerText = playerName:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
+    playerName.playerText:SetPoint("BOTTOM")
+    playerName.playerText:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")")
+    local scoreHeader = CreateFrame("Frame", "ScoreHeader", frame)
+    scoreHeader:SetPoint("TOP", playerName, "BOTTOM")
+    scoreHeader:SetSize(frame:GetWidth(), frame:GetHeight()/2)
+    scoreHeader.ratingText = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
+    scoreHeader.ratingText:SetPoint("TOP", scoreHeader, "TOP")
+    scoreHeader.ratingText:SetText("(1231231230)")
+    scoreHeader.gainText = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    scoreHeader.gainText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    scoreHeader.gainText:SetPoint("LEFT", scoreHeader.ratingText, "RIGHT", 0, 0)
+    scoreHeader.gainText:SetText("")
+    frame.playerName = playerName
+    frame.scoreHeader = scoreHeader
     return frame
 end
 --[[
@@ -969,11 +989,13 @@ local function StartUp()
     addon:CalculateDungeonRatings()
     weeklyAffix = addon:GetWeeklyAffixInfo()
     -- UI setup
-    local mainFrame = CreateMainFrame()
+    mainFrame = CreateMainFrame()
     mainFrame:Hide()
     local headerFrame = CreateHeaderFrame(mainFrame)
     local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
     local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+    mainFrame.summaryFrame = summaryFrame
+    mainFrame.dungeonHolderFrame = dungeonHolderFrame
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_LOGIN")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -981,7 +1003,7 @@ local function StartUp()
         if(event == "PLAYER_LOGIN") then
             LoadData()
             PopulateAllDungeonRows(dungeonHolderFrame)
-            summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+            summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
             PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
         end
         if(event == "CHALLENGE_MODE_COMPLETED") then
@@ -994,16 +1016,19 @@ local function StartUp()
                 local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
                 addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
                 UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame, oldLevel)
-                dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:SetText("+0.0")
                 UpdateDungeonBests(summaryFrame.bestRunsFrame.rows[dungeonID], dungeonID)
-                summaryFrame.header.text:SetText(UnitName("player") .. " (" .. GetRealmName() .. ")\n" .. addon.totalRating)
+                -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
+                summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
+                totalGained = totalGained - tonumber(string.sub(dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:GetText(), 2, -1))
+                summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
+                dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:SetText("+0.0")
             end
         end
     end)
-    return mainFrame
+    --return mainFrame
 end
 
-local mainFrame = StartUp()
+StartUp()
 
 SLASH_HELPERIO1 = "/helperio"
 SLASH_HELPERIO2 = "/hio"
