@@ -2,7 +2,7 @@
 ## Title: Mplus Gains
 ## Notes: Provides rating gain information.
 ## Author: Colin Keys
-## Version: 0.0.1
+## Version: 1.0.0
 
 FormatHelpers.lua
 KeystoneButton.lua
