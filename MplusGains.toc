@@ -1,10 +1,10 @@
 ## Interface: 100105
-## Title: HelperIO
-## Notes: Provides IO gain information.
+## Title: Mplus Gains
+## Notes: Provides rating gain information.
 ## Author: Colin Keys
 ## Version: 0.0.1
 
 FormatHelpers.lua
 KeystoneButton.lua
 DungeonInfo.lua
-HelperIO.lua
+MplusGains.lua

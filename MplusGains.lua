@@ -59,7 +59,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
-    local frame = CreateFrameWithBackdrop(UIParent, "MainHelperIOFrame")
+    local frame = CreateFrameWithBackdrop(UIParent, "MainMplusGainsFrame")
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -69,7 +69,7 @@ local function CreateMainFrame()
     frame:SetScript("OnDragStart", frame.StartMoving)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    _G["MainHelperIOFrame"] = frame
+    _G["MainMplusGainsFrame"] = frame
     tinsert(UISpecialFrames, frame:GetName())
     frame:SetFrameStrata("HIGH")
     return frame
@@ -86,9 +86,9 @@ local function CreateHeaderFrame(parentFrame)
     local frame = CreateFrameWithBackdrop(parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
-    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOUTLINE")
     frame.text:SetPoint("CENTER")
-    frame.text:SetText(addonName)
+    frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
     local exitButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
     local r, g, b, a = 207/255, 170/255, 0, 1
@@ -1139,8 +1139,8 @@ end
 
 StartUp()
 
-SLASH_HELPERIO1 = "/helperio"
-SLASH_HELPERIO2 = "/hio"
-SlashCmdList["HELPERIO"] = function()
+SLASH_MPLUSGAINS1 = "/mplusgains"
+SLASH_MPLUSGAINS2 = "/mpg"
+SlashCmdList["MPLUSGAINS"] = function()
    if(mainFrame:IsShown()) then mainFrame:Hide() else mainFrame:Show() end
 end
