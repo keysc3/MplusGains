@@ -964,7 +964,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateBugReportFrame(anchorFrame, parentFrame)
-    local url = "TEST TEXT WOW A URL?!"
+    local url = "https://github.com/keysc3/MplusGains/issues/new/choose"
     -- Holder
     local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
     frame:SetSize(300, 80)
