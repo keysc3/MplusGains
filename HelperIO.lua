@@ -957,8 +957,15 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     return summaryFrame
 end
 
+--[[
+    CreateBugReportFrame - Creates the bug report frame.
+    @param anchorFrame - the frame to anchor to
+    @param parentFame - the parent frame of the created frame
+    @return frame - the created frame
+--]]
 local function CreateBugReportFrame(anchorFrame, parentFrame)
     local url = "TEST TEXT WOW A URL?!"
+    -- Holder
     local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
     frame:SetSize(300, 80)
     frame:SetPoint("BOTTOMRIGHT", anchorFrame, "TOPRIGHT")
@@ -970,21 +977,25 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     })
     frame:SetBackdropColor(0, 0, 0, 0.9)
     frame:SetFrameLevel(20)
+    -- Header
     frame.headerText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.headerText:ClearAllPoints()
     frame.headerText:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -8)
     frame.headerText:SetText("Report a Bug")
+    -- Edit box
     frame.editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     frame.editBox:SetSize(frame:GetWidth() - 40, 20)
     frame.editBox:SetPoint("TOPLEFT", frame.headerText, "BOTTOMLEFT", 4, -8)
     frame.editBox:SetText(url)
     frame.editBox:SetScript("OnTextChanged", function(self, userInput)
+        -- Don't want text being changed, reset it on change attempt.
         self:SetText(url)
         self:HighlightText()
     end)
     frame.editBox:SetScript("OnEscapePressed", function(self)
         frame:Hide()
     end)
+    -- Copy url text
     frame.copyText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.copyText:ClearAllPoints()
     frame.copyText:SetPoint("TOPLEFT", frame.editBox, "BOTTOMLEFT", -4, -4)
@@ -993,18 +1004,28 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     return frame
 end
 
+--[[
+    CreateFooter - Creates the footer for the main addon frame.
+    @param anchorFrame - the frame to anchor to
+    @param parentFrame - the frames parent to set
+    @param headerFrame - the header frame of the addon
+--]]
 local function CreateFooter(anchorFrame, parentFrame, headerFrame)
+    -- Button rgb values
     local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
     local hover_r, hover_g, hover_b, hover_a = 144/255, 144/255, 144/255, 1
+    -- Holder
     local frame = CreateFrameWithBackdrop(parentFrame, nil)
     frame:SetBackdropBorderColor(0, 0, 0, 0)
     frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
     frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
+    -- Creator text
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.text:ClearAllPoints()
     frame.text:SetPoint("LEFT", frame, "LEFT", 1, 0)
     frame.text:SetTextColor(_r, _g, _b, _a)
     frame.text:SetText("Made by ExplodingMuffins")
+    -- Bug report frame and button
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
     bugButton.mouseDown = false
@@ -1015,6 +1036,7 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     bugButton.text:SetTextColor(_r, _g, _b, _a)
     bugButton.text:SetText("Bug Report")
     bugButton:SetSize(math.ceil(bugButton.text:GetWidth()), frame:GetHeight())
+    -- Handle button text color change depending on action.
     bugButton:SetScript("OnMouseUp", function(self, btn)
         if(self:IsMouseMotionFocus()) then
             self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
@@ -1113,7 +1135,6 @@ local function StartUp()
             end
         end
     end)
-    --return mainFrame
 end
 
 StartUp()
