@@ -957,24 +957,61 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     return summaryFrame
 end
 
+local function CreateBugReportFrame(anchorFrame, parentFrame)
+    local url = "TEST TEXT WOW A URL?!"
+    local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    frame:SetSize(300, 80)
+    frame:SetPoint("BOTTOMRIGHT", anchorFrame, "TOPRIGHT")
+    frame:SetBackdrop({
+        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 0.9)
+    frame:SetFrameLevel(20)
+    frame.headerText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.headerText:ClearAllPoints()
+    frame.headerText:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -8)
+    frame.headerText:SetText("Report a Bug")
+    frame.editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+    frame.editBox:SetSize(frame:GetWidth() - 40, 20)
+    frame.editBox:SetPoint("TOPLEFT", frame.headerText, "BOTTOMLEFT", 4, -8)
+    frame.editBox:SetText(url)
+    frame.editBox:SetScript("OnTextChanged", function(self, userInput)
+        self:SetText(url)
+        self:HighlightText()
+    end)
+    frame.editBox:SetScript("OnEscapePressed", function(self)
+        frame:Hide()
+    end)
+    frame.copyText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.copyText:ClearAllPoints()
+    frame.copyText:SetPoint("TOPLEFT", frame.editBox, "BOTTOMLEFT", -4, -4)
+    frame.copyText:SetText("Press Ctrl+C to copy the URL")
+    frame:Hide()
+    return frame
+end
+
 local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
     local hover_r, hover_g, hover_b, hover_a = 144/255, 144/255, 144/255, 1
     local frame = CreateFrameWithBackdrop(parentFrame, nil)
-    frame:SetBackdropBorderColor(0, 0, 0, 1)
+    frame:SetBackdropBorderColor(0, 0, 0, 0)
     frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
     frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.text:ClearAllPoints()
-    frame.text:SetPoint("LEFT", frame, "LEFT")
+    frame.text:SetPoint("LEFT", frame, "LEFT", 1, 0)
     frame.text:SetTextColor(_r, _g, _b, _a)
     frame.text:SetText("Made by ExplodingMuffins")
+    local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
     bugButton.mouseDown = false
     bugButton:SetPoint("RIGHT", frame, "RIGHT")
     bugButton.text = bugButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bugButton.text:ClearAllPoints()
-    bugButton.text:SetPoint("RIGHT", bugButton, "RIGHT")
+    bugButton.text:SetPoint("RIGHT", bugButton, "RIGHT", -1, 0)
     bugButton.text:SetTextColor(_r, _g, _b, _a)
     bugButton.text:SetText("Bug Report")
     bugButton:SetSize(math.ceil(bugButton.text:GetWidth()), frame:GetHeight())
@@ -983,6 +1020,11 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
             self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
         else
             self.text:SetTextColor(_r, _g, _b, _a)
+        end
+        if(bugReportFrame:IsShown()) then
+            bugReportFrame:Hide()
+        else
+            bugReportFrame:Show()
         end
         self.mouseDown = false
     end)
