@@ -94,7 +94,7 @@ local function CreateHeaderFrame(parentFrame)
     local r, g, b, a = 207/255, 170/255, 0, 1
     exitButton:SetPoint("RIGHT", frame, "RIGHT")
     exitButton:SetSize(headerHeight, headerHeight)
-    exitButton.text = exitButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    exitButton.text = exitButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOUTLINE")
     exitButton.text:ClearAllPoints()
     exitButton.text:SetPoint("CENTER")
     exitButton.text:SetText("x")
