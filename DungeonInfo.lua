@@ -175,6 +175,10 @@ function addon:CalculateRating(runTime, dungeonID, level)
     if(runTime > dungeonTimeLimit) then
         bonusRating  = bonusRating - 5
     end
+    -- Untimed keys over 20 use the base score of a 20.
+    if(level > 20 and runTime > dungeonTimeLimit) then
+        level = 20
+    end
     return scorePerLevel[level] + bonusRating
 end
 
