@@ -404,9 +404,11 @@ end
     @return scrollFrame - the created scroll frame
 --]]
 local function CreateScrollFrame(scrollHolderFrame)
-    local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
+    local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameTemplate")
     scrollFrame.minScrollRange = 1
     scrollFrame.maxScrollRange = 0
+    scrollFrame.ScrollBar:Hide()
+    scrollFrame.ScrollBar:Disable()
     -- up left, down right
     -- scroll to the nearest button edge in the direction the user inputed.
     scrollFrame:SetScript("OnMouseWheel", ScrollButtonRow)
