@@ -79,6 +79,7 @@ function addon:GetPlayerDungeonBests()
                     ["time"] = affix.durationSec,
                     ["overTime"]  = affix.overTime
                 }
+                print(dungeonBest["rating"])
                 if(string.lower(affix.name) == "tyrannical") then
                     playerBests.tyrannical[key] = dungeonBest
                     if(#affixScores == 1) then playerBests.fortified[key] = CreateNoRunsEntry(value.name) end
@@ -174,6 +175,10 @@ function addon:CalculateRating(runTime, dungeonID, level)
 
     if(runTime > dungeonTimeLimit) then
         bonusRating  = bonusRating - 5
+    end
+    -- Untimed keys over 20 use the base score for 20.
+    if(level > 20 and runTime > dungeonTimeLimit) then
+        level = 20
     end
     return scorePerLevel[level] + bonusRating
 end
