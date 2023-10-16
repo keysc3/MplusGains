@@ -114,24 +114,26 @@ end
     @return - retuns the alternating weekly affix
 --]]
 function addon:GetWeeklyAffixInfo()
-    local weeklyAffix = ""
+    local weeklyAffix = nil
     local affixInfo = {}
-    C_MythicPlus.RequestMapInfo()
+    C_MythicPlus.RequestCurrentAffixes()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
-    for i, value in ipairs(affixIDs) do
-        name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
-        affixInfo[value.id] = {
-            ["description"] = description,
-            ["name"] = name,
-            ["filedataid"] = filedataid,
-            ["level"] = GetAffixLevel(name)
-        }
-        if(string.lower(name) == "tyrannical" or string.lower(name) == "fortified") then
-            weeklyAffix = string.lower(name)
-        end
-            
-    end 
-    addon.affixInfo = affixInfo
+    if(affixIDs ~= nil) then
+        for i, value in ipairs(affixIDs) do
+            name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
+            affixInfo[value.id] = {
+                ["description"] = description,
+                ["name"] = name,
+                ["filedataid"] = filedataid,
+                ["level"] = GetAffixLevel(name)
+            }
+            if(string.lower(name) == "tyrannical" or string.lower(name) == "fortified") then
+                weeklyAffix = string.lower(name)
+            end
+                
+        end 
+        addon.affixInfo = affixInfo
+    end
     return weeklyAffix
 end
 

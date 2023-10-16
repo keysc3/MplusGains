@@ -151,7 +151,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonNameFrame(parentRow)
-    local frame = CreateFrame("Frame", string.upper(name), parentRow)
+    local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", rowEdgePadding, 0)
     frame:SetSize(150, parentRow:GetHeight())
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -404,9 +404,11 @@ end
     @return scrollFrame - the created scroll frame
 --]]
 local function CreateScrollFrame(scrollHolderFrame)
-    local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameCodeTemplate")
+    local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameTemplate")
     scrollFrame.minScrollRange = 1
     scrollFrame.maxScrollRange = 0
+    scrollFrame.ScrollBar:Hide()
+    scrollFrame.ScrollBar:Disable()
     -- up left, down right
     -- scroll to the nearest button edge in the direction the user inputed.
     scrollFrame:SetScript("OnMouseWheel", ScrollButtonRow)
@@ -561,6 +563,22 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
 end
 
 --[[
+    PopulateAllAffixRows - Fill the affix info frames with the affix data
+    @param parentFrame - the frame whose children are the affix rows.
+--]]
+local function PopulateAllAffixRows(parentFrame)
+    local sortedAffixes = addon:SortAffixesByLevel()
+    local rows = { parentFrame:GetChildren() }
+    for i, key in ipairs(sortedAffixes) do
+        local affixTable = addon.affixInfo[key]
+        rows[i].titleFrame.nameText:SetText(affixTable.name)
+        rows[i].titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
+        rows[i].titleFrame.texture:SetTexture(affixTable.filedataid)
+        rows[i].descFrame.descText:SetText(affixTable.description)
+    end
+end
+
+--[[
     PopulateAllDungeonRows - Populates the dungeon rows with the proper data. Called on player entering world.
     @param parentFrame - the parent frame
 --]]
@@ -583,7 +601,8 @@ end
 --]]
 local function CreateAllDungeonRows(parentFrame)
     local row = parentFrame
-    for n in pairs(addon.dungeonInfo) do
+    --for n in pairs(addon.dungeonInfo) do
+    for i = 1, 8 do
         row = CreateDungeonRowFrame(row, parentFrame)
         row.dungeonNameFrame = CreateDungeonNameFrame(row)
         row.dungeonTimerFrame = CreateDungeonTimerFrame(row)
@@ -644,7 +663,7 @@ local function CreateSummaryHeaderFrame(parentFrame)
     scoreHeader:SetSize(frame:GetWidth(), frame:GetHeight()/2)
     scoreHeader.ratingText = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOutline")
     scoreHeader.ratingText:SetPoint("TOP", scoreHeader, "TOP")
-    scoreHeader.ratingText:SetText("(1231231230)")
+    scoreHeader.ratingText:SetText("0.0")
     scoreHeader.gainText = scoreHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     scoreHeader.gainText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     scoreHeader.gainText:SetPoint("LEFT", scoreHeader.ratingText, "RIGHT", 0, 0)
@@ -670,10 +689,9 @@ end
     CreateAffixInfoFrame - Creates a frame containing affix name and description
     @param anchorFrame - the frame to anchor to
     @param parentFrame - the frame to parent to
-    @param affixTable - the affix name
     @return frame - the created frame
 --]]
-local function CreateAffixInfoFrame(anchorFrame, parentFrame, affixTable)
+local function CreateAffixInfoFrame(anchorFrame, parentFrame)
     -- Holder frame
     local frame = CreateFrame("Frame", "KeystoneInfo", parentFrame)
     local anchorPoint = "BOTTOM"
@@ -686,31 +704,27 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame, affixTable)
     frame:SetPoint("TOP", anchorFrame, anchorPoint, 0, yOffset)
     frame:SetSize(frameWidth, dungeonRowHeight)
     -- Header with icon, name of affix, level it starts at.
-    local titleFrame = CreateFrame("Frame", "AffixHeader", frame)
-    titleFrame:SetPoint("TOP")
+    frame.titleFrame = CreateFrame("Frame", "AffixHeader", frame)
+    frame.titleFrame:SetPoint("TOP")
     local titleFrameHeight = 20
-    titleFrame:SetSize(frameWidth, titleFrameHeight)
-    titleFrame.nameText = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    titleFrame.nameText:SetPoint("CENTER")
-    titleFrame.nameText:SetText(affixTable.name)
-    titleFrame.levelText = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
-    titleFrame.levelText:SetPoint("LEFT", titleFrame.nameText, "RIGHT", xPadding, 0)
-    titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
-    titleFrame.texture = titleFrame:CreateTexture()
-    titleFrame.texture:SetPoint("RIGHT", titleFrame.nameText, "LEFT", -4, 0)
+    frame.titleFrame:SetSize(frameWidth, titleFrameHeight)
+    frame.titleFrame.nameText = frame.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    frame.titleFrame.nameText:SetPoint("CENTER")
+    frame.titleFrame.levelText = frame.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
+    frame.titleFrame.levelText:SetPoint("LEFT", frame.titleFrame.nameText, "RIGHT", xPadding, 0)
+    frame.titleFrame.texture = frame.titleFrame:CreateTexture()
+    frame.titleFrame.texture:SetPoint("RIGHT", frame.titleFrame.nameText, "LEFT", -4, 0)
     local iconSize = titleFrameHeight/1.2
-    titleFrame.texture:SetSize(iconSize, iconSize)
-    titleFrame.texture:SetTexture(affixTable.filedataid)
+    frame.titleFrame.texture:SetSize(iconSize, iconSize)
     -- Description
-    local descFrame = CreateFrame("Frame", "AffixDesc", frame)
-    descFrame:SetPoint("TOP", titleFrame, "BOTTOM")
-    descFrame:SetSize(frameWidth, frame:GetHeight() - titleFrameHeight)
-    descFrame.descText = descFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    descFrame.descText:ClearAllPoints()
-    descFrame.descText:SetPoint("TOPLEFT", descFrame, "TOPLEFT")
-    descFrame.descText:SetPoint("TOPRIGHT", descFrame, "TOPRIGHT")
-    descFrame.descText:SetJustifyH("LEFT")
-    descFrame.descText:SetText(affixTable.description)
+    frame.descFrame = CreateFrame("Frame", "AffixDesc", frame)
+    frame.descFrame:SetPoint("TOP", frame.titleFrame, "BOTTOM")
+    frame.descFrame:SetSize(frameWidth, frame:GetHeight() - titleFrameHeight)
+    frame.descFrame.descText = frame.descFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.descFrame.descText:ClearAllPoints()
+    frame.descFrame.descText:SetPoint("TOPLEFT", frame.descFrame, "TOPLEFT")
+    frame.descFrame.descText:SetPoint("TOPRIGHT", frame.descFrame, "TOPRIGHT")
+    frame.descFrame.descText:SetJustifyH("LEFT")
     return frame
 end
 
@@ -941,17 +955,17 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     summaryFrame.header  = CreateSummaryHeaderFrame(summaryFrame)
     CreateSplitFrame(summaryFrame.header, summaryFrame)
     -- Affix info
-    local affixInfoFrame = CreateAffixInfoHolderFrame(summaryFrame.header, summaryFrame)
-    local anchor = affixInfoFrame
-    local sortedAffixes = addon:SortAffixesByLevel()
-    for i, key in ipairs(sortedAffixes) do
-        anchor = CreateAffixInfoFrame(anchor, affixInfoFrame, addon.affixInfo[key])
+    summaryFrame.affixInfoHolderFrame = CreateAffixInfoHolderFrame(summaryFrame.header, summaryFrame)
+    local anchor = summaryFrame.affixInfoHolderFrame
+    for i = 1, 3 do
+        anchor = CreateAffixInfoFrame(anchor, summaryFrame.affixInfoHolderFrame)
     end
-    CreateSplitFrame(affixInfoFrame, summaryFrame)
+    CreateSplitFrame(summaryFrame.affixInfoHolderFrame, summaryFrame)
     -- Best runs
-    summaryFrame.bestRunsFrame = CreateBestRunsFrame(affixInfoFrame, summaryFrame)
+    summaryFrame.bestRunsFrame = CreateBestRunsFrame(summaryFrame.affixInfoHolderFrame, summaryFrame)
     anchor = CreateDungeonSummaryHeader(summaryFrame.bestRunsFrame)
-    for n in pairs(addon.dungeonInfo) do
+    --for n in pairs(addon.dungeonInfo) do
+    for i = 1, 8 do
         anchor = CreateBestRunRow(anchor, summaryFrame.bestRunsFrame)
     end
     return summaryFrame
@@ -1077,14 +1091,6 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
 end
 
 --[[
-    LoadData - Loads player dungeon data. Called on player entering world event.
---]]
-local function LoadData()
-    addon:GetPlayerDungeonBests()
-    addon:CalculateDungeonRatings()
-end
-
---[[
     CheckForNewBest - Checks to see if a dungeon run is better than the current best for that dungeon.
 --]]
 local function CheckForNewBest(dungeonID, level, time)
@@ -1098,15 +1104,29 @@ local function CheckForNewBest(dungeonID, level, time)
 end
 
 --[[
-    StartUp - Handles necessary start up actions.
-    @return - the main addon frame
+    DataSetup - Setup for all data that will be displayed.
+    @param dungeonHolderFrame - the dungeon holder frame containing dungeon rows
+    @param summaryFrame - the summary frame containing to be changed values.
 --]]
-local function StartUp()
-    -- Non-player dungeon info
+local function DataSetup(dungeonHolderFrame, summaryFrame)
+    weeklyAffix = addon:GetWeeklyAffixInfo()
+    if(weeklyAffix == nil) then return false end
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
     weeklyAffix = addon:GetWeeklyAffixInfo()
+    PopulateAllDungeonRows(dungeonHolderFrame)
+    PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
+    PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
+    summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
+    return true
+end
+
+--[[
+    StartUp - Handles necessary start up actions.
+    @return - the main addon frame
+--]]
+local function StartUp()
     -- UI setup
     mainFrame = CreateMainFrame()
     mainFrame:Hide()
@@ -1117,15 +1137,28 @@ local function StartUp()
     mainFrame.dungeonHolderFrame = dungeonHolderFrame
     CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
     -- Data setup.
-    mainFrame:RegisterEvent("PLAYER_LOGIN")
+    mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
-        if(event == "PLAYER_LOGIN") then
-            LoadData()
-            PopulateAllDungeonRows(dungeonHolderFrame)
-            summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
-            PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
+        -- Player entering world
+        if(event == "PLAYER_ENTERING_WORLD") then
+            local isInitialLogin, isReloadingUI = ...
+            if(isInitialLogin) then
+                self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
+            else
+                if(isReloadingUI) then
+                    DataSetup(dungeonHolderFrame, summaryFrame)
+                end
+            end
         end
+        -- M+ affix update
+        if(event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE") then
+            -- Affix info is available after this event fires, but not always the first time.
+            if(DataSetup(dungeonHolderFrame, summaryFrame)) then
+                self:UnregisterEvent(event)
+            end
+        end
+        -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
             local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
                 oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
