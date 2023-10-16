@@ -1,6 +1,6 @@
 ## Interface: 100105
 ## Title: Mplus Gains
-## Notes: Provides rating gain information.
+## Notes: Provides m+ rating gain information. /mplusgains or /mpg
 ## Author: Colin Keys
 ## Version: 1.0.1
 
