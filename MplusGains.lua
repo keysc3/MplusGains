@@ -337,11 +337,11 @@ end
 --[[
     CreateAllButtons - Create a number of keystone buttons.
     @param scrollHolderFrame - the frame the buttons are a part of
-    @param startingLevel - the keystone level to start making buttons at
     @param maxLevel - the keystone level to stop making buttons at.
 --]]
-local function CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
+local function CreateAllButtons(scrollHolderFrame, maxLevel)
     local button = nil
+    local startingLevel = scrollHolderFrame.scrollChild.startingLevel
     -- Create the buttons and add them to the parent frames buttons table
     for i = startingLevel, maxLevel do
         button = CreateButton(i, button, scrollHolderFrame.scrollChild)
@@ -351,13 +351,29 @@ local function CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
     end
 end
 
+local function GetStartingLevel(dungeonID)
+    local best = addon.playerBests[weeklyAffix][dungeonID]
+    if(best.overTime) then
+        local baseBetter = best.level
+        for i = best.level - 1, 1, -1 do
+            if(addon.scorePerLevel[i] > best.rating) then
+                baseBetter = i
+                break
+            end
+        end
+        return baseBetter
+    end
+    return best.level
+
+end
+
 --[[
     CreateButtonRow - Creates the buttons for a row frame.
     @param scrollHolderFrame - the scroll holder frame for the buttons.
     @param dungeonID - the dungeonID the row is for.
 --]]
 local function CreateButtonRow(scrollHolderFrame, dungeonID)
-    local startingLevel = addon.playerBests[weeklyAffix][dungeonID].level
+    local startingLevel = GetStartingLevel(dungeonID)
     -- Setup base values
     scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
@@ -368,7 +384,7 @@ local function CreateButtonRow(scrollHolderFrame, dungeonID)
     -- Setup UI values
     CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
     -- Create the buttons and add them to the parent frames buttons table
-    CreateAllButtons(scrollHolderFrame, startingLevel, maxLevel)
+    CreateAllButtons(scrollHolderFrame, maxLevel)
 end
 
 --[[
@@ -526,7 +542,7 @@ end
 --]]
 local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
-    local newLevel = addon.playerBests[weeklyAffix][dungeonID].level
+    local newLevel = GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
     scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
     scrollHolderFrame.scrollChild.startingLevel = newLevel
@@ -547,7 +563,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
         -- Setup new values and new buttons
         scrollHolderFrame.scrollChild.baseLevel = newLevel
         CalculateScrollHolderUIValues(scrollHolderFrame, newLevel)
-        CreateAllButtons(scrollHolderFrame, newLevel, oldBase - 1)
+        CreateAllButtons(scrollHolderFrame, oldBase - 1)
         -- Set new anchor point for old level
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
