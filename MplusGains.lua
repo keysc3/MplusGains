@@ -203,12 +203,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     btn:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    -- If the button being created is the first/highest key level button for the dungeon it is for. Set it to the selected color.
-    if(keyLevel ~= parentFrame.startingLevel or (keyLevel == parentFrame.startingLevel and parentFrame.overTime)) then
-        btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-    else
-        btn:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
-    end
+    btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
@@ -238,7 +233,7 @@ local function SelectButtons(parentFrame, keystoneButton)
             parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         end
     else
-        if(parentFrame.overTime) then
+        if(keystoneButton.level == parentFrame.startingLevel) then
             parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
             parentFrame.selectedLevel = keystoneButton.level - 1
             return
@@ -275,14 +270,11 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
         if(btn == "RightButton") then keystoneButton.mouseDown = false end
         if(btn == "LeftButton") then
             -- If the clicked button is not the currently selected button then select necessary buttons.
-            if(keystoneButton.level ~= parentFrame.selectedLevel or (keystoneButton.level == parentFrame.startingLevel and keystoneButton.level == parentFrame.selectedLevel and parentFrame.overTime)) then
+            if(keystoneButton.level ~= parentFrame.selectedLevel or (keystoneButton.level == parentFrame.startingLevel and keystoneButton.level == parentFrame.selectedLevel)) then
                 -- Set gained from selected key completion
                 local gained = 0
                 if(keystoneButton.level ~= parentFrame.selectedLevel) then
-                    if(keystoneButton.level ~= parentFrame.startingLevel or parentFrame.overTime) then
-                        --parentFrame:GetParent():GetParent():GetParent().summaryFrame.scoreHeader.gainText
-                        gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
-                    end
+                    gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
                 end
                 totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
@@ -354,16 +346,18 @@ end
 local function GetStartingLevel(dungeonID)
     local best = addon.playerBests[weeklyAffix][dungeonID]
     if(best.overTime) then
-        local baseBetter = best.level
-        for i = best.level - 1, 1, -1 do
+        local baseLevel = best.level
+        for i = best.level - 1, 2, -1 do
+            -- Find lowest key that gives more min rating than best rating
             if(addon.scorePerLevel[i] > best.rating) then
-                baseBetter = i
+                baseLevel = i
+            else
                 break
             end
         end
-        return baseBetter
+        return (baseLevel == best.level) and (best.level + 1) or baseLevel
     end
-    return best.level
+    return best.level + 1
 
 end
 
@@ -379,7 +373,7 @@ local function CreateButtonRow(scrollHolderFrame, dungeonID)
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
     scrollHolderFrame.scrollChild.baseLevel = startingLevel
     scrollHolderFrame.scrollChild.startingLevel = startingLevel
-    scrollHolderFrame.scrollChild.selectedLevel = (scrollHolderFrame.scrollChild.overTime) and startingLevel - 1 or startingLevel
+    scrollHolderFrame.scrollChild.selectedLevel = startingLevel - 1
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     -- Setup UI values
     CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
@@ -551,7 +545,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     if(newLevel <= oldBase) then
         newPos = 1
     else
-        newPos = 1 + ((newLevel - oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+        newPos = 1 + (((newLevel - 1)- oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     end
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
@@ -570,12 +564,8 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     end
     -- Select/Deselect necessary buttons
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
-    if(scrollHolderFrame.scrollChild.overTime) then
-        scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-        scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
-    else
-        scrollHolderFrame.scrollChild.selectedLevel = newLevel
-    end
+    scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+    scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
 end
 
 --[[
@@ -1155,6 +1145,7 @@ local function StartUp()
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    --mainFrame:RegisterEvent("PLAYER_STARTED_MOVING")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         -- Player entering world
         if(event == "PLAYER_ENTERING_WORLD") then
@@ -1176,10 +1167,15 @@ local function StartUp()
         end
         -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
+        --if(event == "PLAYER_STARTED_MOVING") then
             local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
                 oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
                 PrimaryAffix, isEligibleForScore, members
                     = C_ChallengeMode.GetCompletionInfo()
+                --[[dungeonID = 405
+                level = 22
+                time = 2800000
+                onTime = false--]]
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
                 local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
