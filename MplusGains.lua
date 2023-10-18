@@ -404,7 +404,6 @@ end
 local function CreateButtonRow(scrollHolderFrame, dungeonID)
     local startingLevel = GetStartingLevel(dungeonID)
     -- Setup base values
-    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
     scrollHolderFrame.scrollChild.baseLevel = startingLevel
     scrollHolderFrame.scrollChild.startingLevel = startingLevel
@@ -583,7 +582,6 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     local newLevel = GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
-    scrollHolderFrame.scrollChild.overTime = addon.playerBests[weeklyAffix][dungeonID].overTime
     scrollHolderFrame.scrollChild.startingLevel = newLevel
     -- Setup new scroll range and pos values
     local newPos
