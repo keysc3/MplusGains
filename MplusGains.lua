@@ -256,6 +256,31 @@ local function CalculateGainedRating(keystoneLevel, dungeonID)
     return (gainedScore > 0) and gainedScore or 0
 end
 
+local function CheckForScrollButtonEnable(scrollHolderFrame)
+    local scrollFrame = scrollHolderFrame.scrollFrame
+    local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
+    local leftEnabled = scrollHolderFrame.leftScrollButton:IsEnabled()
+    local rightEnabled = scrollHolderFrame.rightScrollButton:IsEnabled()
+    if(scrollFrame.minScrollRange >= scroll) then
+        if(leftEnabled) then
+            scrollHolderFrame.leftScrollButton:Disable()
+        end
+    else
+        if(not leftEnabled) then
+            scrollHolderFrame.leftScrollButton:Enable()
+        end
+    end
+    if(scrollFrame.maxScrollRange <= scroll) then
+        if(rightEnabled) then
+            scrollHolderFrame.rightScrollButton:Disable()
+        end
+    else
+        if(not rightEnabled) then
+            scrollHolderFrame.rightScrollButton:Enable()
+        end
+    end
+end
+
 --[[
     SetKeystoneButtonScripts - Sets a keystone buttons event scripts.
     @param keystoneButton - the keystoneButton object to use
@@ -307,6 +332,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 local newPos = parentScroll:GetHorizontalScroll() + diff
                 parentScroll:SetHorizontalScroll((newPos > parentScroll.maxScrollRange) and parentScroll.maxScrollRange or newPos)
             end
+            CheckForScrollButtonEnable(parentScroll:GetParent())
             lastX = currX
         end
     end)
@@ -406,6 +432,7 @@ local function ScrollButtonRow(self, delta)
         newPos = self.minScrollRange 
     end
     self:SetHorizontalScroll(newPos)
+    CheckForScrollButtonEnable(self:GetParent())
 end
 
 --[[
@@ -445,8 +472,8 @@ end
     @param direciont - the direction to point the arrow in.
 --]]
 local function CreateScrollButton(parentFrame, anchorFrame, direction)
-    local downAlpha = 0.7
-    local textureName = "Interface/MONEYFRAME/Arrow-" .. direction .. "-Down.PNG"
+    local defualtAlpha = 0.7
+    local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-" .. direction .. "-Default.PNG"
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (direction == "Left") and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(20, parentFrame:GetHeight())
@@ -455,7 +482,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.textureUp:SetTexture(textureName)
     scrollButton.textureUp:ClearAllPoints()
     scrollButton.textureUp:SetPoint("CENTER")
-    scrollButton.textureUp:SetVertexColor(1, 1, 1, downAlpha)
+    scrollButton.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
     scrollButton.textureDown = scrollButton:CreateTexture()
     scrollButton.textureDown:SetTexture(textureName)
     scrollButton.textureDown:ClearAllPoints()
@@ -463,11 +490,18 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.textureDown:SetScale(0.9)
     scrollButton:SetNormalTexture(scrollButton.textureUp)
     scrollButton:SetPushedTexture(scrollButton.textureDown)
+    scrollButton.disabledTexture = scrollButton:CreateTexture()
+    scrollButton.disabledTexture:SetTexture(textureName)
+    scrollButton.disabledTexture:ClearAllPoints()
+    scrollButton.disabledTexture:SetPoint("CENTER")
+    scrollButton.disabledTexture:SetScale(0.9)
+    scrollButton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
+    scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
     scrollButton:SetScript("OnEnter", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, 1)
     end)
     scrollButton:SetScript("OnLeave", function(self, motion)
-        self.textureUp:SetVertexColor(1, 1, 1, downAlpha)
+        self.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
     end)
     scrollButton:SetScript("OnMouseUp", function(self, btn)
         ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
@@ -490,8 +524,10 @@ local function CreateScrollHolderFrame(parentRow)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     local leftScrollButton = CreateScrollButton(parentRow, parentRow.dungeonTimerFrame, "Left")
+    leftScrollButton:Disable()
     scrollHolderFrame:SetPoint("LEFT", leftScrollButton, "RIGHT")
     scrollHolderFrame.leftScrollButton = leftScrollButton
+
 
     local rightScrollButton = CreateScrollButton(parentRow, scrollHolderFrame, "Right")
     scrollHolderFrame.rightScrollButton = rightScrollButton
@@ -566,6 +602,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
     scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
+    CheckForScrollButtonEnable(scrollHolderFrame)
 end
 
 --[[
@@ -1145,7 +1182,6 @@ local function StartUp()
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-    --mainFrame:RegisterEvent("PLAYER_STARTED_MOVING")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         -- Player entering world
         if(event == "PLAYER_ENTERING_WORLD") then
@@ -1167,15 +1203,10 @@ local function StartUp()
         end
         -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
-        --if(event == "PLAYER_STARTED_MOVING") then
             local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
                 oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
                 PrimaryAffix, isEligibleForScore, members
                     = C_ChallengeMode.GetCompletionInfo()
-                --[[dungeonID = 405
-                level = 22
-                time = 2800000
-                onTime = false--]]
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
                 local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
