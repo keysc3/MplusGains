@@ -203,11 +203,38 @@ local function CreateHeaderFrame(parentFrame)
         totalGained = 0
         mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
     end)
+    -- Holder
+    local tooltip = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    tooltip:SetSize(1, 30)
+    tooltip:SetPoint("BOTTOMLEFT", resetButton, "TOPLEFT", -2, -1)
+    tooltip:SetBackdrop({
+        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    })
+    tooltip:SetBackdropColor(0, 0, 0, 0.9)
+    tooltip:SetFrameLevel(20)
+    -- Header
+    tooltip.text = tooltip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tooltip.text:ClearAllPoints()
+    tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
+    tooltip.text:SetText("Reset selected keys")
+    tooltip:SetWidth(math.ceil(tooltip.text:GetWidth() + 16))
+    tooltip:Hide()
     resetButton:SetScript("OnEnter", function(self, motion)
         self.texture:SetVertexColor(1, 1, 1, 1)
+        --[[GameTooltip:SetOwner(self, "ANCHOR_NONE")
+        GameTooltip:SetPoint("LEFT", self, "RIGHT")
+        GameTooltip:AddLine("Reset selected keys")
+        GameTooltip:SetBackdropColor(1, 0, 0, 1)
+        GameTooltip:Show()--]]
+        tooltip:Show()
     end)
     resetButton:SetScript("OnLeave", function(self, motion)
         self.texture:SetVertexColor(1, 1, 1, 0.7)
+        GameTooltip:Hide()
+        tooltip:Hide()
     end)
     return frame
 end
