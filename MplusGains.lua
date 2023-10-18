@@ -76,6 +76,75 @@ local function CreateMainFrame()
 end
 
 --[[
+    SelectButtons - Sets button colors to selected or unselected based on clicked button.
+    @param parentFrame - the parent frame containing the relevant buttons
+    @param keystoneButton - the keystonebutton object that was clicked.
+--]]
+local function SelectButtons(parentFrame, keystoneButton)
+    -- If the clicked button is a higher keystone level than the currently selected button.
+    if(keystoneButton.level > parentFrame.selectedLevel) then 
+        -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
+        for i = parentFrame.selectedLevel + 1, keystoneButton.level do
+            parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+        end
+    -- If the clicked button is a lower keystone level than the currently selected button.
+    elseif(keystoneButton.level < parentFrame.selectedLevel) then
+        -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
+        for i = parentFrame.selectedLevel, keystoneButton.level + 1, -1 do
+            parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+        end
+    else
+        if(keystoneButton.level == parentFrame.startingLevel) then
+            parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+            parentFrame.selectedLevel = keystoneButton.level - 1
+            return
+        end
+    end
+    parentFrame.selectedLevel = keystoneButton.level
+end
+
+--[[
+    CheckForScrollButtonEnable - Checks to see if either scroll buttons needs to be enabled or disabled and does so if necessary.
+    @param scrollHolderFrame - the frame the scroll buttons are a part of.
+--]]
+local function CheckForScrollButtonEnable(scrollHolderFrame)
+    local scrollFrame = scrollHolderFrame.scrollFrame
+    local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
+    local leftEnabled = scrollHolderFrame.leftScrollButton:IsEnabled()
+    local rightEnabled = scrollHolderFrame.rightScrollButton:IsEnabled()
+    if(scrollFrame.minScrollRange >= scroll) then
+        if(leftEnabled) then
+            scrollHolderFrame.leftScrollButton:Disable()
+        end
+    else
+        if(not leftEnabled) then
+            scrollHolderFrame.leftScrollButton:Enable()
+        end
+    end
+    if(scrollFrame.maxScrollRange <= scroll) then
+        if(rightEnabled) then
+            scrollHolderFrame.rightScrollButton:Disable()
+        end
+    else
+        if(not rightEnabled) then
+            scrollHolderFrame.rightScrollButton:Enable()
+        end
+    end
+end
+
+--[[
+    ResetToStartingLevel - Resets the given scroll holder frame to the default state.
+    @param scrollHolderFrame - the scroll holder frame to reset
+--]]
+local function ResetToStartingLevel(scrollHolderFrame)
+    local startingLevel = scrollHolderFrame.scrollChild.startingLevel
+    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[startingLevel])
+    scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+    scrollHolderFrame.scrollChild.selectedLevel = startingLevel - 1
+    CheckForScrollButtonEnable(scrollHolderFrame)
+end
+
+--[[
     CreateHeaderFrame- Creates the header frame for the addon.
     @param parentFrame - the parent frame to use
     @return frame - the created frame
@@ -125,12 +194,15 @@ local function CreateHeaderFrame(parentFrame)
     resetButton.texture1:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
     resetButton.texture1:SetScale(0.9)
     resetButton:SetPushedTexture(resetButton.texture1)
-    --[[resetButton:SetScript("OnMouseDown", function(self, btn)
-        self.texture:SetVertexColor(1, 1, 1, 1)
+    resetButton:SetScript("OnMouseUp", function(self, btn)
+        for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
+            value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange)
+            value.gainedScoreFrame.text:SetText("+0.0")
+            ResetToStartingLevel(value.scrollHolderFrame)
+        end
+        totalGained = 0
+        mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
     end)
-    resetButton:SetScript("OnMouseDown", function(self, btn)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-    end)--]]
     resetButton:SetScript("OnEnter", function(self, motion)
         self.texture:SetVertexColor(1, 1, 1, 1)
     end)
@@ -242,34 +314,6 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
 end
 
 --[[
-    SelectButtons - Sets button colors to selected or unselected based on clicked button.
-    @param parentFrame - the parent frame containing the relevant buttons
-    @param keystoneButton - the keystonebutton object that was clicked.
---]]
-local function SelectButtons(parentFrame, keystoneButton)
-    -- If the clicked button is a higher keystone level than the currently selected button.
-    if(keystoneButton.level > parentFrame.selectedLevel) then 
-        -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
-        for i = parentFrame.selectedLevel + 1, keystoneButton.level do
-            parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
-        end
-    -- If the clicked button is a lower keystone level than the currently selected button.
-    elseif(keystoneButton.level < parentFrame.selectedLevel) then
-        -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
-        for i = parentFrame.selectedLevel, keystoneButton.level + 1, -1 do
-            parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-        end
-    else
-        if(keystoneButton.level == parentFrame.startingLevel) then
-            parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-            parentFrame.selectedLevel = keystoneButton.level - 1
-            return
-        end
-    end
-    parentFrame.selectedLevel = keystoneButton.level
-end
-
---[[
     CalculateGainedRating - Calculates the rating gained given a keystone level and a dungeon.
     @param keystoneLevel - the level of the keystone completed
     @param dungeonID - the dungeon ID for the dungeon being completed.
@@ -281,35 +325,6 @@ local function CalculateGainedRating(keystoneLevel, dungeonID)
     local newScore = addon.scorePerLevel[keystoneLevel]
     local gainedScore = addon:CalculateDungeonTotal(newScore, oppositeBest) - addon.playerDungeonRatings[dungeonID].mapScore
     return (gainedScore > 0) and gainedScore or 0
-end
-
---[[
-    CheckForScrollButtonEnable - Checks to see if either scroll buttons needs to be enabled or disabled and does so if necessary.
-    @param scrollHolderFrame - the frame the scroll buttons are a part of.
---]]
-local function CheckForScrollButtonEnable(scrollHolderFrame)
-    local scrollFrame = scrollHolderFrame.scrollFrame
-    local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
-    local leftEnabled = scrollHolderFrame.leftScrollButton:IsEnabled()
-    local rightEnabled = scrollHolderFrame.rightScrollButton:IsEnabled()
-    if(scrollFrame.minScrollRange >= scroll) then
-        if(leftEnabled) then
-            scrollHolderFrame.leftScrollButton:Disable()
-        end
-    else
-        if(not leftEnabled) then
-            scrollHolderFrame.leftScrollButton:Enable()
-        end
-    end
-    if(scrollFrame.maxScrollRange <= scroll) then
-        if(rightEnabled) then
-            scrollHolderFrame.rightScrollButton:Disable()
-        end
-    else
-        if(not rightEnabled) then
-            scrollHolderFrame.rightScrollButton:Enable()
-        end
-    end
 end
 
 --[[
@@ -632,11 +647,8 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
     end
-    -- Select/Deselect necessary buttons
-    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[newLevel])
-    scrollHolderFrame.scrollChild.keystoneButtons[newLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-    scrollHolderFrame.scrollChild.selectedLevel = newLevel - 1
-    CheckForScrollButtonEnable(scrollHolderFrame)
+    -- Reset scroll frame to no key selected state.
+    ResetToStartingLevel(scrollHolderFrame)
 end
 
 --[[
