@@ -256,6 +256,10 @@ local function CalculateGainedRating(keystoneLevel, dungeonID)
     return (gainedScore > 0) and gainedScore or 0
 end
 
+--[[
+    CheckForScrollButtonEnable - Checks to see if either scroll buttons needs to be enabled or disabled and does so if necessary.
+    @param scrollHolderFrame - the frame the scroll buttons are a part of.
+--]]
 local function CheckForScrollButtonEnable(scrollHolderFrame)
     local scrollFrame = scrollHolderFrame.scrollFrame
     local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
@@ -369,6 +373,11 @@ local function CreateAllButtons(scrollHolderFrame, maxLevel)
     end
 end
 
+--[[
+    GetStartingLevel - Gets the lowest dungeon level it is possible to get rating from and returns it.
+    @param dungeonID - the ID of the dungeon to be checked.
+    @return - the lowest key level the playe can get rating from for the dungeon.
+--]]
 local function GetStartingLevel(dungeonID)
     local best = addon.playerBests[weeklyAffix][dungeonID]
     if(best.overTime) then
@@ -381,7 +390,7 @@ local function GetStartingLevel(dungeonID)
                 break
             end
         end
-        return (baseLevel == best.level) and (best.level + 1) or baseLevel
+        return baseLevel
     end
     return best.level + 1
 
