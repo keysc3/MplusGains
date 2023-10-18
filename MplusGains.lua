@@ -387,9 +387,9 @@ end
 --[[
     CalculateScrollHolderUIValues - Calculates and sets the width and max scroll range values of a scrollframe
     @param scrollHolderFrame - the scroll holder frame that is being adjusted
-    @param startingLevel - the starting keystone level to set the scroll to
 --]]
-local function CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
+local function CalculateScrollHolderUIValues(scrollHolderFrame)
+    local startingLevel = scrollHolderFrame.scrollChild.startingLevel
     -- Calculate the row width and max scroll range.
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
     local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
@@ -452,7 +452,7 @@ local function CreateButtonRow(scrollHolderFrame, dungeonID)
     scrollHolderFrame.scrollChild.selectedLevel = startingLevel - 1
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     -- Setup UI values
-    CalculateScrollHolderUIValues(scrollHolderFrame, startingLevel)
+    CalculateScrollHolderUIValues(scrollHolderFrame)
     -- Create the buttons and add them to the parent frames buttons table
     CreateAllButtons(scrollHolderFrame, maxLevel)
 end
@@ -641,7 +641,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     if(newLevel < oldBase) then
         -- Setup new values and new buttons
         scrollHolderFrame.scrollChild.baseLevel = newLevel
-        CalculateScrollHolderUIValues(scrollHolderFrame, newLevel)
+        CalculateScrollHolderUIValues(scrollHolderFrame)
         CreateAllButtons(scrollHolderFrame, oldBase - 1)
         -- Set new anchor point for old level
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
