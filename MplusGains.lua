@@ -1026,18 +1026,58 @@ local function GetDungeonLevelString(affix, dungeonID)
 end
 
 --[[
-    UpdateDungeonBests - Updates a given dungeons dungeon best row.
+    FillBestRunRow - Fills a best run row with a dungeons player data.
+    @param rowFrame - the row to fill
+    @param dungeonID - the dungeon data to use
+--]]
+local function FillBestRunRow(rowFrame, dungeonID)
+    rowFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", dungeonID))
+    rowFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", dungeonID))
+    rowFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
+    rowFrame.nameFrame.nameText:SetText(addon.dungeonInfo[dungeonID].name)
+end
+
+--[[
+    UpdateDungeonBests - Updates dungone bests frame with a re-sort and update new values.
     @param parentFrame - the row being updated
     @param dungeonID - the dungeon being updated
 --]]
 local function UpdateDungeonBests(parentFrame, dungeonID)
     addon:CalculateDungeonRatings()
-    if(weeklyAffix == "tyrannical") then 
-        parentFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", dungeonID))
-    else
-        parentFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", dungeonID))
+    -- Get row position of the dungeon.
+    local orderPos = 1
+    for key, value in pairs(parentFrame.order) do
+        if(value == dungeonID) then orderPos = key break end
     end
-    parentFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
+    -- If the dungeon isn't the first then re-order where needed.
+    if(orderPos > 1) then
+        local tempID
+        local newPos = orderPos
+        local newRow = parentFrame.rows[dungeonID]
+        for i = orderPos - 1, 1, -1 do
+            tempID = parentFrame.order[i]
+            -- If the updated dungeons map score is better than the current iteration rows dungeon
+            if(addon.playerDungeonRatings[dungeonID].mapScore > addon.playerDungeonRatings[tempID].mapScore) then
+                -- Store the iterations row, replace it with the last iterations row, replace last iteration row variable.
+                local tempRow = parentFrame.rows[tempID]
+                parentFrame.rows[tempID] = newRow
+                newRow = tempRow
+                -- Row is being pushed down one, update order of iterations row and position of dungeon being updated.
+                parentFrame.order[i + 1] = tempID
+                newPos = i
+                -- Fill the row with its new dungeons info
+                FillBestRunRow(parentFrame.rows[tempID], tempID)
+            else
+                break
+            end
+        end
+        -- If the order has changed update dungeons associated row and order
+        if(newPos ~= orderPos) then
+            parentFrame.rows[dungeonID] = newRow 
+            parentFrame.order[newPos] = dungeonID
+        end
+    end
+    FillBestRunRow(parentFrame.rows[dungeonID], dungeonID)
 end
 
 --[[
@@ -1048,12 +1088,11 @@ local function PopulateAllBestRunsRows(parentFrame)
     local sortedScores = addon:SortDungeonsByScore()
     local rows = { parentFrame:GetChildren() }
     parentFrame.rows = {}
+    parentFrame.order = {}
     for i, key in ipairs(sortedScores) do
         local index = i + 1
-        rows[index].tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", key))
-        rows[index].fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", key))
-        rows[index].scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[key].mapScore))
-        rows[index].nameFrame.nameText:SetText(addon.dungeonInfo[key].name)
+        FillBestRunRow(rows[index], key)
+        parentFrame.order[i] = key
         parentFrame.rows[key] = rows[index]
     end
 end
@@ -1285,7 +1324,7 @@ local function StartUp()
                 local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
                 addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
                 UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame, oldLevel)
-                UpdateDungeonBests(summaryFrame.bestRunsFrame.rows[dungeonID], dungeonID)
+                UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
                 -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
                 summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
                 totalGained = totalGained - tonumber(string.sub(dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:GetText(), 2, -1))
