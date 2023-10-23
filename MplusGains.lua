@@ -601,7 +601,6 @@ local function CreateScrollHolderFrame(parentRow)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollChild:SetSize(0, scrollHolderFrame.scrollFrame:GetHeight())
     local leftScrollButton = CreateScrollButton(parentRow, parentRow.dungeonTimerFrame, "Left")
-    leftScrollButton:Disable()
     scrollHolderFrame:SetPoint("LEFT", leftScrollButton, "RIGHT")
     scrollHolderFrame.leftScrollButton = leftScrollButton
 
@@ -708,6 +707,7 @@ local function PopulateAllDungeonRows(parentFrame)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
         CreateButtonRow(rows[i].scrollHolderFrame, key)
         parentFrame.rows[key] = rows[i]
+        CheckForScrollButtonEnable(rows[i].scrollHolderFrame)
     end
 end
 
