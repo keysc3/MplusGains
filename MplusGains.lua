@@ -168,32 +168,33 @@ local function CreateHeaderFrame(parentFrame)
     exitButton.text:SetPoint("CENTER")
     exitButton.text:SetText("x")
     exitButton.text:SetTextScale(1.4)
+    exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))
     local _r, _g, _b, _a = exitButton.text:GetTextColor()
     exitButton.text:SetTextColor(r, g, b, a)
     exitButton:SetScript("OnMouseUp", function(self, btn)
         if(btn == "LeftButton") then parentFrame:Hide() end
+        exitButton.text:SetTextScale(1.4)
     end)
-    exitButton:SetScript("OnEnter", function(self, motion)
-        self.text:SetTextColor(_r, _g, _b, _a)
+    exitButton:SetScript("OnMouseDown", function(self, motion)
+        exitButton.text:SetTextScale(1.2)
     end)
-    exitButton:SetScript("OnLeave", function(self, motion)
-        self.text:SetTextColor(r, g, b, a)
-    end)
-    local resetButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
+    local resetButton = CreateFrame("Button", "REFRESH_BUTTON", frame)
     resetButton:SetPoint("LEFT", frame, "LEFT")
     resetButton:SetSize(headerHeight, headerHeight)
     resetButton.texture = resetButton:CreateTexture()
     resetButton.texture:ClearAllPoints()
     resetButton.texture:SetPoint("CENTER")
     resetButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
-    resetButton.texture:SetVertexColor(1, 1, 1, 0.7)
+    resetButton.texture:SetVertexColor(1, 1, 1, 0.8)
     resetButton:SetNormalTexture(resetButton.texture)
     resetButton.texture1 = resetButton:CreateTexture()
     resetButton.texture1:ClearAllPoints()
     resetButton.texture1:SetPoint("CENTER")
     resetButton.texture1:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
+    resetButton.texture1:SetVertexColor(1, 1, 1, 0.9)
     resetButton.texture1:SetScale(0.9)
     resetButton:SetPushedTexture(resetButton.texture1)
+    resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
     resetButton:SetScript("OnMouseUp", function(self, btn)
         for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
             value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange)
@@ -223,16 +224,9 @@ local function CreateHeaderFrame(parentFrame)
     tooltip:SetWidth(math.ceil(tooltip.text:GetWidth() + 16))
     tooltip:Hide()
     resetButton:SetScript("OnEnter", function(self, motion)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        --[[GameTooltip:SetOwner(self, "ANCHOR_NONE")
-        GameTooltip:SetPoint("LEFT", self, "RIGHT")
-        GameTooltip:AddLine("Reset selected keys")
-        GameTooltip:SetBackdropColor(1, 0, 0, 1)
-        GameTooltip:Show()--]]
         tooltip:Show()
     end)
     resetButton:SetScript("OnLeave", function(self, motion)
-        self.texture:SetVertexColor(1, 1, 1, 0.7)
         GameTooltip:Hide()
         tooltip:Hide()
     end)
@@ -644,9 +638,8 @@ end
 --[[
     UpdateDungeonButtons - Updates the position and selected buttons of a dungeon row based on a given level. Adds new buttons if needed.
     @param scrollHolderFrame - the rows scroll holder frame
-    @param oldLevel - the old level to update from
 --]]
-local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
+local function UpdateDungeonButtons(scrollHolderFrame)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     local newLevel = GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
@@ -656,7 +649,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     if(newLevel <= oldBase) then
         newPos = 1
     else
-        newPos = 1 + (((newLevel - 1)- oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+        newPos = 1 + (((newLevel) - oldBase) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     end
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
@@ -1182,7 +1175,6 @@ end
 local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     -- Button rgb values
     local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
-    local hover_r, hover_g, hover_b, hover_a = 144/255, 144/255, 144/255, 1
     -- Holder
     local frame = CreateFrameWithBackdrop(parentFrame, nil)
     frame:SetBackdropBorderColor(0, 0, 0, 0)
@@ -1207,41 +1199,22 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     -- Bug report frame and button
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
-    bugButton.mouseDown = false
     bugButton:SetPoint("RIGHT", frame, "RIGHT")
     bugButton.text = bugButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bugButton.text:ClearAllPoints()
-    bugButton.text:SetPoint("RIGHT", bugButton, "RIGHT", -1, 0)
+    bugButton.text:SetPoint("CENTER", bugButton, "CENTER", 0, 0)
     bugButton.text:SetTextColor(_r, _g, _b, _a)
     bugButton.text:SetText("Bug Report")
-    bugButton:SetSize(math.ceil(bugButton.text:GetWidth()), frame:GetHeight())
+    bugButton:SetSize(math.ceil(bugButton.text:GetWidth() + 2), frame:GetHeight())
+    bugButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, bugButton))
+    bugButton:SetPushedTexture(CreateNewTexture(hover.r, hover.g, hover.b, 0.07, bugButton))
     -- Handle button text color change depending on action.
     bugButton:SetScript("OnMouseUp", function(self, btn)
-        if(self:IsMouseMotionFocus()) then
-            self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
-        else
-            self.text:SetTextColor(_r, _g, _b, _a)
-        end
         if(bugReportFrame:IsShown()) then
             bugReportFrame:Hide()
         else
             bugReportFrame:Show()
         end
-        self.mouseDown = false
-    end)
-    bugButton:SetScript("OnEnter", function(self, motion)
-        if(not self.mouseDown) then
-            self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
-        end
-    end)
-    bugButton:SetScript("OnLeave", function(self, motion)
-        if(not self.mouseDown) then
-            self.text:SetTextColor(_r, _g, _b, _a)
-        end
-    end)
-    bugButton:SetScript("OnMouseDown", function(self, btn)
-        self.mouseDown = true
-        self.text:SetTextColor(188/255, 188/255, 188/255, 1)
     end)
 end
 
@@ -1321,9 +1294,8 @@ local function StartUp()
                     = C_ChallengeMode.GetCompletionInfo()
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
-                local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
                 addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
-                UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame, oldLevel)
+                UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
                 UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
                 -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
                 summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
