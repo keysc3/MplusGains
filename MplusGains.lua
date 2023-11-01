@@ -1175,7 +1175,6 @@ end
 local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     -- Button rgb values
     local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
-    local hover_r, hover_g, hover_b, hover_a = 144/255, 144/255, 144/255, 1
     -- Holder
     local frame = CreateFrameWithBackdrop(parentFrame, nil)
     frame:SetBackdropBorderColor(0, 0, 0, 0)
@@ -1200,41 +1199,22 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     -- Bug report frame and button
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
-    bugButton.mouseDown = false
     bugButton:SetPoint("RIGHT", frame, "RIGHT")
     bugButton.text = bugButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bugButton.text:ClearAllPoints()
-    bugButton.text:SetPoint("RIGHT", bugButton, "RIGHT", -1, 0)
+    bugButton.text:SetPoint("CENTER", bugButton, "CENTER", 0, 0)
     bugButton.text:SetTextColor(_r, _g, _b, _a)
     bugButton.text:SetText("Bug Report")
-    bugButton:SetSize(math.ceil(bugButton.text:GetWidth()), frame:GetHeight())
+    bugButton:SetSize(math.ceil(bugButton.text:GetWidth() + 2), frame:GetHeight())
+    bugButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, bugButton))
+    bugButton:SetPushedTexture(CreateNewTexture(hover.r, hover.g, hover.b, 0.07, bugButton))
     -- Handle button text color change depending on action.
     bugButton:SetScript("OnMouseUp", function(self, btn)
-        if(self:IsMouseMotionFocus()) then
-            self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
-        else
-            self.text:SetTextColor(_r, _g, _b, _a)
-        end
         if(bugReportFrame:IsShown()) then
             bugReportFrame:Hide()
         else
             bugReportFrame:Show()
         end
-        self.mouseDown = false
-    end)
-    bugButton:SetScript("OnEnter", function(self, motion)
-        if(not self.mouseDown) then
-            self.text:SetTextColor(hover_r, hover_g, hover_b, hover_a)
-        end
-    end)
-    bugButton:SetScript("OnLeave", function(self, motion)
-        if(not self.mouseDown) then
-            self.text:SetTextColor(_r, _g, _b, _a)
-        end
-    end)
-    bugButton:SetScript("OnMouseDown", function(self, btn)
-        self.mouseDown = true
-        self.text:SetTextColor(188/255, 188/255, 188/255, 1)
     end)
 end
 
