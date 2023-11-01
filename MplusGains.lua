@@ -644,9 +644,8 @@ end
 --[[
     UpdateDungeonButtons - Updates the position and selected buttons of a dungeon row based on a given level. Adds new buttons if needed.
     @param scrollHolderFrame - the rows scroll holder frame
-    @param oldLevel - the old level to update from
 --]]
-local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
+local function UpdateDungeonButtons(scrollHolderFrame)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
     local newLevel = GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
@@ -656,7 +655,7 @@ local function UpdateDungeonButtons(scrollHolderFrame, oldLevel)
     if(newLevel <= oldBase) then
         newPos = 1
     else
-        newPos = 1 + (((newLevel - 1)- oldLevel) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+        newPos = 1 + (((newLevel) - oldBase) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
     end
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
@@ -1321,9 +1320,8 @@ local function StartUp()
                     = C_ChallengeMode.GetCompletionInfo()
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
-                local oldLevel = addon.playerBests[weeklyAffix][dungeonID].level
                 addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
-                UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame, oldLevel)
+                UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
                 UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
                 -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
                 summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
