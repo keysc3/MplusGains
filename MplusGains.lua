@@ -859,7 +859,7 @@ end
 local function CreateBestRunsFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "BestRuns", parentFrame)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
-    frame:SetSize(parentFrame:GetWidth() - (xPadding*2), (dungeonRowHeight * 4) + (yPadding * 5))
+    frame:SetSize(parentFrame:GetWidth() - (xPadding*2) - 20, (dungeonRowHeight * 4) + (yPadding * 5))
     frame.smallColumnWidth = 60
     return frame
 end
