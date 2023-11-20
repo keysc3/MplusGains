@@ -2,7 +2,7 @@
 ## Title: Mplus Gains
 ## Notes: Provides M+ rating gain information. /mplusgains or /mpg
 ## Author: Colin Keys
-## Version: 1.2.3
+## Version: 1.2.4
 
 FormatHelpers.lua
 KeystoneButton.lua

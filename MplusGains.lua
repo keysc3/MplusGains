@@ -196,13 +196,15 @@ local function CreateHeaderFrame(parentFrame)
     resetButton:SetPushedTexture(resetButton.texture1)
     resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
     resetButton:SetScript("OnMouseUp", function(self, btn)
-        for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
-            value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange)
-            value.gainedScoreFrame.text:SetText("+0.0")
-            ResetToStartingLevel(value.scrollHolderFrame)
+        if(mainFrame.dungeonHolderFrame.rows ~= nil) then
+            for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
+                value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange)
+                value.gainedScoreFrame.text:SetText("+0.0")
+                ResetToStartingLevel(value.scrollHolderFrame)
+            end
+            totalGained = 0
+            mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
         end
-        totalGained = 0
-        mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
     end)
     -- Holder
     local tooltip = CreateFrame("Frame", nil, frame, "BackdropTemplate")
