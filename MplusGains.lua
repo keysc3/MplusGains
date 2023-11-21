@@ -343,7 +343,7 @@ end
     @return - the amount of score gained from the completed keystone
 --]]
 local function CalculateGainedRating(keystoneLevel, dungeonID)
-    local oppositeAffix = (weeklyAffix == "tyrannical") and "fortified" or "tyrannical"
+    local oppositeAffix = (weeklyAffix == addon.tyrannicalID) and addon.fortifiedID or addon.tyrannicalID
     local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
     local newScore = addon.scorePerLevel[keystoneLevel]
     local gainedScore = addon:CalculateDungeonTotal(newScore, oppositeBest) - addon.playerDungeonRatings[dungeonID].mapScore
@@ -877,7 +877,7 @@ local function CreateRunFrame(anchorFrame, parentFrame, affix)
     local parentFrameHeight = parentFrame:GetHeight()
     local affixFrame = CreateFrame("Frame", nil, parentFrame)
     local anchorPosition = "LEFT"
-    if(affix == "tyrannical") then anchorPosition = "RIGHT" end
+    if(affix == addon.tyrannicalID) then anchorPosition = "RIGHT" end
     affixFrame:SetPoint("RIGHT", anchorFrame, anchorPosition)
     affixFrame:SetSize(parentFrame:GetParent().smallColumnWidth, parentFrameHeight)
     affixFrame.keyLevelText = affixFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -985,8 +985,8 @@ local function CreateBestRunRow(anchorFrame, parentFrame)
     local holder = CreateFrame("Frame", nil, parentFrame)
     holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
-    holder.tyrFrame = CreateRunFrame(holder, holder, "tyrannical")
-    holder.fortFrame = CreateRunFrame(holder.tyrFrame, holder, "fortified")
+    holder.tyrFrame = CreateRunFrame(holder, holder, addon.tyrannicalID)
+    holder.fortFrame = CreateRunFrame(holder.tyrFrame, holder, addon.fortifiedID)
     holder.scoreFrame = CreateDungeonScoreFrame(holder.fortFrame, holder)
     holder.nameFrame = CreateDungeonBestNameFrame(holder)
     return holder
@@ -1026,8 +1026,8 @@ end
     @param dungeonID - the dungeon data to use
 --]]
 local function FillBestRunRow(rowFrame, dungeonID)
-    rowFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString("tyrannical", dungeonID))
-    rowFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString("fortified", dungeonID))
+    rowFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString(addon.tyrannicalID, dungeonID))
+    rowFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString(addon.fortifiedID, dungeonID))
     rowFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
     rowFrame.nameFrame.nameText:SetText(addon.dungeonInfo[dungeonID].name)
 end
@@ -1244,7 +1244,6 @@ local function DataSetup(dungeonHolderFrame, summaryFrame)
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
-    weeklyAffix = addon:GetWeeklyAffixInfo()
     PopulateAllDungeonRows(dungeonHolderFrame)
     PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
     PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
