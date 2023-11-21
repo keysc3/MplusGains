@@ -1,17 +1,21 @@
 local _, addon = ...
 
 local maxModifier = 0.4
+local tyrannicalID = 9
+local fortifiedID = 10
 
 local scorePerLevel  = {0, 40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
 142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
 
 local affixLevels = {
-    [2] = {"fortified", "tyrannical"},
-    [7] = {"afflicted", "incorporeal", "volcanic", "entangling", "storming"},
-    [14] = {"spiteful", "raging", "bolstering", "bursting", "sanguine"}
+    [2] = {10, 9},
+    [7] = {135, 136, 3, 134, 124},
+    [14] = {123, 6, 7, 11, 8}
 }
 
 addon.scorePerLevel = scorePerLevel
+addon.tyrannicalID = tyrannicalID
+addon.fortifiedID = fortifiedID
 
 --[[
     CalculateDungeonTotal - Calculates a dungeons overall score contributing to a players rating.
@@ -34,9 +38,9 @@ end
 --]]
 function addon:CalculateDungeonRatings()
     local playerDungeonRatings = {}
-    for key, value in pairs(addon.playerBests["tyrannical"]) do
+    for key, value in pairs(addon.playerBests[tyrannicalID]) do
         local bestTyran = value.rating
-        local bestFort = addon.playerBests["fortified"][key].rating
+        local bestFort = addon.playerBests[fortifiedID][key].rating
         playerDungeonRatings[key] = {
             ["mapScore"] = addon:CalculateDungeonTotal(bestTyran, bestFort)
         }
@@ -66,8 +70,8 @@ end
 --]]
 function addon:GetPlayerDungeonBests()
     local playerBests = {
-        ["tyrannical"] = {},
-        ["fortified"] = {}
+        [tyrannicalID] = {},
+        [fortifiedID] = {}
     }
     for key, value in pairs(addon.dungeonInfo) do
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
@@ -79,17 +83,17 @@ function addon:GetPlayerDungeonBests()
                     ["time"] = affix.durationSec,
                     ["overTime"]  = affix.overTime
                 }
-                if(string.lower(affix.name) == "tyrannical") then
-                    playerBests.tyrannical[key] = dungeonBest
-                    if(#affixScores == 1) then playerBests.fortified[key] = CreateNoRunsEntry(value.name) end
+                if(addon.affixInfo[tyrannicalID] ~= nil) then
+                    playerBests[tyrannicalID][key] = dungeonBest
+                    if(#affixScores == 1) then playerBests[fortifiedID][key] = CreateNoRunsEntry(value.name) end
                 else
-                    playerBests.fortified[key] = dungeonBest
-                    if(#affixScores == 1) then playerBests.tyrannical[key] = CreateNoRunsEntry(value.name) end
+                    playerBests[fortifiedID][key] = dungeonBest
+                    if(#affixScores == 1) then playerBests[tyrannicalID][key] = CreateNoRunsEntry(value.name) end
                 end
             end
         else
-            playerBests.tyrannical[key] = CreateNoRunsEntry(value.name)
-            playerBests.fortified[key] = CreateNoRunsEntry(value.name)
+            playerBests[tyrannicalID][key] = CreateNoRunsEntry(value.name)
+            playerBests[fortifiedID][key] = CreateNoRunsEntry(value.name)
         end
     end
     addon.playerBests = playerBests
@@ -125,10 +129,10 @@ function addon:GetWeeklyAffixInfo()
                 ["description"] = description,
                 ["name"] = name,
                 ["filedataid"] = filedataid,
-                ["level"] = GetAffixLevel(name)
+                ["level"] = GetAffixLevel(value.id)
             }
-            if(string.lower(name) == "tyrannical" or string.lower(name) == "fortified") then
-                weeklyAffix = string.lower(name)
+            if(value.id == tyrannicalID or value.id == fortifiedID) then
+                weeklyAffix = value.id
             end
                 
         end 
@@ -242,14 +246,14 @@ function addon:SortDungeonsByLevel(weeklyAffix)
 end
 
 --[[
-    GetAffixLevel - Gets the level an affix starts at given its name
-    @param name - name of the affix
+    GetAffixLevel - Gets the level an affix starts at given its ID
+    @param affixID - id of the affix
     @return - level the affix starts at.
 --]]
-function GetAffixLevel(name)
+function GetAffixLevel(affixID)
     for key, value in pairs(affixLevels) do
         for _, v in ipairs(value) do
-            if(v == string.lower(name)) then
+            if(v == affixID) then
                 return key
             end
         end
