@@ -3,6 +3,7 @@ local _, addon = ...
 local maxModifier = 0.4
 local tyrannicalID = 9
 local fortifiedID = 10
+local weeklyAffix = nil
 
 local scorePerLevel  = {0, 40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
 142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
@@ -83,27 +84,42 @@ function addon:GetPlayerDungeonBests()
                     ["time"] = affix.durationSec,
                     ["overTime"]  = affix.overTime
                 }
-                if(addon.affixInfo[tyrannicalID] ~= nil) then
-                    playerBests[tyrannicalID][key] = dungeonBest
-                    if(#affixScores == 1) then playerBests[fortifiedID][key] = CreateNoRunsEntry(value.name) end
+                local oppositeAffix = GetOppositeWeeklyAffix()
+                -- If the affix this iteration is the weekly affix.
+                if(string.lower(addon.affixInfo[weeklyAffix].name) == string.lower(affix.name)) then
+                    -- Insert new entry with weekly affix key and check if empty affix should be added.
+                    playerBests[weeklyAffix][key] = dungeonBest
+                    if(#affixScores == 1) then playerBests[oppositeAffix][key] = CreateNoRunsEntry() end
                 else
-                    playerBests[fortifiedID][key] = dungeonBest
-                    if(#affixScores == 1) then playerBests[tyrannicalID][key] = CreateNoRunsEntry(value.name) end
+                    -- Insert new afffix with opposite affix and check if empty of weekly should be added.
+                    playerBests[oppositeAffix][key] = dungeonBest
+                    if(#affixScores == 1) then playerBests[weeklyAffix][key] = CreateNoRunsEntry() end
                 end
             end
         else
-            playerBests[tyrannicalID][key] = CreateNoRunsEntry(value.name)
-            playerBests[fortifiedID][key] = CreateNoRunsEntry(value.name)
+            playerBests[tyrannicalID][key] = CreateNoRunsEntry()
+            playerBests[fortifiedID][key] = CreateNoRunsEntry()
         end
     end
     addon.playerBests = playerBests
 end
 
 --[[
+    GetOppositeWeeklyAffix - Gets the weekly affix that isn't active this week.
+]]
+function GetOppositeWeeklyAffix()
+    if(weeklyAffix == tyrannicalID) then 
+        return fortifiedID
+    else 
+        return tyrannicalID
+    end
+end
+
+--[[
     CreateNoRunsEntry - Creates a default table for use when a dungeon doens't have a run for an associated week.
     @return - the created default run table.
 --]]
-function CreateNoRunsEntry(name)
+function CreateNoRunsEntry()
     local dungeonBest = {
         ["level"] = 1,
         ["rating"] = 0,
@@ -118,7 +134,7 @@ end
     @return - retuns the alternating weekly affix
 --]]
 function addon:GetWeeklyAffixInfo()
-    local weeklyAffix = nil
+    --local weeklyAffix = nil
     local affixInfo = {}
     C_MythicPlus.RequestCurrentAffixes()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
