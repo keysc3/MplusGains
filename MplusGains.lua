@@ -1014,7 +1014,7 @@ end
 local function GetDungeonLevelString(affix, dungeonID)
     local runString = "-"
     local level = addon.playerBests[affix][dungeonID].level
-    if(level > 1) then 
+    if(level > 1 and addon.playerBests[affix][dungeonID].rating > 0) then 
         runString = addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. level
     end
     return runString
@@ -1225,7 +1225,7 @@ end
 --]]
 local function CheckForNewBest(dungeonID, level, time)
     local completionRating = addon:CalculateRating((time/1000), dungeonID, level)
-    if(level > 1) then
+    if(level > 1 and completionRating > 0) then
         if(completionRating > addon.playerBests[weeklyAffix][dungeonID].rating) then
             return true
         end
