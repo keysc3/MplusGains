@@ -646,12 +646,13 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     local newLevel = GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
     scrollHolderFrame.scrollChild.startingLevel = newLevel
+    scrollHolderFrame.scrollChild.baseLevel = newLevel
     -- Setup new scroll range and pos values
     local newPos
     if(newLevel <= oldBase) then
         newPos = 1
     else
-        newPos = 1 + (((newLevel) - oldBase) * (buttonWidth - scrollHolderFrame.scrollFrame.minScrollRange))
+        newPos = scrollHolderFrame.scrollFrame.minScrollRange + ((newLevel - oldBase) * (buttonWidth - 1))
     end
     scrollHolderFrame.scrollFrame.minScrollRange = newPos
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
@@ -661,7 +662,6 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     -- Need new buttons if the newLevel is lower than the base level.
     if(newLevel < oldBase) then
         -- Setup new values and new buttons
-        scrollHolderFrame.scrollChild.baseLevel = newLevel
         CalculateScrollHolderUIValues(scrollHolderFrame)
         CreateAllButtons(scrollHolderFrame, oldBase - 1)
         -- Set new anchor point for old level
