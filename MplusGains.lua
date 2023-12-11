@@ -133,6 +133,22 @@ local function CheckForScrollButtonEnable(scrollHolderFrame)
 end
 
 --[[
+    SetDesaturation - Sets the desaturation of the given texture. Uses vertex color if shader supported is false.
+    @param texture - The texture being altered.
+    @param desaturation - Bool for whether or not to desaturate the texture.
+--]]
+local function SetDesaturation(texture, desaturation)
+	local shaderSupported = texture:SetDesaturated(desaturation)
+	if(not shaderSupported) then
+		if(desaturation) then
+			texture:SetVertexColor(0.5, 0.5, 0.5)
+		else
+			texture:SetVertexColor(1.0, 1.0, 1.0)
+		end
+	end
+end
+
+--[[
     ResetToStartingLevel - Resets the given scroll holder frame to the default state.
     @param scrollHolderFrame - the scroll holder frame to reset
 --]]
@@ -145,37 +161,40 @@ local function ResetToStartingLevel(scrollHolderFrame)
 end
 
 --[[
-    CreateToggle - Creates a scroll button with an arrow texture.
-    @param parentFrame - the parent frome of the button
-    @param anchorFrame - the buttons anchor.
+    CreateToggleButton - Creates a toggle button for switching between weeks when choosing keys.
+    @param parentFrame - The parent frame for the button.
+    @param affixID - The affix the button is for.
+    @return button - The created button.
 --]]
-local function CreateToggle(parentFrame)
-    --local defualtAlpha = 0.7
-    local name, description, filedataid = C_ChallengeMode.GetAffixInfo(addon.tyrannicalID);
+local function CreateToggleButton(parentFrame, affixID)
+    local name, description, filedataid = C_ChallengeMode.GetAffixInfo(affixID);
     local button = CreateFrame("Button", nil, parentFrame)
     button:SetSize((parentFrame:GetWidth()/1.5), (parentFrame:GetHeight()/1.5))
     button.texture = button:CreateTexture()
     button.texture:SetTexture(filedataid)
     button:SetNormalTexture(button.texture)
     button:ClearAllPoints()
-    button:SetPoint("LEFT", parentFrame, "LEFT")
+    button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
+    return button
+end
 
-    name, description, filedataid = C_ChallengeMode.GetAffixInfo(addon.fortifiedID);
-    local button1 = CreateFrame("Button", nil, parentFrame)
-    button1:SetSize((parentFrame:GetWidth()/1.5), (parentFrame:GetHeight()/1.5))
-    button1.texture = button1:CreateTexture()
-    button1.texture:SetTexture(filedataid)
-    button1:SetNormalTexture(button1.texture)
-    button1:ClearAllPoints()
-    button1:SetPoint("LEFT", button, "RIGHT", 2, 0)
-    button1.texture:SetDesaturated(true)
+--[[
+    CreateToggle - Creates a scroll button with an arrow texture.
+    @param parentFrame - the parent frome of the button.
+--]]
+local function CreateToggle(parentFrame)
+    parentFrame.tyranButton = CreateToggleButton(parentFrame, addon.tyrannicalID)
+    parentFrame.tyranButton:SetPoint("LEFT", parentFrame, "LEFT")
+
+    parentFrame.fortButton = CreateToggleButton(parentFrame, addon.fortifiedID)
+    parentFrame.fortButton:SetPoint("LEFT", parentFrame.tyranButton, "RIGHT", 2, 0)
+
     --[[scrollButton:SetScript("OnEnter", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, 1)
     end)
     scrollButton:SetScript("OnLeave", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
     end)--]]
-    return button
 end
 
 --[[
@@ -267,10 +286,11 @@ local function CreateHeaderFrame(parentFrame)
         tooltip:Hide()
     end)
 
-    local newFrame = CreateFrame("Frame", nil, parentFrame)
-    newFrame:SetSize(headerHeight, headerHeight)
-    newFrame:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
-    CreateToggle(newFrame)
+    local toggle = CreateFrame("Frame", nil, parentFrame)
+    toggle:SetSize(headerHeight, headerHeight)
+    toggle:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
+    CreateToggle(toggle)
+    frame.toggle = toggle
     return frame
 end
 
@@ -1276,10 +1296,16 @@ end
     DataSetup - Setup for all data that will be displayed.
     @param dungeonHolderFrame - the dungeon holder frame containing dungeon rows
     @param summaryFrame - the summary frame containing to be changed values.
+    @param headerFrame - the header frame of the main frame.
 --]]
-local function DataSetup(dungeonHolderFrame, summaryFrame)
+local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
     weeklyAffix = addon:GetWeeklyAffixInfo()
     if(weeklyAffix == nil) then return false end
+    if(weeklyAffix ~= addon.tyrannicalID) then
+        SetDesaturation(headerFrame.toggle.tyranButton.texture, true)
+    else
+        SetDesaturation(headerFrame.toggle.fortButton.texture, true)
+    end
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
     addon:CalculateDungeonRatings()
@@ -1315,14 +1341,14 @@ local function StartUp()
                 self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
             else
                 if(isReloadingUI) then
-                    DataSetup(dungeonHolderFrame, summaryFrame)
+                    DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
                 end
             end
         end
         -- M+ affix update
         if(event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE") then
             -- Affix info is available after this event fires, but not always the first time.
-            if(DataSetup(dungeonHolderFrame, summaryFrame)) then
+            if(DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)) then
                 self:UnregisterEvent(event)
             end
         end
