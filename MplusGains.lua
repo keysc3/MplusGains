@@ -145,6 +145,40 @@ local function ResetToStartingLevel(scrollHolderFrame)
 end
 
 --[[
+    CreateToggle - Creates a scroll button with an arrow texture.
+    @param parentFrame - the parent frome of the button
+    @param anchorFrame - the buttons anchor.
+--]]
+local function CreateToggle(parentFrame)
+    --local defualtAlpha = 0.7
+    local name, description, filedataid = C_ChallengeMode.GetAffixInfo(addon.tyrannicalID);
+    local button = CreateFrame("Button", nil, parentFrame)
+    button:SetSize((parentFrame:GetWidth()/1.5), (parentFrame:GetHeight()/1.5))
+    button.texture = button:CreateTexture()
+    button.texture:SetTexture(filedataid)
+    button:SetNormalTexture(button.texture)
+    button:ClearAllPoints()
+    button:SetPoint("LEFT", parentFrame, "LEFT")
+
+    name, description, filedataid = C_ChallengeMode.GetAffixInfo(addon.fortifiedID);
+    local button1 = CreateFrame("Button", nil, parentFrame)
+    button1:SetSize((parentFrame:GetWidth()/1.5), (parentFrame:GetHeight()/1.5))
+    button1.texture = button1:CreateTexture()
+    button1.texture:SetTexture(filedataid)
+    button1:SetNormalTexture(button1.texture)
+    button1:ClearAllPoints()
+    button1:SetPoint("LEFT", button, "RIGHT", 2, 0)
+    button1.texture:SetDesaturated(true)
+    --[[scrollButton:SetScript("OnEnter", function(self, motion)
+        self.textureUp:SetVertexColor(1, 1, 1, 1)
+    end)
+    scrollButton:SetScript("OnLeave", function(self, motion)
+        self.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
+    end)--]]
+    return button
+end
+
+--[[
     CreateHeaderFrame- Creates the header frame for the addon.
     @param parentFrame - the parent frame to use
     @return frame - the created frame
@@ -232,6 +266,11 @@ local function CreateHeaderFrame(parentFrame)
         GameTooltip:Hide()
         tooltip:Hide()
     end)
+
+    local newFrame = CreateFrame("Frame", nil, parentFrame)
+    newFrame:SetSize(headerHeight, headerHeight)
+    newFrame:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
+    CreateToggle(newFrame)
     return frame
 end
 
