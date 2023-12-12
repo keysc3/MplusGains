@@ -16,6 +16,8 @@ local dungeonRowHeight = 64
 local scrollButtonPadding = 4
 local totalGained = 0
 local mainFrame = nil
+local selectedAffix = addon.tyrannicalID
+
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -161,6 +163,32 @@ local function ResetToStartingLevel(scrollHolderFrame)
 end
 
 --[[
+    CreateTooltip - Creates a tooltip for the given frame and with the given text.
+    @param parentFrame - The parent frame for the tooltip.
+    @param textString - The string to set the tooltips text to.
+    @return tooltip - The created tooltip.
+--]]
+local function CreateTooltip(parentFrame, textString)
+    local tooltip = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    tooltip:SetSize(1, 30)
+    tooltip:SetBackdrop({
+        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    })
+    tooltip:SetBackdropColor(0, 0, 0, 0.9)
+    tooltip:SetFrameLevel(20)
+    tooltip.text = tooltip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tooltip.text:ClearAllPoints()
+    tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
+    tooltip.text:SetText(textString)
+    tooltip:SetWidth(math.ceil(tooltip.text:GetWidth() + 16))
+    tooltip:Hide()
+    return tooltip
+end
+
+--[[
     CreateToggleButton - Creates a toggle button for switching between weeks when choosing keys.
     @param parentFrame - The parent frame for the button.
     @param affixID - The affix the button is for.
@@ -169,12 +197,28 @@ end
 local function CreateToggleButton(parentFrame, affixID)
     local name, description, filedataid = C_ChallengeMode.GetAffixInfo(affixID);
     local button = CreateFrame("Button", nil, parentFrame)
+    button.affixID = affixID
     button:SetSize((parentFrame:GetWidth()/1.5), (parentFrame:GetHeight()/1.5))
     button.texture = button:CreateTexture()
     button.texture:SetTexture(filedataid)
     button:SetNormalTexture(button.texture)
     button:ClearAllPoints()
     button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
+    button.tooltip = CreateTooltip(parentFrame, "View " .. string.lower(name) .. " keys")
+    button:SetScript("OnEnter", function(self, motion)
+        self.tooltip:Show()
+    end)
+    button:SetScript("OnLeave", function(self, motion)
+        self.tooltip:Hide()
+    end)
+    button:SetScript("OnClick", function(self, motion)
+        if(selectedAffix ~= self.affixID) then
+            SetDesaturation(self.texture, false)
+            local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().fortButton or self:GetParent().tyranButton
+            SetDesaturation(otherButton.texture, true)
+            selectedAffix = self.affixID
+        end
+    end)
     return button
 end
 
@@ -185,11 +229,13 @@ end
 local function CreateToggle(parentFrame)
     parentFrame.tyranButton = CreateToggleButton(parentFrame, addon.tyrannicalID)
     parentFrame.tyranButton:SetPoint("LEFT", parentFrame, "LEFT")
-
+    parentFrame.tyranButton.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", -2, -1)
+    local pad = 4
     parentFrame.fortButton = CreateToggleButton(parentFrame, addon.fortifiedID)
-    parentFrame.fortButton:SetPoint("LEFT", parentFrame.tyranButton, "RIGHT", 2, 0)
+    parentFrame.fortButton:SetPoint("LEFT", parentFrame.tyranButton, "RIGHT", pad, 0)
+    parentFrame.fortButton.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", parentFrame.tyranButton:GetWidth() + pad - 2, -1)
 
-    --[[scrollButton:SetScript("OnEnter", function(self, motion)
+    --[[scrollButton:SetScript("OnClick", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, 1)
     end)
     scrollButton:SetScript("OnLeave", function(self, motion)
@@ -259,31 +305,14 @@ local function CreateHeaderFrame(parentFrame)
             mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
         end
     end)
-    -- Holder
-    local tooltip = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    tooltip:SetSize(1, 30)
-    tooltip:SetPoint("BOTTOMLEFT", resetButton, "TOPLEFT", -2, -1)
-    tooltip:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 },
-    })
-    tooltip:SetBackdropColor(0, 0, 0, 0.9)
-    tooltip:SetFrameLevel(20)
-    -- Header
-    tooltip.text = tooltip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    tooltip.text:ClearAllPoints()
-    tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
-    tooltip.text:SetText("Reset selected keys")
-    tooltip:SetWidth(math.ceil(tooltip.text:GetWidth() + 16))
-    tooltip:Hide()
+    resetButton.tooltip = CreateTooltip(frame, "Reset selected keys")
+    resetButton.tooltip:SetPoint("BOTTOMLEFT", resetButton, "TOPLEFT", -2, -1)
     resetButton:SetScript("OnEnter", function(self, motion)
-        tooltip:Show()
+        self.tooltip:Show()
     end)
     resetButton:SetScript("OnLeave", function(self, motion)
-        GameTooltip:Hide()
-        tooltip:Hide()
+        --GameTooltip:Hide()
+        self.tooltip:Hide()
     end)
 
     local toggle = CreateFrame("Frame", nil, parentFrame)
@@ -1301,7 +1330,8 @@ end
 local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
     weeklyAffix = addon:GetWeeklyAffixInfo()
     if(weeklyAffix == nil) then return false end
-    if(weeklyAffix ~= addon.tyrannicalID) then
+    selectedAffix = weeklyAffix
+    if(selectedAffix ~= addon.tyrannicalID) then
         SetDesaturation(headerFrame.toggle.tyranButton.texture, true)
     else
         SetDesaturation(headerFrame.toggle.fortButton.texture, true)
