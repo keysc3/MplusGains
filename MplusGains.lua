@@ -18,6 +18,10 @@ local totalGained = 0
 local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
 
+--[[local function GetLevelFromTable(affixTable, affix)
+    return (selectedAffix == affix) and affixTable[selectedAffix] or affixTable[affix]
+end--]]
+
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -84,25 +88,25 @@ end
 --]]
 local function SelectButtons(parentFrame, keystoneButton)
     -- If the clicked button is a higher keystone level than the currently selected button.
-    if(keystoneButton.level > parentFrame.selectedLevel) then 
+    if(keystoneButton.level > parentFrame.selectedLevel[selectedAffix]) then 
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
-        for i = parentFrame.selectedLevel + 1, keystoneButton.level do
+        for i = parentFrame.selectedLevel[selectedAffix] + 1, keystoneButton.level do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
         end
     -- If the clicked button is a lower keystone level than the currently selected button.
-    elseif(keystoneButton.level < parentFrame.selectedLevel) then
+    elseif(keystoneButton.level < parentFrame.selectedLevel[selectedAffix]) then
         -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
-        for i = parentFrame.selectedLevel, keystoneButton.level + 1, -1 do
+        for i = parentFrame.selectedLevel[selectedAffix], keystoneButton.level + 1, -1 do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         end
     else
-        if(keystoneButton.level == parentFrame.startingLevel) then
+        if(keystoneButton.level == parentFrame.startingLevel[selectedAffix]) then
             parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-            parentFrame.selectedLevel = keystoneButton.level - 1
+            parentFrame.selectedLevel[selectedAffix] = keystoneButton.level - 1
             return
         end
     end
-    parentFrame.selectedLevel = keystoneButton.level
+    parentFrame.selectedLevel[selectedAffix] = keystoneButton.level
 end
 
 --[[
@@ -155,10 +159,10 @@ end
     @param scrollHolderFrame - the scroll holder frame to reset
 --]]
 local function ResetToStartingLevel(scrollHolderFrame)
-    local startingLevel = scrollHolderFrame.scrollChild.startingLevel
+    local startingLevel = scrollHolderFrame.scrollChild.startingLevel[selectedAffix]
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[startingLevel])
     scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-    scrollHolderFrame.scrollChild.selectedLevel = startingLevel - 1
+    scrollHolderFrame.scrollChild.selectedLevel[selectedAffix] = startingLevel - 1
     CheckForScrollButtonEnable(scrollHolderFrame)
 end
 
@@ -216,6 +220,23 @@ local function CreateToggleButton(parentFrame, affixID)
             SetDesaturation(self.texture, false)
             local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().fortButton or self:GetParent().tyranButton
             SetDesaturation(otherButton.texture, true)
+            if(mainFrame.dungeonHolderFrame.rows ~= nil) then
+                for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
+                    --value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange)
+                    --value.gainedScoreFrame.text:SetText("+0.0")
+                    local scrollChild = value.scrollHolderFrame.scrollChild
+                    local oldSelected = scrollChild.selectedLevel[otherButton.affixID]
+                    if(scrollChild.selectedLevel[self.affixID] < scrollChild.startingLevel[self.affixID]) then
+                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]])
+                        scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+                    else
+                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]])
+                    end
+                    scrollChild.selectedLevel[otherButton.affixID] = oldSelected
+                end
+                --totalGained = 0
+                --mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
+            end
             selectedAffix = self.affixID
         end
     end)
@@ -452,10 +473,10 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
         if(btn == "RightButton") then keystoneButton.mouseDown = false end
         if(btn == "LeftButton") then
             -- If the clicked button is not the currently selected button then select necessary buttons.
-            if(keystoneButton.level ~= parentFrame.selectedLevel or (keystoneButton.level == parentFrame.startingLevel and keystoneButton.level == parentFrame.selectedLevel)) then
+            if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix] or (keystoneButton.level == parentFrame.startingLevel[selectedAffix] and keystoneButton.level == parentFrame.selectedLevel[selectedAffix])) then
                 -- Set gained from selected key completion
                 local gained = 0
-                if(keystoneButton.level ~= parentFrame.selectedLevel) then
+                if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix]) then
                     gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
                 end
                 totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
@@ -500,10 +521,10 @@ end
     @param scrollHolderFrame - the scroll holder frame that is being adjusted
 --]]
 local function CalculateScrollHolderUIValues(scrollHolderFrame)
-    local startingLevel = scrollHolderFrame.scrollChild.startingLevel
+    local baseLevel = scrollHolderFrame.scrollChild.baseLevel
     -- Calculate the row width and max scroll range.
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
-    local totalRowWidth = (((maxLevel + 1) - startingLevel) * buttonWidth) - (maxLevel - startingLevel)
+    local totalRowWidth = (((maxLevel + 1) - baseLevel) * buttonWidth) - (maxLevel - baseLevel)
     local diff = totalRowWidth - scrollHolderFrame:GetWidth()
     scrollHolderFrame.scrollFrame.maxScrollRange = (diff > scrollHolderFrame.scrollFrame.minScrollRange) and diff or scrollHolderFrame.scrollFrame.minScrollRange
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
@@ -516,9 +537,9 @@ end
 --]]
 local function CreateAllButtons(scrollHolderFrame, maxLevel)
     local button = nil
-    local startingLevel = scrollHolderFrame.scrollChild.startingLevel
+    local baseLevel = scrollHolderFrame.scrollChild.baseLevel
     -- Create the buttons and add them to the parent frames buttons table
-    for i = startingLevel, maxLevel do
+    for i = baseLevel, maxLevel do
         button = CreateButton(i, button, scrollHolderFrame.scrollChild)
         local keystoneButton = addon:CreateKeystoneButton(i, button)
         SetKeystoneButtonScripts(keystoneButton, scrollHolderFrame.scrollChild, scrollHolderFrame.scrollFrame, scrollHolderFrame:GetParent().gainedScoreFrame)
@@ -531,8 +552,8 @@ end
     @param dungeonID - the ID of the dungeon to be checked.
     @return - the lowest key level the playe can get rating from for the dungeon.
 --]]
-local function GetStartingLevel(dungeonID)
-    local best = addon.playerBests[weeklyAffix][dungeonID]
+local function GetStartingLevel(dungeonID, affixID)
+    local best = addon.playerBests[affixID][dungeonID]
     if(best.overTime) then
         local baseLevel = best.level
         for i = best.level - 1, 2, -1 do
@@ -555,12 +576,14 @@ end
     @param dungeonID - the dungeonID the row is for.
 --]]
 local function CreateButtonRow(scrollHolderFrame, dungeonID)
-    local startingLevel = GetStartingLevel(dungeonID)
+    local startingTyranLevel = GetStartingLevel(dungeonID, addon.tyrannicalID)
+    local startingFortLevel = GetStartingLevel(dungeonID, addon.fortifiedID)
+    --local startingLevel = (startingTyranLevel < startingFortLevel) and startingTyranLevel or startingFortLevel
     -- Setup base values
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
-    scrollHolderFrame.scrollChild.baseLevel = startingLevel
-    scrollHolderFrame.scrollChild.startingLevel = startingLevel
-    scrollHolderFrame.scrollChild.selectedLevel = startingLevel - 1
+    scrollHolderFrame.scrollChild.baseLevel = (startingTyranLevel < startingFortLevel) and startingTyranLevel or startingFortLevel
+    scrollHolderFrame.scrollChild.startingLevel = { [addon.tyrannicalID] = startingTyranLevel, [addon.fortifiedID] = startingFortLevel }
+    scrollHolderFrame.scrollChild.selectedLevel = { [addon.tyrannicalID] = startingTyranLevel - 1, [addon.fortifiedID] = startingFortLevel - 1 } 
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     -- Setup UI values
     CalculateScrollHolderUIValues(scrollHolderFrame)
@@ -731,9 +754,9 @@ end
 --]]
 local function UpdateDungeonButtons(scrollHolderFrame)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
-    local newLevel = GetStartingLevel(dungeonID)
+    local newLevel = GetStartingLevel(dungeonID, weeklyAffix)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
-    scrollHolderFrame.scrollChild.startingLevel = newLevel
+    scrollHolderFrame.scrollChild.startingLevel[weeklyAffix] = newLevel
     scrollHolderFrame.scrollChild.baseLevel = newLevel
     -- Setup new scroll range and pos values
     local newPos
