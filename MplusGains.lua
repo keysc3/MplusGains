@@ -236,6 +236,12 @@ local function CreateToggleButton(parentFrame, affixID)
                     scrollChild.selectedLevel[otherButton.affixID] = oldSelected
                     value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange[self.affixID])
                     CheckForScrollButtonEnable(value.scrollHolderFrame, self.affixID)
+                    value.gainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[self.affixID]))
+                    if(value.gainedScoreFrame.gainedScore[selectedAffix] > 0) then
+                        value.gainedScoreFrame.oppText:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[selectedAffix]))
+                    else
+                        value.gainedScoreFrame.oppText:SetText("")
+                    end
                 end
                 --totalGained = 0
                 --mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
@@ -447,7 +453,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     btn:SetNormalFontObject(myFont)
     return btn
 end
-
+--TODO: HANDLE RATING GAIN CHECKING WHEN OTHER WEEKS POSSIBLE GAIN IS not 0
 --[[
     CalculateGainedRating - Calculates the rating gained given a keystone level and a dungeon.
     @param keystoneLevel - the level of the keystone completed
@@ -483,9 +489,11 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix]) then
                     gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID, selectedAffix))
                 end
-                totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
+                --totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
+                totalGained = totalGained + (gained -  rowGainedScoreFrame.gainedScore[selectedAffix])
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
                 rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
+                rowGainedScoreFrame.gainedScore[selectedAffix] = gained
                 SelectButtons(parentFrame, keystoneButton)
             end
         end
@@ -743,6 +751,12 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
     frame:SetSize(32, parentRow:GetHeight())
+    frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
+    frame.oppText = frame:CreateFontString(nil, "OVERLAY")
+    frame.oppText:SetFont("Fonts\\FRIZQT__.TTF", 9)
+    frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
+    frame.oppText:SetTextColor(0.8, 0.8, 0.8)
+    frame.oppText:SetText("")
     return frame
 end
 
