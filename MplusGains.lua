@@ -112,13 +112,14 @@ end
 --[[
     CheckForScrollButtonEnable - Checks to see if either scroll buttons needs to be enabled or disabled and does so if necessary.
     @param scrollHolderFrame - the frame the scroll buttons are a part of.
+    @param affixID - The affixID of the affix to use for the scroll range check.
 --]]
-local function CheckForScrollButtonEnable(scrollHolderFrame)
+local function CheckForScrollButtonEnable(scrollHolderFrame, affixID)
     local scrollFrame = scrollHolderFrame.scrollFrame
     local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
     local leftEnabled = scrollHolderFrame.leftScrollButton:IsEnabled()
     local rightEnabled = scrollHolderFrame.rightScrollButton:IsEnabled()
-    if(scrollFrame.minScrollRange[selectedAffix] >= scroll) then
+    if(scrollFrame.minScrollRange[affixID] >= scroll) then
         if(leftEnabled) then
             scrollHolderFrame.leftScrollButton:Disable()
         end
@@ -127,7 +128,7 @@ local function CheckForScrollButtonEnable(scrollHolderFrame)
             scrollHolderFrame.leftScrollButton:Enable()
         end
     end
-    if(scrollFrame.maxScrollRange[selectedAffix] <= scroll) then
+    if(scrollFrame.maxScrollRange[affixID] <= scroll) then
         if(rightEnabled) then
             scrollHolderFrame.rightScrollButton:Disable()
         end
@@ -163,7 +164,7 @@ local function ResetToStartingLevel(scrollHolderFrame)
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[startingLevel])
     scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     scrollHolderFrame.scrollChild.selectedLevel[selectedAffix] = startingLevel - 1
-    CheckForScrollButtonEnable(scrollHolderFrame)
+    CheckForScrollButtonEnable(scrollHolderFrame, selectedAffix)
 end
 
 --[[
@@ -233,6 +234,8 @@ local function CreateToggleButton(parentFrame, affixID)
                         SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]])
                     end
                     scrollChild.selectedLevel[otherButton.affixID] = oldSelected
+                    value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange[self.affixID])
+                    CheckForScrollButtonEnable(value.scrollHolderFrame, self.affixID)
                 end
                 --totalGained = 0
                 --mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
@@ -506,11 +509,11 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 local newPos = parentScroll:GetHorizontalScroll() - diff
                 parentScroll:SetHorizontalScroll((newPos < parentScroll.minScrollRange[selectedAffix]) and parentScroll.minScrollRange[selectedAffix] or newPos)
             -- If attempting to scroll right and haven't reached the moximum scroll range yet set the value.
-            elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentScroll.maxScrollRange) then
+            elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentScroll.maxScrollRange[selectedAffix]) then
                 local newPos = parentScroll:GetHorizontalScroll() + diff
-                parentScroll:SetHorizontalScroll((newPos > parentScroll.maxScrollRange) and parentScroll.maxScrollRange or newPos)
+                parentScroll:SetHorizontalScroll((newPos > parentScroll.maxScrollRange[selectedAffix]) and parentScroll.maxScrollRange[selectedAffix] or newPos)
             end
-            CheckForScrollButtonEnable(parentScroll:GetParent())
+            CheckForScrollButtonEnable(parentScroll:GetParent(), selectedAffix)
             lastX = currX
         end
     end)
@@ -627,7 +630,7 @@ local function ScrollButtonRow(self, delta)
         newPos = self.minScrollRange[selectedAffix] 
     end
     self:SetHorizontalScroll(newPos)
-    CheckForScrollButtonEnable(self:GetParent())
+    CheckForScrollButtonEnable(self:GetParent(), selectedAffix)
 end
 
 --[[
@@ -774,11 +777,11 @@ local function UpdateDungeonButtons(scrollHolderFrame)
         newPos = 1
     else
         scrollHolderFrame.scrollChild.baseLevel = newLevel
-        newPos = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffixAffix] + ((newLevel - oldBase) * (buttonWidth - 1))
+        newPos = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] + ((newLevel - oldBase) * (buttonWidth - 1))
     end
-    scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffixAffix] = newPos
+    scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = newPos
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
-        scrollHolderFrame.scrollFrame.maxScrollRange = newPos 
+        scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = newPos 
     end
     scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
     -- Need new buttons if the newLevel is lower than the base level.
@@ -824,7 +827,7 @@ local function PopulateAllDungeonRows(parentFrame)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
         CreateButtonRow(rows[i].scrollHolderFrame, key)
         parentFrame.rows[key] = rows[i]
-        CheckForScrollButtonEnable(rows[i].scrollHolderFrame)
+        CheckForScrollButtonEnable(rows[i].scrollHolderFrame, selectedAffix)
     end
 end
 
