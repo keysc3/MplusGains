@@ -452,10 +452,11 @@ end
     CalculateGainedRating - Calculates the rating gained given a keystone level and a dungeon.
     @param keystoneLevel - the level of the keystone completed
     @param dungeonID - the dungeon ID for the dungeon being completed.
+    @param affixID - the affix ID for the affix of the key.
     @return - the amount of score gained from the completed keystone
 --]]
-local function CalculateGainedRating(keystoneLevel, dungeonID)
-    local oppositeAffix = (weeklyAffix == addon.tyrannicalID) and addon.fortifiedID or addon.tyrannicalID
+local function CalculateGainedRating(keystoneLevel, dungeonID, affixID)
+    local oppositeAffix = (affixID == addon.tyrannicalID) and addon.fortifiedID or addon.tyrannicalID
     local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
     local newScore = addon.scorePerLevel[keystoneLevel]
     local gainedScore = addon:CalculateDungeonTotal(newScore, oppositeBest) - addon.playerDungeonRatings[dungeonID].mapScore
@@ -480,7 +481,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 -- Set gained from selected key completion
                 local gained = 0
                 if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix]) then
-                    gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
+                    gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID, selectedAffix))
                 end
                 totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
