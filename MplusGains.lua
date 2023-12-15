@@ -86,7 +86,7 @@ end
     @param parentFrame - the parent frame containing the relevant buttons
     @param keystoneButton - the keystonebutton object that was clicked.
 --]]
-local function SelectButtons(parentFrame, keystoneButton)
+local function SelectButtons(parentFrame, keystoneButton, isSwitch)
     -- If the clicked button is a higher keystone level than the currently selected button.
     if(keystoneButton.level > parentFrame.selectedLevel[selectedAffix]) then 
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
@@ -100,7 +100,7 @@ local function SelectButtons(parentFrame, keystoneButton)
             parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         end
     else
-        if(keystoneButton.level == parentFrame.startingLevel[selectedAffix]) then
+        if(keystoneButton.level == parentFrame.startingLevel[selectedAffix] and not isSwitch) then
             parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
             parentFrame.selectedLevel[selectedAffix] = keystoneButton.level - 1
             return
@@ -161,7 +161,7 @@ end
 --]]
 local function ResetToStartingLevel(scrollHolderFrame)
     local startingLevel = scrollHolderFrame.scrollChild.startingLevel[selectedAffix]
-    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[startingLevel])
+    SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[startingLevel], false)
     scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     scrollHolderFrame.scrollChild.selectedLevel[selectedAffix] = startingLevel - 1
     CheckForScrollButtonEnable(scrollHolderFrame, selectedAffix)
@@ -228,10 +228,10 @@ local function CreateToggleButton(parentFrame, affixID)
                     local scrollChild = value.scrollHolderFrame.scrollChild
                     local oldSelected = scrollChild.selectedLevel[otherButton.affixID]
                     if(scrollChild.selectedLevel[self.affixID] < scrollChild.startingLevel[self.affixID]) then
-                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]])
+                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]], true)
                         scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
                     else
-                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]])
+                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]], true)
                     end
                     scrollChild.selectedLevel[otherButton.affixID] = oldSelected
                     value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange[self.affixID])
@@ -532,7 +532,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
                 --rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
                 --rowGainedScoreFrame.gainedScore[selectedAffix] = gained
-                SelectButtons(parentFrame, keystoneButton)
+                SelectButtons(parentFrame, keystoneButton, false)
             end
         end
     end)
