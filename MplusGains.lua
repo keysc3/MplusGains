@@ -478,7 +478,7 @@ local function CalculateGainedRatingBothSelected(newSelectedLevel, affixID, pare
         weeklySelected = newSelectedLevel
         oppSelected = parentFrame.selectedLevel[opp]
     else
-        weeklySelected =parentFrame.selectedLevel[weeklyAffix]
+        weeklySelected = parentFrame.selectedLevel[weeklyAffix]
         oppSelected = newSelectedLevel
     end
     local weeklyGained = CalculateGainedRating(weeklySelected, dungeonID, weeklyAffix)
@@ -507,25 +507,33 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix] or (keystoneButton.level == parentFrame.startingLevel[selectedAffix] and keystoneButton.level == parentFrame.selectedLevel[selectedAffix])) then
                 -- Set gained from selected key completion
                 local gained = 0
+                local opp = GetOppositeAffix(selectedAffix)
                 if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix]) then
-                    local opp = GetOppositeAffix(selectedAffix)
                     if(parentFrame.selectedLevel[opp] < parentFrame.startingLevel[opp]) then
                         gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID, selectedAffix))
                         totalGained = totalGained + (gained - rowGainedScoreFrame.gainedScore[selectedAffix])
                         rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
                         rowGainedScoreFrame.gainedScore[selectedAffix] = gained
-                        print("OPP NOT SELECTED")
                     else
                         gainedTable = CalculateGainedRatingBothSelected(keystoneButton.level, selectedAffix, parentFrame)
                         totalGained = totalGained + (gainedTable[selectedAffix] - rowGainedScoreFrame.gainedScore[selectedAffix])
                         totalGained = totalGained + (gainedTable[opp] - rowGainedScoreFrame.gainedScore[opp])
                         rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gainedTable[selectedAffix]))
-                        rowGainedScoreFrame.oppText:SetText("+" .. addon:FormatDecimal(gainedTable[opp]))
+                        rowGainedScoreFrame.oppText:SetText((gainedTable[opp] > 0) and ("+" .. addon:FormatDecimal(gainedTable[opp])) or "")
                         rowGainedScoreFrame.gainedScore[selectedAffix] = gainedTable[selectedAffix]
                         rowGainedScoreFrame.gainedScore[opp] = gainedTable[opp]
-                        print("OPP SELECTED")
                     end
                     --gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID, selectedAffix))
+                else
+                    totalGained = totalGained + (gained - rowGainedScoreFrame.gainedScore[selectedAffix])
+                    rowGainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(gained))
+                    rowGainedScoreFrame.gainedScore[selectedAffix] = gained
+                    if(parentFrame.selectedLevel[opp] > parentFrame.startingLevel[opp]) then
+                        gained = addon:RoundToOneDecimal(CalculateGainedRating(parentFrame.selectedLevel[opp], parentFrame.dungeonID, opp))
+                        totalGained = totalGained + (gained - rowGainedScoreFrame.gainedScore[opp])
+                        rowGainedScoreFrame.oppText:SetText((gained > 0) and ("+" .. addon:FormatDecimal(gained)) or "")
+                        rowGainedScoreFrame.gainedScore[opp] = gained
+                    end
                 end
                 --totalGained = totalGained + (gained - tonumber(string.sub(rowGainedScoreFrame.text:GetText(), 2, -1)))
                 --totalGained = totalGained + (gained - rowGainedScoreFrame.gainedScore[selectedAffix])
