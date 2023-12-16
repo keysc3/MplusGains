@@ -84,7 +84,7 @@ function addon:GetPlayerDungeonBests()
                     ["time"] = affix.durationSec,
                     ["overTime"]  = affix.overTime
                 }
-                local oppositeAffix = GetOppositeWeeklyAffix()
+                local oppositeAffix = addon:GetOppositeAffix(weeklyAffix)
                 -- If the affix this iteration is the weekly affix.
                 if(string.lower(addon.affixInfo[weeklyAffix].name) == string.lower(affix.name)) then
                     -- Insert new entry with weekly affix key and check if empty affix should be added.
@@ -105,10 +105,10 @@ function addon:GetPlayerDungeonBests()
 end
 
 --[[
-    GetOppositeWeeklyAffix - Gets the weekly affix that isn't active this week.
+    GetOppositeAffix - Gets the alternating affix that isn't active this given.
 ]]
-function GetOppositeWeeklyAffix()
-    if(weeklyAffix == tyrannicalID) then 
+function addon:GetOppositeAffix(givenAffix)
+    if(givenAffix == tyrannicalID) then 
         return fortifiedID
     else 
         return tyrannicalID
