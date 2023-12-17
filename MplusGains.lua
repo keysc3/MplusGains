@@ -81,6 +81,7 @@ end
     SelectButtons - Sets button colors to selected or unselected based on clicked button.
     @param parentFrame - the parent frame containing the relevant buttons
     @param keystoneButton - the keystonebutton object that was clicked.
+    @param isSwitch - bool for whether or not the function was called when switching weeks.
 --]]
 local function SelectButtons(parentFrame, keystoneButton, isSwitch)
     -- If the clicked button is a higher keystone level than the currently selected button.
@@ -102,7 +103,9 @@ local function SelectButtons(parentFrame, keystoneButton, isSwitch)
             return
         end
     end
-    parentFrame.selectedLevel[selectedAffix] = keystoneButton.level
+    if(not isSwitch) then 
+        parentFrame.selectedLevel[selectedAffix] = keystoneButton.level
+    end
 end
 
 --[[
@@ -151,6 +154,12 @@ local function SetDesaturation(texture, desaturation)
 	end
 end
 
+--[[
+    ResetScrollFrameValues - Resets the values of a dungeons scroll frame.
+    @param affixID - the ID of the week being reset
+    @param scrollChild - the scrollChild from for the row
+    @param gainedScoreFrame - the gainedScoreFrame of the row
+--]]
 local function ResetScrollFrameValues(affixID, scrollChild, gainedScoreFrame)
     scrollChild.selectedLevel[affixID] = scrollChild.startingLevel[affixID] - 1
     totalGained = totalGained - gainedScoreFrame.gainedScore[affixID]
@@ -158,8 +167,8 @@ local function ResetScrollFrameValues(affixID, scrollChild, gainedScoreFrame)
 end
 
 --[[
-    ResetToStartingLevel - Resets the given scroll holder frame to the default state.
-    @param scrollHolderFrame - the scroll holder frame to reset
+    ResetBothToStartingLevel - Resets both affix weeks of the given rows scrollholder frame to the default state.
+    @param rowFrame - the row frame to reset
 --]]
 local function ResetBothToStartingLevel(rowFrame)
     local scrollChild = rowFrame.scrollHolderFrame.scrollChild
@@ -167,11 +176,13 @@ local function ResetBothToStartingLevel(rowFrame)
     local gainedScoreFrame = rowFrame.gainedScoreFrame
     local opp = addon:GetOppositeAffix(selectedAffix)
     local startingLevel = (scrollChild.startingLevel[selectedAffix] < scrollChild.startingLevel[opp]) and scrollChild.startingLevel[selectedAffix] or scrollChild.startingLevel[opp]
+    -- Reset button selection UI colors and scroll values/position.
     SelectButtons(scrollChild, scrollChild.keystoneButtons[startingLevel], false)
     scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     scrollFrame.previousScroll = scrollFrame.minScrollRange[opp]
     scrollFrame:SetHorizontalScroll(scrollFrame.minScrollRange[selectedAffix])
     CheckForScrollButtonEnable(rowFrame.scrollHolderFrame, selectedAffix)
+    -- Reset the scroll frame values and set the text.
     ResetScrollFrameValues(selectedAffix, scrollChild, gainedScoreFrame)
     ResetScrollFrameValues(addon:GetOppositeAffix(selectedAffix), scrollChild, gainedScoreFrame)
     gainedScoreFrame.text:SetText("+0.0")
@@ -182,13 +193,13 @@ end
     ResetToStartingLevel - Resets the given scroll holder frame to the default state.
     @param scrollHolderFrame - the scroll holder frame to reset
 --]]
-local function ResetToStartingLevel(scrollHolderFrame)
+--[[local function ResetToStartingLevel(scrollHolderFrame)
     local startingLevel = scrollHolderFrame.scrollChild.startingLevel[selectedAffix]
     SelectButtons(scrollHolderFrame.scrollChild, scrollHolderFrame.scrollChild.keystoneButtons[startingLevel], false)
     scrollHolderFrame.scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     scrollHolderFrame.scrollChild.selectedLevel[selectedAffix] = startingLevel - 1
     CheckForScrollButtonEnable(scrollHolderFrame, selectedAffix)
-end
+end--]]
 
 --[[
     CreateTooltip - Creates a tooltip for the given frame and with the given text.
@@ -217,6 +228,44 @@ local function CreateTooltip(parentFrame, textString)
 end
 
 --[[
+    SwitchAffixWeeks - Handles switching between affix weeks on button click.
+    @param self - the button clicked
+    @param motion - the button used for the click
+    @param down - bool for if the button is held down
+--]]
+local function SwitchAffixWeeks(self, button, down)
+    if(selectedAffix ~= self.affixID) then
+        SetDesaturation(self.texture, false)
+        local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().fortButton or self:GetParent().tyranButton
+        SetDesaturation(otherButton.texture, true)
+        if(mainFrame.dungeonHolderFrame.rows ~= nil) then
+            for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
+                local scrollChild = value.scrollHolderFrame.scrollChild
+                -- If no level is selected then deselect every button including the starting level, otherwise deslect to the selected level.
+                if(scrollChild.selectedLevel[self.affixID] < scrollChild.startingLevel[self.affixID]) then
+                    SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]], true)
+                    scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+                else
+                    SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]], true)
+                end
+                -- Handle scroll values and button enabling.
+                local oldScroll = value.scrollHolderFrame.scrollFrame:GetHorizontalScroll()
+                value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.previousScroll)
+                value.scrollHolderFrame.scrollFrame.previousScroll = oldScroll
+                CheckForScrollButtonEnable(value.scrollHolderFrame, self.affixID)
+                -- Set text values for gains.
+                value.gainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[self.affixID]))
+                if(value.gainedScoreFrame.gainedScore[selectedAffix] > 0) then
+                    value.gainedScoreFrame.oppText:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[selectedAffix]))
+                else
+                    value.gainedScoreFrame.oppText:SetText("")
+                end
+            end
+        end
+        selectedAffix = self.affixID
+    end
+end
+--[[
     CreateToggleButton - Creates a toggle button for switching between weeks when choosing keys.
     @param parentFrame - The parent frame for the button.
     @param affixID - The affix the button is for.
@@ -239,41 +288,7 @@ local function CreateToggleButton(parentFrame, affixID)
     button:SetScript("OnLeave", function(self, motion)
         self.tooltip:Hide()
     end)
-    button:SetScript("OnClick", function(self, motion)
-        if(selectedAffix ~= self.affixID) then
-            SetDesaturation(self.texture, false)
-            local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().fortButton or self:GetParent().tyranButton
-            SetDesaturation(otherButton.texture, true)
-            if(mainFrame.dungeonHolderFrame.rows ~= nil) then
-                for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
-                    --value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange)
-                    --value.gainedScoreFrame.text:SetText("+0.0")
-                    local scrollChild = value.scrollHolderFrame.scrollChild
-                    local oldSelected = scrollChild.selectedLevel[otherButton.affixID]
-                    if(scrollChild.selectedLevel[self.affixID] < scrollChild.startingLevel[self.affixID]) then
-                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]], true)
-                        scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-                    else
-                        SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]], true)
-                    end
-                    scrollChild.selectedLevel[otherButton.affixID] = oldSelected
-                    local oldScroll = value.scrollHolderFrame.scrollFrame:GetHorizontalScroll()
-                    value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.previousScroll)
-                    value.scrollHolderFrame.scrollFrame.previousScroll = oldScroll
-                    CheckForScrollButtonEnable(value.scrollHolderFrame, self.affixID)
-                    value.gainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[self.affixID]))
-                    if(value.gainedScoreFrame.gainedScore[selectedAffix] > 0) then
-                        value.gainedScoreFrame.oppText:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[selectedAffix]))
-                    else
-                        value.gainedScoreFrame.oppText:SetText("")
-                    end
-                end
-                --totalGained = 0
-                --mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
-            end
-            selectedAffix = self.affixID
-        end
-    end)
+    button:SetScript("OnClick", SwitchAffixWeeks)
     return button
 end
 
@@ -289,13 +304,6 @@ local function CreateToggle(parentFrame)
     parentFrame.fortButton = CreateToggleButton(parentFrame, addon.fortifiedID)
     parentFrame.fortButton:SetPoint("LEFT", parentFrame.tyranButton, "RIGHT", pad, 0)
     parentFrame.fortButton.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", parentFrame.tyranButton:GetWidth() + pad - 2, -1)
-
-    --[[scrollButton:SetScript("OnClick", function(self, motion)
-        self.textureUp:SetVertexColor(1, 1, 1, 1)
-    end)
-    scrollButton:SetScript("OnLeave", function(self, motion)
-        self.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
-    end)--]]
 end
 
 --[[
