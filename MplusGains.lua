@@ -153,6 +153,7 @@ end
 
 local function ResetScrollFrameValues(affixID, scrollChild, gainedScoreFrame)
     scrollChild.selectedLevel[affixID] = scrollChild.startingLevel[affixID] - 1
+    totalGained = totalGained - gainedScoreFrame.gainedScore[affixID]
     gainedScoreFrame.gainedScore[affixID] = 0
 end
 
@@ -160,7 +161,7 @@ end
     ResetToStartingLevel - Resets the given scroll holder frame to the default state.
     @param scrollHolderFrame - the scroll holder frame to reset
 --]]
-local function ResetAllToStartingLevel(rowFrame)
+local function ResetBothToStartingLevel(rowFrame)
     local scrollChild = rowFrame.scrollHolderFrame.scrollChild
     local scrollFrame = rowFrame.scrollHolderFrame.scrollFrame
     local gainedScoreFrame = rowFrame.gainedScoreFrame
@@ -351,9 +352,9 @@ local function CreateHeaderFrame(parentFrame)
                 --value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange[selectedAffix])
                 --value.gainedScoreFrame.text:SetText("+0.0")
                 --ResetToStartingLevel(value.scrollHolderFrame)
-                ResetAllToStartingLevel(value)
+                ResetBothToStartingLevel(value)
             end
-            totalGained = 0
+            --totalGained = 0
             mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
         end
     end)
@@ -605,7 +606,7 @@ end
 local function CalculateScrollMinRange(baseLevel, startingLevel)
     local minimum = 1
     if(startingLevel > baseLevel) then
-        minimum = minimum + (startingLevel - baseLevel) * (buttonWidth - 1)
+        minimum = minimum + ((startingLevel - baseLevel) * (buttonWidth - 1))
     end
     return minimum
 end
@@ -625,7 +626,7 @@ local function CalculateScrollHolderUIValues(scrollHolderFrame)
     scrollHolderFrame.scrollFrame.maxScrollRange[addon.tyrannicalID] = (diff > scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID]) and diff or scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID]
     scrollHolderFrame.scrollFrame.maxScrollRange[addon.fortifiedID] = (diff > scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID]) and diff or scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID]
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
-    scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[selectedAffix])
+    --scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[selectedAffix])
 end
 
 --[[
@@ -684,6 +685,7 @@ local function CreateButtonRow(scrollHolderFrame, dungeonID)
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     -- Setup UI values
     CalculateScrollHolderUIValues(scrollHolderFrame)
+    scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[selectedAffix])
     -- Create the buttons and add them to the parent frames buttons table
     CreateAllButtons(scrollHolderFrame, maxLevel)
 end
@@ -860,18 +862,14 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
     scrollHolderFrame.scrollChild.startingLevel[weeklyAffix] = newLevel
     -- Setup new scroll range and pos values
-    local newPos
+    --[[local newPos
     if(newLevel <= oldBase) then
         newPos = 1
     else
         scrollHolderFrame.scrollChild.baseLevel = newLevel
         newPos = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] + ((newLevel - oldBase) * (buttonWidth - 1))
-    end
-    scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = newPos
-    if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
-        scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = newPos 
-    end
-    scrollHolderFrame.scrollFrame:SetHorizontalScroll(newPos)
+    end--]]
+    
     -- Need new buttons if the newLevel is lower than the base level.
     if(newLevel < oldBase) then
         -- Setup new values and new buttons
@@ -880,9 +878,17 @@ local function UpdateDungeonButtons(scrollHolderFrame)
         -- Set new anchor point for old level
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
+    else
+        scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
+        if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
+            scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] 
+        end
+        --if(weeklyAffix == selectedAffix) then
+            --scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix])
+        --end
     end
     -- Reset scroll frame to no key selected state.
-    ResetToStartingLevel(scrollHolderFrame)
+    ResetBothToStartingLevel(scrollHolderFrame:GetParent())
 end
 
 --[[
@@ -1488,6 +1494,7 @@ local function StartUp()
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    --mainFrame:RegisterEvent("PLAYER_STARTED_MOVING")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         -- Player entering world
         if(event == "PLAYER_ENTERING_WORLD") then
@@ -1509,10 +1516,15 @@ local function StartUp()
         end
         -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
+        --if(event == "PLAYER_STARTED_MOVING") then
             local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
                 oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
                 PrimaryAffix, isEligibleForScore, members
                     = C_ChallengeMode.GetCompletionInfo()
+                --[[dungeonID = 199
+                onTime = true
+                level = 27
+                time = 1920000--]]
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
                 addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
@@ -1520,9 +1532,9 @@ local function StartUp()
                 UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
                 -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
                 summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
-                totalGained = totalGained - tonumber(string.sub(dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:GetText(), 2, -1))
+                --totalGained = totalGained - tonumber(string.sub(dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:GetText(), 2, -1))
                 summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
-                dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:SetText("+0.0")
+                --dungeonHolderFrame.rows[dungeonID].gainedScoreFrame.text:SetText("+0.0")
             end
         end
     end)
