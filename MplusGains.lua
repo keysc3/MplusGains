@@ -169,6 +169,7 @@ local function ResetBothToStartingLevel(rowFrame)
     local startingLevel = (scrollChild.startingLevel[selectedAffix] < scrollChild.startingLevel[opp]) and scrollChild.startingLevel[selectedAffix] or scrollChild.startingLevel[opp]
     SelectButtons(scrollChild, scrollChild.keystoneButtons[startingLevel], false)
     scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
+    scrollFrame.previousScroll = scrollFrame.minScrollRange[opp]
     scrollFrame:SetHorizontalScroll(scrollFrame.minScrollRange[selectedAffix])
     CheckForScrollButtonEnable(rowFrame.scrollHolderFrame, selectedAffix)
     ResetScrollFrameValues(selectedAffix, scrollChild, gainedScoreFrame)
@@ -256,7 +257,9 @@ local function CreateToggleButton(parentFrame, affixID)
                         SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]], true)
                     end
                     scrollChild.selectedLevel[otherButton.affixID] = oldSelected
-                    value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.minScrollRange[self.affixID])
+                    local oldScroll = value.scrollHolderFrame.scrollFrame:GetHorizontalScroll()
+                    value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.previousScroll)
+                    value.scrollHolderFrame.scrollFrame.previousScroll = oldScroll
                     CheckForScrollButtonEnable(value.scrollHolderFrame, self.affixID)
                     value.gainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[self.affixID]))
                     if(value.gainedScoreFrame.gainedScore[selectedAffix] > 0) then
@@ -625,6 +628,7 @@ local function CalculateScrollHolderUIValues(scrollHolderFrame)
     scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID] = CalculateScrollMinRange(baseLevel, scrollHolderFrame.scrollChild.startingLevel[addon.fortifiedID])
     scrollHolderFrame.scrollFrame.maxScrollRange[addon.tyrannicalID] = (diff > scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID]) and diff or scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID]
     scrollHolderFrame.scrollFrame.maxScrollRange[addon.fortifiedID] = (diff > scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID]) and diff or scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID]
+    scrollHolderFrame.scrollFrame.previousScroll = scrollHolderFrame.scrollFrame.minScrollRange[addon:GetOppositeAffix(selectedAffix)]
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
     --scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[selectedAffix])
 end
@@ -727,6 +731,7 @@ local function CreateScrollFrame(scrollHolderFrame)
     local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameTemplate")
     scrollFrame.minScrollRange = { [addon.tyrannicalID] = 1, [addon.fortifiedID] = 1 }
     scrollFrame.maxScrollRange = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
+    scrollFrame.previousScroll = 1
     scrollFrame.ScrollBar:Hide()
     scrollFrame.ScrollBar:Disable()
     -- up left, down right
@@ -861,15 +866,6 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     local newLevel = GetStartingLevel(dungeonID, weeklyAffix)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
     scrollHolderFrame.scrollChild.startingLevel[weeklyAffix] = newLevel
-    -- Setup new scroll range and pos values
-    --[[local newPos
-    if(newLevel <= oldBase) then
-        newPos = 1
-    else
-        scrollHolderFrame.scrollChild.baseLevel = newLevel
-        newPos = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] + ((newLevel - oldBase) * (buttonWidth - 1))
-    end--]]
-    
     -- Need new buttons if the newLevel is lower than the base level.
     if(newLevel < oldBase) then
         -- Setup new values and new buttons
@@ -879,13 +875,11 @@ local function UpdateDungeonButtons(scrollHolderFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
     else
+        -- Setup new scroll range and pos values
         scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
         if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
             scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] 
         end
-        --if(weeklyAffix == selectedAffix) then
-            --scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix])
-        --end
     end
     -- Reset scroll frame to no key selected state.
     ResetBothToStartingLevel(scrollHolderFrame:GetParent())
