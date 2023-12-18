@@ -893,20 +893,21 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     scrollHolderFrame.scrollChild.startingLevel[weeklyAffix] = newLevel
     -- Need new buttons if the newLevel is lower than the base level.
     --TODO: NEEDED?? FIX?
-    if(newLevel < oldBase) then
+    --[[if(newLevel < oldBase) then
         -- Setup new values and new buttons
+        scrollHolderFrame.scrollChild.baseLevel = newLevel
         CalculateScrollHolderUIValues(scrollHolderFrame)
         CreateAllButtons(scrollHolderFrame, oldBase - 1)
         -- Set new anchor point for old level
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
-    else
+    else--]]
         -- Setup new scroll range and pos values
-        scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
-        if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
-            scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] 
-        end
+    scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
+    if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
+        scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] 
     end
+    --end
     -- Reset scroll frame to no key selected state.
     ResetBothToStartingLevel(scrollHolderFrame:GetParent())
 end
