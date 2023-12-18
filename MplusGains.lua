@@ -237,7 +237,7 @@ local function SwitchAffixWeeks(self, button, down)
     if(button ~= "LeftButton") then return end
     if(selectedAffix ~= self.affixID) then
         SetDesaturation(self.texture, false)
-        local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().fortButton or self:GetParent().tyranButton
+        local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().toggles[addon.fortifiedID] or self:GetParent().toggles[addon.tyrannicalID]
         SetDesaturation(otherButton.texture, true)
         if(mainFrame.dungeonHolderFrame.rows ~= nil) then
             for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
@@ -298,13 +298,16 @@ end
     @param parentFrame - the parent frome of the button.
 --]]
 local function CreateToggle(parentFrame)
-    parentFrame.tyranButton = CreateToggleButton(parentFrame, addon.tyrannicalID)
-    parentFrame.tyranButton:SetPoint("LEFT", parentFrame, "LEFT")
-    parentFrame.tyranButton.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", -2, -1)
+    parentFrame.toggles = {}
+    local leftToggle = CreateToggleButton(parentFrame, addon.fortifiedID)
+    leftToggle:SetPoint("LEFT", parentFrame, "LEFT")
+    leftToggle.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", -2, -1)
     local pad = 4
-    parentFrame.fortButton = CreateToggleButton(parentFrame, addon.fortifiedID)
-    parentFrame.fortButton:SetPoint("LEFT", parentFrame.tyranButton, "RIGHT", pad, 0)
-    parentFrame.fortButton.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", parentFrame.tyranButton:GetWidth() + pad - 2, -1)
+    local rightToggle = CreateToggleButton(parentFrame, addon.tyrannicalID)
+    rightToggle:SetPoint("LEFT", leftToggle, "RIGHT", pad, 0)
+    rightToggle.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", leftToggle:GetWidth() + pad - 2, -1)
+    parentFrame.toggles[leftToggle.affixID] = leftToggle
+    parentFrame.toggles[rightToggle.affixID] = rightToggle
 end
 
 --[[
@@ -902,7 +905,7 @@ local function UpdateDungeonButtons(scrollHolderFrame)
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
         scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
     else--]]
-        -- Setup new scroll range and pos values
+    -- Setup new scroll range and pos values
     scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
         scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] 
@@ -1497,9 +1500,9 @@ local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
     if(weeklyAffix == nil) then return false end
     selectedAffix = weeklyAffix
     if(selectedAffix ~= addon.tyrannicalID) then
-        SetDesaturation(headerFrame.toggle.tyranButton.texture, true)
+        SetDesaturation(headerFrame.toggle.toggles[addon.tyrannicalID].texture, true)
     else
-        SetDesaturation(headerFrame.toggle.fortButton.texture, true)
+        SetDesaturation(headerFrame.toggle.toggles[addon.fortifiedID].texture, true)
     end
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
