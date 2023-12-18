@@ -234,6 +234,7 @@ end
     @param down - bool for if the button is held down
 --]]
 local function SwitchAffixWeeks(self, button, down)
+    if(button ~= "LeftButton") then return end
     if(selectedAffix ~= self.affixID) then
         SetDesaturation(self.texture, false)
         local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().fortButton or self:GetParent().tyranButton
@@ -360,11 +361,13 @@ local function CreateHeaderFrame(parentFrame)
     resetButton:SetPushedTexture(resetButton.texture1)
     resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
     resetButton:SetScript("OnClick", function(self, btn, down)
-        if(mainFrame.dungeonHolderFrame.rows ~= nil) then
-            for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
-                ResetBothToStartingLevel(value)
+        if(btn == "LeftButton") then
+            if(mainFrame.dungeonHolderFrame.rows ~= nil) then
+                for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
+                    ResetBothToStartingLevel(value)
+                end
+                mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
             end
-            mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
         end
     end)
     resetButton.tooltip = CreateTooltip(frame, "Reset selected keys")
@@ -807,7 +810,9 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
     scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
     scrollButton:SetScript("OnClick", function(self, button, down)
-        ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
+        if(button == "LeftButton") then
+            ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
+        end
     end)
     scrollButton:SetScript("OnEnter", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, 1)
@@ -1446,10 +1451,12 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     --bugButton:SetPushedTexture(CreateNewTexture(hover.r, hover.g, hover.b, 0.07, bugButton))
     -- Handle button text color change depending on action.
     bugButton:SetScript("OnClick", function(self, btn, down)
-        if(bugReportFrame:IsShown()) then
-            bugReportFrame:Hide()
-        else
-            bugReportFrame:Show()
+        if(btn == "LeftButton") then
+            if(bugReportFrame:IsShown()) then
+                bugReportFrame:Hide()
+            else
+                bugReportFrame:Show()
+            end
         end
     end)
     bugButton:SetScript("OnMouseDown", function(self, motion)
