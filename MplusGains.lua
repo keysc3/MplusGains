@@ -545,7 +545,6 @@ local function UpdateGained(newGain, frame, affix)
     frame.gainedScore[affix] = newGain
 end
 
---TODO: Switch to onclick
 --[[
     SetKeystoneButtonScripts - Sets a keystone buttons event scripts.
     @param keystoneButton - the keystoneButton object to use
@@ -556,8 +555,7 @@ end
 local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScroll, rowGainedScoreFrame)
     local lastX, lastY = 0, 0
     -- OnMouseUp
-    keystoneButton.button:SetScript("OnMouseUp", function(self, btn)
-        if(btn == "RightButton") then keystoneButton.mouseDown = false end
+    keystoneButton.button:SetScript("OnClick", function(self, btn, down)
         if(btn == "LeftButton") then
             -- If the clicked button is not the currently selected button then select necessary buttons.
             if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix] or (keystoneButton.level == parentFrame.startingLevel[selectedAffix] and keystoneButton.level == parentFrame.selectedLevel[selectedAffix])) then
@@ -589,6 +587,10 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                 SelectButtons(parentFrame, keystoneButton, false)
             end
         end
+    end)
+    -- OnMouseUp
+    keystoneButton.button:SetScript("OnMouseUp", function(self, btn)
+        if(btn == "RightButton") then keystoneButton.mouseDown = false end
     end)
     -- OnMouseDown
     keystoneButton.button:SetScript("OnMouseDown", function(self, btn)
@@ -772,7 +774,6 @@ local function CreateScrollChildFrame(scrollHolderFrame)
     return scrollChildFrame
 end
 
---TODO: Switch to onclick
 --[[
     CreateScrollButton - Creates a scroll button with an arrow texture.
     @param parentFrame - the parent frome of the button
@@ -805,14 +806,14 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.disabledTexture:SetScale(0.9)
     scrollButton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
     scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
+    scrollButton:SetScript("OnClick", function(self, button, down)
+        ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
+    end)
     scrollButton:SetScript("OnEnter", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, 1)
     end)
     scrollButton:SetScript("OnLeave", function(self, motion)
         self.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
-    end)
-    scrollButton:SetScript("OnMouseUp", function(self, btn)
-        ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
     end)
     return scrollButton
 end
@@ -1354,7 +1355,6 @@ local function CreateSummary(mainFrame, dungeonHelperFrame, width)
     return summaryFrame
 end
 
---TODO: Swith to onclick
 --[[
     CreateBugReportFrame - Creates the bug report frame.
     @param anchorFrame - the frame to anchor to
@@ -1443,14 +1443,20 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     bugButton.text:SetText("Bug Report")
     bugButton:SetSize(math.ceil(bugButton.text:GetWidth() + 2), frame:GetHeight())
     bugButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, bugButton))
-    bugButton:SetPushedTexture(CreateNewTexture(hover.r, hover.g, hover.b, 0.07, bugButton))
+    --bugButton:SetPushedTexture(CreateNewTexture(hover.r, hover.g, hover.b, 0.07, bugButton))
     -- Handle button text color change depending on action.
-    bugButton:SetScript("OnMouseUp", function(self, btn)
+    bugButton:SetScript("OnClick", function(self, btn, down)
         if(bugReportFrame:IsShown()) then
             bugReportFrame:Hide()
         else
             bugReportFrame:Show()
         end
+    end)
+    bugButton:SetScript("OnMouseDown", function(self, motion)
+        self.text:SetTextScale(0.94)
+    end)
+    bugButton:SetScript("OnMouseUp", function(self, motion)
+        self.text:SetTextScale(1)
     end)
 end
 
