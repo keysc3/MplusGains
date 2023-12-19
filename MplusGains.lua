@@ -583,7 +583,7 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
                     -- Starting key == selected key and was pressed, no gain for the row.
                     UpdateGained(gained, rowGainedScoreFrame, selectedAffix)
                     -- If a key in the other week is selected then recalculate the gain.
-                    if(parentFrame.selectedLevel[opp] > parentFrame.startingLevel[opp]) then
+                    if(parentFrame.selectedLevel[opp] >= parentFrame.startingLevel[opp]) then
                         gained = addon:RoundToOneDecimal(CalculateGainedRating(parentFrame.selectedLevel[opp], parentFrame.dungeonID, opp))
                         UpdateGained(gained, rowGainedScoreFrame, opp)
                     end
