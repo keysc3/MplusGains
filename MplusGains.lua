@@ -40,10 +40,8 @@ end
 local function CustomFontString(textSize, color, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
 
-    text:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, textSize, flags)
+    text:SetFont(MplusGainsSettings.Font, textSize, flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
-    text:SetText("Shalom")
-    print("OKOK" .. text:GetWidth())
     --frame.text:SetPoint("CENTER")
     --frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     return text
@@ -324,6 +322,60 @@ local function CreateToggle(parentFrame)
     parentFrame.toggles[rightToggle.affixID] = rightToggle
 end
 
+local function CreateExitButton(closeFrame, parentFrame, headerHeight)
+    -- Exit button
+    local exitButton = CreateFrame("Button", nil, parentFrame)
+    local r, g, b, a = 207/255, 170/255, 0, 1
+    exitButton:SetPoint("RIGHT", parentFrame, "RIGHT")
+    exitButton:SetSize(headerHeight, headerHeight)
+    exitButton.text = CustomFontString(16, textColor, exitButton, "OUTLINE")
+    exitButton.text:ClearAllPoints()
+    exitButton.text:SetPoint("CENTER")
+    exitButton.text:SetText("x")
+    exitButton.text:SetTextScale(1.4)
+    exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))
+    exitButton.text:SetTextColor(r, g, b, a)
+    exitButton:SetScript("OnMouseUp", function(self, btn)
+        self.text:SetTextScale(1.4)
+    end)
+    exitButton:SetScript("OnMouseDown", function(self, motion)
+        self.text:SetTextScale(1.2)
+    end)
+    exitButton:SetScript("OnClick", function(self, button, down)
+        if(button == "LeftButton") then closeFrame:Hide() end
+    end)
+    return exitButton
+end
+
+local function CreateSettingsWindow(parentFrame)
+    local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
+    frame:SetSize(200, 200)
+    frame:SetPoint("CENTER")
+    --frame:SetSize(1000, 600)
+    frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+    frame:Show()
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    --frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    --_G["MainMplusGainsFrame"] = frame
+    --tinsert(UISpecialFrames, frame:GetName())
+    frame:SetFrameStrata("DIALOG")
+    --frame:SetFrameLevel(10000)
+    local header = CreateFrame("Frame", nil, frame)
+    header:SetPoint("TOP")
+    header:SetSize(frame:GetWidth(), 40)
+    header.text = CustomFontString(14, textColor, header, "OUTLINE")
+    header.text:ClearAllPoints()
+    header.text:SetPoint("CENTER")
+    header.text:SetText("Settings")
+    -- Exit button
+    local exitButton = CreateExitButton(frame, header, 40)
+    return frame
+end
+
 --[[
     CreateHeaderFrame- Creates the header frame for the addon.
     @param parentFrame - the parent frame to use
@@ -333,13 +385,14 @@ local function CreateHeaderFrame(parentFrame)
     local headerWidthDiff = 8
     local headerHeight = 40
     local frame = CreateFrameWithBackdrop(parentFrame, "Header")
-    frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
+    frame:SetPoint("TOP", parentFrame, "TOP", 0, - (headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
     frame.text = CustomFontString(24, textColor, frame, "OUTLINE")
     frame.text:SetPoint("CENTER")
     frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
-    local exitButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
+    local exitButton = CreateExitButton(parentFrame, frame, headerHeight)
+    --[[local exitButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
     local r, g, b, a = 207/255, 170/255, 0, 1
     exitButton:SetPoint("RIGHT", frame, "RIGHT")
     exitButton:SetSize(headerHeight, headerHeight)
@@ -348,9 +401,18 @@ local function CreateHeaderFrame(parentFrame)
     exitButton.text:SetPoint("CENTER")
     exitButton.text:SetText("x")
     exitButton.text:SetTextScale(1.4)
-    exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))
-    local _r, _g, _b, _a = exitButton.text:GetTextColor()
-    exitButton.text:SetTextColor(r, g, b, a)
+    exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))--]]
+    -- Settings button
+    local settingsButton = CreateFrame("Button", "SETTINGS_BUTTON", frame)
+    settingsButton:SetPoint("RIGHT", exitButton, "LEFT")
+    settingsButton:SetSize(100, headerHeight)
+    settingsButton.text = CustomFontString(12, textColor, settingsButton, "OUTLINE")
+    settingsButton.text:ClearAllPoints()
+    settingsButton.text:SetPoint("CENTER")
+    settingsButton.text:SetText("SETTINGS")
+    local settingsFrame = CreateSettingsWindow(parentFrame)
+    settingsButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, settingsButton))
+    --[[exitButton.text:SetTextColor(r, g, b, a)
     exitButton:SetScript("OnMouseUp", function(self, btn)
         exitButton.text:SetTextScale(1.4)
     end)
@@ -359,7 +421,7 @@ local function CreateHeaderFrame(parentFrame)
     end)
     exitButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then parentFrame:Hide() end
-    end)
+    end)--]]
     local resetButton = CreateFrame("Button", "REFRESH_BUTTON", frame)
     resetButton:SetPoint("LEFT", frame, "LEFT")
     resetButton:SetSize(headerHeight, headerHeight)
@@ -396,7 +458,7 @@ local function CreateHeaderFrame(parentFrame)
         self.tooltip:Hide()
     end)
     -- Create the weekly affix toggles
-    local toggle = CreateFrame("Frame", nil, parentFrame)
+    local toggle = CreateFrame("Frame", nil, frame)
     toggle:SetSize(headerHeight, headerHeight)
     toggle:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
     CreateToggle(toggle)
@@ -500,7 +562,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     -- Create keystone button font
     --btn.text = CustomFontString(12, textColor, btn, nil)
     local myFont = CreateFont("Font")
-    myFont:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, 12, "OUTLINE, MONOCHROME")
+    myFont:SetFont(MplusGainsSettings.Font, 12, "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
     btn:SetNormalFontObject(myFont)
     return btn
@@ -1077,9 +1139,9 @@ local function CreateAffixInfoFrame(anchorFrame, parentFrame)
     frame.titleFrame:SetPoint("TOP")
     local titleFrameHeight = 20
     frame.titleFrame:SetSize(frameWidth, titleFrameHeight)
-    frame.titleFrame.nameText = CustomFontString(16, textColor, frame.titleFrame, "OUTLINE")
+    frame.titleFrame.nameText = CustomFontString(14, textColor, frame.titleFrame, "OUTLINE")
     frame.titleFrame.nameText:SetPoint("CENTER")
-    frame.titleFrame.levelText = CustomFontString(16, textColor, frame.titleFrame, "OUTLINE")
+    frame.titleFrame.levelText = CustomFontString(14, textColor, frame.titleFrame, "OUTLINE")
     frame.titleFrame.levelText:SetPoint("LEFT", frame.titleFrame.nameText, "RIGHT", xPadding, 0)
     frame.titleFrame.texture = frame.titleFrame:CreateTexture()
     frame.titleFrame.texture:SetPoint("RIGHT", frame.titleFrame.nameText, "LEFT", -4, 0)
@@ -1172,7 +1234,7 @@ local function CreateDungeonBestNameFrame(parentFrame)
     local totalWidth = parentFrame:GetParent().smallColumnWidth * #children
     local nameFrame = CreateFrame("Frame", nil, parentFrame)
     nameFrame:SetPoint("LEFT", parentFrame, "LEFT")
-    nameFrame:SetSize(parentFrame:GetWidth() - totalWidth, parentFrame:GetHeight())
+    nameFrame:SetSize(parentFrame:GetWidth() - (totalWidth + 10), parentFrame:GetHeight())
     nameFrame.nameText = CustomFontString(12, textColor, nameFrame, nil)
     nameFrame.nameText:ClearAllPoints()
     nameFrame.nameText:SetPoint("LEFT", nameFrame, "LEFT")
@@ -1553,12 +1615,14 @@ local function StartUp()
                 if(MplusGainsSettings.Count == nil) then
                     --print("NILLLL")
                     -- Set initial font
-                    MplusGainsSettings = {Count = 1, Font = "TitilliumWeb-Regular.ttf"}
+                    MplusGainsSettings = {Count = 1, Font = "Fonts\\FRIZQT__.TTF"}
                 else
                     --print("NOT NILLLL")
                     -- Used saved variable font
                     MplusGainsSettings.Count = MplusGainsSettings.Count + 1
-                    MplusGainsSettings.Font = "TitilliumWeb-Regular.ttf"
+                    --MplusGainsSettings.Font = "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf"
+                    MplusGainsSettings.Font = "Fonts\\FRIZQT__.TTF"
+                    --MplusGainsSettings.Font = "Fonts\\SKURRI.TTF"
                 end
                 headerFrame = CreateHeaderFrame(mainFrame)
                 dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
