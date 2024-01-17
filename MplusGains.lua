@@ -36,6 +36,16 @@ local function CreateNewTexture(red, green, blue, alpha, parent)
 end
 
 
+local function CustomFontString(textSize, color, parentFrame)
+    local text = parentFrame:CreateFontString(nil, "OVERLAY")
+    --frame.text = frame:CreateFontString(nil, "OVERLAY")
+    text:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, textSize)
+    text:SetTextColor(color.r, color.g, color.b, 1)
+    --frame.text:SetPoint("CENTER")
+    --frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
+    return text
+end
+
 --[[
     CreateFrameWithBackdrop - Creates a frame using the backdrop template.
     @param parentFrame - the parent frame
@@ -321,7 +331,8 @@ local function CreateHeaderFrame(parentFrame)
     local frame = CreateFrameWithBackdrop(parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
-    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOUTLINE")
+    frame.text = CustomFontString(24, {r = 1, g = 1, b = 1}, frame)
+    --frame.text:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, 24)
     frame.text:SetPoint("CENTER")
     frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
@@ -1367,7 +1378,7 @@ end
 --[[
     CreateBugReportFrame - Creates the bug report frame.
     @param anchorFrame - the frame to anchor to
-    @param parentFame - the parent frame of the created frame
+    @param parentFrame - the parent frame of the created frame
     @return frame - the created frame
 --]]
 local function CreateBugReportFrame(anchorFrame, parentFrame)
@@ -1522,12 +1533,9 @@ local function StartUp()
     -- UI setup
     mainFrame = CreateMainFrame()
     mainFrame:Hide()
-    local headerFrame = CreateHeaderFrame(mainFrame)
-    local dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
-    local summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
-    mainFrame.summaryFrame = summaryFrame
-    mainFrame.dungeonHolderFrame = dungeonHolderFrame
-    CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
+    local headerFrame
+    local dungeonHolderFrame
+    local summaryFrame
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -1541,12 +1549,19 @@ local function StartUp()
                 if(MplusGainsSettings.Count == nil) then
                     --print("NILLLL")
                     -- Set initial font
-                    MplusGainsSettings = {Count = 1}
+                    MplusGainsSettings = {Count = 1, Font = "TitilliumWeb-Regular.ttf"}
                 else
                     --print("NOT NILLLL")
                     -- Used saved variable font
                     MplusGainsSettings.Count = MplusGainsSettings.Count + 1
+                    MplusGainsSettings.Font = "TitilliumWeb-Regular.ttf"
                 end
+                headerFrame = CreateHeaderFrame(mainFrame)
+                dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
+                summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+                mainFrame.summaryFrame = summaryFrame
+                mainFrame.dungeonHolderFrame = dungeonHolderFrame
+                CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
                 print(MplusGainsSettings.Count)
             end
         end
