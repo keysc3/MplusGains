@@ -5,6 +5,7 @@ local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
+local textColor = { r = 1, g = 0.82, b = 0, a = 1}
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
@@ -36,10 +37,10 @@ local function CreateNewTexture(red, green, blue, alpha, parent)
 end
 
 
-local function CustomFontString(textSize, color, parentFrame)
+local function CustomFontString(textSize, color, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     --frame.text = frame:CreateFontString(nil, "OVERLAY")
-    text:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, textSize)
+    text:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, textSize, flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
     --frame.text:SetPoint("CENTER")
     --frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
@@ -228,7 +229,7 @@ local function CreateTooltip(parentFrame, textString)
     })
     tooltip:SetBackdropColor(0, 0, 0, 0.9)
     tooltip:SetFrameLevel(20)
-    tooltip.text = tooltip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tooltip.text = CustomFontString(12, textColor, tooltip, nil)
     tooltip.text:ClearAllPoints()
     tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
     tooltip.text:SetText(textString)
@@ -331,8 +332,7 @@ local function CreateHeaderFrame(parentFrame)
     local frame = CreateFrameWithBackdrop(parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, -(headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
-    frame.text = CustomFontString(24, {r = 1, g = 1, b = 1}, frame)
-    --frame.text:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, 24)
+    frame.text = CustomFontString(24, textColor, frame, "OUTLINE")
     frame.text:SetPoint("CENTER")
     frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
@@ -340,7 +340,7 @@ local function CreateHeaderFrame(parentFrame)
     local r, g, b, a = 207/255, 170/255, 0, 1
     exitButton:SetPoint("RIGHT", frame, "RIGHT")
     exitButton:SetSize(headerHeight, headerHeight)
-    exitButton.text = exitButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeOUTLINE")
+    exitButton.text = CustomFontString(16, textColor, exitButton, "OUTLINE")
     exitButton.text:ClearAllPoints()
     exitButton.text:SetPoint("CENTER")
     exitButton.text:SetText("x")
@@ -442,7 +442,7 @@ local function CreateDungeonNameFrame(parentRow)
     local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", rowEdgePadding, 0)
     frame:SetSize(150, parentRow:GetHeight())
-    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text = CustomFontString(12, textColor, frame, nil)
     frame.text:SetText("Default Dungeon")
     frame.text:ClearAllPoints()
     frame.text:SetPoint("LEFT", frame, "LEFT")
@@ -459,7 +459,7 @@ end
 local function CreateDungeonTimerFrame(parentRow)
     local frame = CreateFrame("Frame", "DUNGEON_TIMER", parentRow)
     frame:SetPoint("LEFT", parentRow.dungeonNameFrame, "RIGHT", xColPadding, 0)
-    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text = CustomFontString(12, textColor, frame, nil)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("xx:xx")
     frame:SetSize(40, parentRow:GetHeight())
@@ -495,8 +495,9 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
+    --btn.text = CustomFontString(12, textColor, btn, nil)
     local myFont = CreateFont("Font")
-    myFont:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE, MONOCHROME")
+    myFont:SetFont("Interface\\Addons\\MplusGains\\Fonts\\".. MplusGainsSettings.Font, 12, "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
     btn:SetNormalFontObject(myFont)
     return btn
@@ -867,15 +868,15 @@ end
 local function CreateGainedScoreFrame(parentRow)
     local frame = CreateFrame("Frame", "GAINED_SCORE", parentRow)
     frame:SetPoint("LEFT", parentRow.scrollHolderFrame.rightScrollButton, "RIGHT", scrollButtonPadding, 0)
-    frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.text = CustomFontString(12, textColor, frame, nil)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
     frame:SetSize(32, parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
-    frame.oppText = frame:CreateFontString(nil, "OVERLAY")
-    frame.oppText:SetFont("Fonts\\FRIZQT__.TTF", 9)
+    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, frame, nil)
+    --frame.oppText:SetFont("Fonts\\FRIZQT__.TTF", 9)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
-    frame.oppText:SetTextColor(0.8, 0.8, 0.8)
+    --frame.oppText:SetTextColor(0.8, 0.8, 0.8)
     frame.oppText:SetText("")
     return frame
 end
