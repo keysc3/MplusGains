@@ -1531,7 +1531,25 @@ local function StartUp()
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    mainFrame:RegisterEvent("ADDON_LOADED")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
+        if(event == "ADDON_LOADED") then
+            --print("MHM")
+            local addonLoaded = ...
+            --print(addonLoaded)
+            if(addonLoaded == "MplusGains") then
+                if(MplusGainsSettings.Count == nil) then
+                    --print("NILLLL")
+                    -- Set initial font
+                    MplusGainsSettings = {Count = 1}
+                else
+                    --print("NOT NILLLL")
+                    -- Used saved variable font
+                    MplusGainsSettings.Count = MplusGainsSettings.Count + 1
+                end
+                print(MplusGainsSettings.Count)
+            end
+        end
         -- Player entering world
         if(event == "PLAYER_ENTERING_WORLD") then
             local isInitialLogin, isReloadingUI = ...
