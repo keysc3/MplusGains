@@ -362,9 +362,63 @@ local function CreateExitButton(closeFrame, parentFrame, headerHeight)
     return exitButton
 end
 
+local fontsTest = { "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF" }
+local selectedFont = 3
+
+--[[function Dropdown_Intializer(frame, level, menuList)
+    local info = UIDropDownMenu_CreateInfo()
+    info.isNotRadio = true
+    info.func = frame.SetValue
+    for i, v in ipairs(fontsTest) do
+        info.checked = (v == selectedFont)
+        info.text, info.arg1 = v, info
+        UIDropDownMenu_AddButton(info)
+    end
+end--]]
+
+local function CreateDropDown(parentFrame)
+    -- Create the dropdown, and configure its appearance
+    local dropDown = CreateFrame("Frame", "FONTDROPDOWN", parentFrame, "UIDropDownMenuTemplate")
+    UIDropDownMenu_SetWidth(dropDown, (parentFrame:GetWidth()/2))
+    UIDropDownMenu_SetText(dropDown, fontsTest[selectedFont])
+    function GetChild(frame, name, key)
+        if (frame[key]) then
+            return frame[key];
+        elseif name then
+            return _G[name..key];
+        end
+        return nil;
+    end
+    -- OnClick
+    function Dropdown_OnClick(self, arg1, arg2, checked)
+        selectedFont = arg1
+        UIDropDownMenu_SetText(dropDown, arg2)
+        GetChild(dropDown, "FONTDROPDOWN", "Text"):SetFont("Fonts\\" .. fontsTest[selectedFont], 12, "")
+    end
+    -- Create and bind data
+    UIDropDownMenu_Initialize(dropDown, function(self, level, menuList)
+        local info = UIDropDownMenu_CreateInfo()
+	    --local testframe = GetChild(frame, frameName, "Text")
+        GetChild(dropDown, "FONTDROPDOWN", "Text"):SetFont("Fonts\\" .. fontsTest[selectedFont], 12, "")
+        --info.notCheckable = true
+        info.isNotRadio = true
+        info.func = Dropdown_OnClick
+        for i, v in ipairs(fontsTest) do
+            local myFont = CreateFont(v)
+            myFont:SetFont("Fonts\\" .. v, 12, "")
+            myFont:SetTextColor(1, 1, 1, 1)
+            info.fontObject = myFont
+            info.checked = (i == selectedFont)
+            info.text, info.arg1, info.arg2 = v, i, v
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+    return dropDown
+end
+
 local function CreateSettingsWindow(parentFrame)
     local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
-    frame:SetSize(200, 200)
+    frame:SetSize(250, 200)
     frame:SetPoint("CENTER")
     --frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.95)
@@ -393,32 +447,33 @@ local function CreateSettingsWindow(parentFrame)
     fontFrame:SetSize(frame:GetWidth(), 20)
     fontFrame:SetPoint("TOP", header, "BOTTOM")
     local fontLabel = CreateFrame("Frame", nil, fontFrame)
-    fontLabel:SetSize(fontFrame:GetWidth()/3, 20)
+    fontLabel:SetSize(fontFrame:GetWidth()/4, 20)
     fontLabel:SetPoint("LEFT", 2, 0)
     fontLabel.text = CustomFontString(12, textColor, fontLabel, "OUTLINE")
     fontLabel.text:ClearAllPoints()
     fontLabel.text:SetPoint("LEFT")
     fontLabel.text:SetText("Font")
-    local fontDropDown = CreateFrame("Frame", nil, fontFrame)
-    fontDropDown:SetSize((fontFrame:GetWidth()/3)*2, 20)
+    local fontDropDown = CreateDropDown(fontFrame)
+    --local fontDropDown = CreateFrame("Frame", nil, fontFrame)
+    --fontDropDown:SetSize((fontFrame:GetWidth()/3)*2, 20)
     fontDropDown:SetPoint("LEFT", fontLabel, "RIGHT", 2, 0)
-    fontDropDown.text = CustomFontString(12, textColor, fontDropDown, "OUTLINE")
+    --[[fontDropDown.text = CustomFontString(12, textColor, fontDropDown, "OUTLINE")
     fontDropDown.text:ClearAllPoints()
     fontDropDown.text:SetPoint("LEFT")
-    fontDropDown.text:SetText("Font Dropdown")
+    fontDropDown.text:SetText("Font Dropdown")--]]
     --scale
     local scalingFrame = CreateFrame("Frame", nil, frame)
     scalingFrame:SetSize(frame:GetWidth(), 20)
     scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM")
     local scalingLabel = CreateFrame("Frame", nil, scalingFrame)
-    scalingLabel:SetSize(scalingFrame:GetWidth()/3, 20)
+    scalingLabel:SetSize(scalingFrame:GetWidth()/4, 20)
     scalingLabel:SetPoint("LEFT", 2, 0)
     scalingLabel.text = CustomFontString(12, textColor, scalingLabel, "OUTLINE")
     scalingLabel.text:ClearAllPoints()
     scalingLabel.text:SetPoint("LEFT")
     scalingLabel.text:SetText("Scale")
     local scalingSlider = CreateFrame("Frame", nil, scalingFrame)
-    scalingSlider:SetSize((scalingFrame:GetWidth()/3)*2, 20)
+    scalingSlider:SetSize((scalingFrame:GetWidth()/4)*3, 20)
     scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT", 2, 0)
     scalingSlider.text = CustomFontString(12, textColor, scalingSlider, "OUTLINE")
     scalingSlider.text:ClearAllPoints()
