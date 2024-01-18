@@ -306,6 +306,21 @@ local function CreateToggleButton(parentFrame, affixID)
 end
 
 --[[
+    CalculateHeight - Calculates the height for a frame.
+    @param frame - the frame to caclculate for
+    @return totalWidth - the total height needed for the frame
+]]
+local function CalculateHeight(frame)
+    local totalHeight = 0
+    local children = { frame:GetChildren() }
+    for _, child in ipairs(children) do
+        totalHeight = totalHeight + child:GetHeight()
+    end
+    -- xCol and scroll padding used twice each
+    --totalHeight = totalWidth + (2 * xColPadding) + (2 * scrollButtonPadding)
+    return totalHeight
+end
+--[[
     CreateToggle - Creates a scroll button with an arrow texture.
     @param parentFrame - the parent frome of the button.
 --]]
@@ -352,7 +367,7 @@ local function CreateSettingsWindow(parentFrame)
     frame:SetSize(200, 200)
     frame:SetPoint("CENTER")
     --frame:SetSize(1000, 600)
-    frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
+    frame:SetBackdropColor(26/255, 26/255, 27/255, 0.95)
     frame:SetMovable(true)
     frame:EnableMouse(true)
     frame:Hide()
@@ -369,10 +384,48 @@ local function CreateSettingsWindow(parentFrame)
     header:SetSize(frame:GetWidth(), 40)
     header.text = CustomFontString(14, textColor, header, "OUTLINE")
     header.text:ClearAllPoints()
-    header.text:SetPoint("CENTER")
+    header.text:SetPoint("LEFT", 2, 0)
     header.text:SetText("Settings")
     -- Exit button
     local exitButton = CreateExitButton(frame, header, 40)
+    --font
+    local fontFrame = CreateFrame("Frame", nil, frame)
+    fontFrame:SetSize(frame:GetWidth(), 20)
+    fontFrame:SetPoint("TOP", header, "BOTTOM")
+    local fontLabel = CreateFrame("Frame", nil, fontFrame)
+    fontLabel:SetSize(fontFrame:GetWidth()/3, 20)
+    fontLabel:SetPoint("LEFT", 2, 0)
+    fontLabel.text = CustomFontString(12, textColor, fontLabel, "OUTLINE")
+    fontLabel.text:ClearAllPoints()
+    fontLabel.text:SetPoint("LEFT")
+    fontLabel.text:SetText("Font")
+    local fontDropDown = CreateFrame("Frame", nil, fontFrame)
+    fontDropDown:SetSize((fontFrame:GetWidth()/3)*2, 20)
+    fontDropDown:SetPoint("LEFT", fontLabel, "RIGHT", 2, 0)
+    fontDropDown.text = CustomFontString(12, textColor, fontDropDown, "OUTLINE")
+    fontDropDown.text:ClearAllPoints()
+    fontDropDown.text:SetPoint("LEFT")
+    fontDropDown.text:SetText("Font Dropdown")
+    --scale
+    local scalingFrame = CreateFrame("Frame", nil, frame)
+    scalingFrame:SetSize(frame:GetWidth(), 20)
+    scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM")
+    local scalingLabel = CreateFrame("Frame", nil, scalingFrame)
+    scalingLabel:SetSize(scalingFrame:GetWidth()/3, 20)
+    scalingLabel:SetPoint("LEFT", 2, 0)
+    scalingLabel.text = CustomFontString(12, textColor, scalingLabel, "OUTLINE")
+    scalingLabel.text:ClearAllPoints()
+    scalingLabel.text:SetPoint("LEFT")
+    scalingLabel.text:SetText("Scale")
+    local scalingSlider = CreateFrame("Frame", nil, scalingFrame)
+    scalingSlider:SetSize((scalingFrame:GetWidth()/3)*2, 20)
+    scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT", 2, 0)
+    scalingSlider.text = CustomFontString(12, textColor, scalingSlider, "OUTLINE")
+    scalingSlider.text:ClearAllPoints()
+    scalingSlider.text:SetPoint("LEFT")
+    scalingSlider.text:SetText("Scale Slider")
+    -- frame height
+    frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame))
     return frame
 end
 
