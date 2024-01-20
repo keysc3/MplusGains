@@ -375,8 +375,58 @@ local selectedFont = 3
         UIDropDownMenu_AddButton(info)
     end
 end--]]
+local function CreateDropDown(parentFrame, anchorFrame)
+    -- Button frame
+    local fontDropDownButton = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
+    fontDropDownButton:SetSize(parentFrame:GetWidth()/2, parentFrame:GetHeight())
+    fontDropDownButton:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 },
+    })
+    fontDropDownButton:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    fontDropDownButton:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
+    fontDropDownButton:SetScript("OnEnter", function(self, motion)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
+    end)
+    fontDropDownButton:SetScript("OnLeave", function(self, motion)
+        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    end)
+    -- text frame
+    local textFrame = CreateFrame("Frame", nil, fontDropDownButton)
+    textFrame:SetSize(fontDropDownButton:GetWidth()/1.5, fontDropDownButton:GetHeight())
+    textFrame:SetPoint("LEFT")
+    textFrame.text = CustomFontString(12, textColor, textFrame, "")
+    textFrame.text:ClearAllPoints()
+    textFrame.text:SetPoint("LEFT", 2, 0)
+    textFrame.text:SetPoint("RIGHT")
+    textFrame.text:SetText("SETTINGSfcyugfcthfdctfcujfctujrfc")
+    textFrame.text:SetJustifyH("LEFT")
+    -- texture frame
+    local textureFrame = CreateFrame("Frame", nil, fontDropDownButton)
+    textureFrame:SetSize(fontDropDownButton:GetHeight(), fontDropDownButton:GetHeight())
+    textureFrame:SetPoint("RIGHT")
+    textureFrame.texture = textureFrame:CreateTexture()
+    textureFrame.texture:SetTexture("Interface/AddOns/MplusGains/Textures/Arrow-Left-Default.PNG")
+    textureFrame.texture:SetRotation(math.pi/2)
+    textureFrame.texture:ClearAllPoints()
+    textureFrame.texture:SetPoint("CENTER", 0, -4)
+    textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
+    -- Mouse enter and leave
+    fontDropDownButton:SetScript("OnEnter", function(self, motion)
+        self:SetBackdropBorderColor(0.8, 0.8, 0.8 , 1)
+        textureFrame.texture:SetVertexColor(1, 1, 1, 1)
+    end)
+    fontDropDownButton:SetScript("OnLeave", function(self, motion)
+        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+        textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
+    end)
+    return fontDropDownButton
+end
 
-local function CreateDropDown(parentFrame)
+--[[local function CreateDropDown(parentFrame)
     -- Create the dropdown, and configure its appearance
     local dropDown = CreateFrame("Frame", "FONTDROPDOWN", parentFrame, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(dropDown, (parentFrame:GetWidth()/2))
@@ -414,13 +464,13 @@ local function CreateDropDown(parentFrame)
         end
     end)
     return dropDown
-end
+end--]]
 
 local function CreateSettingsWindow(parentFrame)
+    local rowHeight = 20.1
     local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
-    frame:SetSize(250, 200)
+    frame:SetSize(240, 200)
     frame:SetPoint("CENTER")
-    --frame:SetSize(1000, 600)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.95)
     frame:SetMovable(true)
     frame:EnableMouse(true)
@@ -428,11 +478,7 @@ local function CreateSettingsWindow(parentFrame)
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", frame.StartMoving)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    --frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    --_G["MainMplusGainsFrame"] = frame
-    --tinsert(UISpecialFrames, frame:GetName())
     frame:SetFrameStrata("DIALOG")
-    --frame:SetFrameLevel(10000)
     local header = CreateFrame("Frame", nil, frame)
     header:SetPoint("TOP")
     header:SetSize(frame:GetWidth(), 40)
@@ -444,36 +490,28 @@ local function CreateSettingsWindow(parentFrame)
     local exitButton = CreateExitButton(frame, header, 40)
     --font
     local fontFrame = CreateFrame("Frame", nil, frame)
-    fontFrame:SetSize(frame:GetWidth(), 20)
+    fontFrame:SetSize(frame:GetWidth(), rowHeight)
     fontFrame:SetPoint("TOP", header, "BOTTOM")
     local fontLabel = CreateFrame("Frame", nil, fontFrame)
-    fontLabel:SetSize(fontFrame:GetWidth()/4, 20)
+    fontLabel:SetSize(fontFrame:GetWidth()/4, fontFrame:GetHeight())
     fontLabel:SetPoint("LEFT", 2, 0)
     fontLabel.text = CustomFontString(12, textColor, fontLabel, "OUTLINE")
     fontLabel.text:ClearAllPoints()
     fontLabel.text:SetPoint("LEFT")
     fontLabel.text:SetText("Font")
-    local fontDropDown = CreateDropDown(fontFrame)
-    --local fontDropDown = CreateFrame("Frame", nil, fontFrame)
-    --fontDropDown:SetSize((fontFrame:GetWidth()/3)*2, 20)
-    fontDropDown:SetPoint("LEFT", fontLabel, "RIGHT", 2, 0)
-    --[[fontDropDown.text = CustomFontString(12, textColor, fontDropDown, "OUTLINE")
-    fontDropDown.text:ClearAllPoints()
-    fontDropDown.text:SetPoint("LEFT")
-    fontDropDown.text:SetText("Font Dropdown")--]]
-    --scale
+    local fontDropDown = CreateDropDown(fontFrame, fontLabel)
     local scalingFrame = CreateFrame("Frame", nil, frame)
-    scalingFrame:SetSize(frame:GetWidth(), 20)
+    scalingFrame:SetSize(frame:GetWidth(), rowHeight)
     scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM")
     local scalingLabel = CreateFrame("Frame", nil, scalingFrame)
-    scalingLabel:SetSize(scalingFrame:GetWidth()/4, 20)
+    scalingLabel:SetSize(scalingFrame:GetWidth()/4, scalingFrame:GetHeight())
     scalingLabel:SetPoint("LEFT", 2, 0)
     scalingLabel.text = CustomFontString(12, textColor, scalingLabel, "OUTLINE")
     scalingLabel.text:ClearAllPoints()
     scalingLabel.text:SetPoint("LEFT")
     scalingLabel.text:SetText("Scale")
     local scalingSlider = CreateFrame("Frame", nil, scalingFrame)
-    scalingSlider:SetSize((scalingFrame:GetWidth()/4)*3, 20)
+    scalingSlider:SetSize((scalingFrame:GetWidth()/4)*3, scalingFrame:GetHeight())
     scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT", 2, 0)
     scalingSlider.text = CustomFontString(12, textColor, scalingSlider, "OUTLINE")
     scalingSlider.text:ClearAllPoints()
@@ -500,16 +538,7 @@ local function CreateHeaderFrame(parentFrame)
     frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
     local exitButton = CreateExitButton(parentFrame, frame, headerHeight)
-    --local exitButton = CreateFrame("Button", "CLOSE_BUTTON", frame)
     local r, g, b, a = 207/255, 170/255, 0, 1
-     --[[exitButton:SetPoint("RIGHT", frame, "RIGHT")
-    exitButton:SetSize(headerHeight, headerHeight)
-    exitButton.text = CustomFontString(16, textColor, exitButton, "OUTLINE")
-    exitButton.text:ClearAllPoints()
-    exitButton.text:SetPoint("CENTER")
-    exitButton.text:SetText("x")
-    exitButton.text:SetTextScale(1.4)
-    exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))--]]
     -- Settings button
     local settingsButton = CreateFrame("Button", "SETTINGS_BUTTON", frame)
     settingsButton:SetPoint("RIGHT", exitButton, "LEFT")
