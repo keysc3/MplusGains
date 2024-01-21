@@ -375,11 +375,101 @@ local selectedFont = 3
         UIDropDownMenu_AddButton(info)
     end
 end--]]
+
+local function CreateSettingsScrollFrame(parentFrame)
+    local scrollHolderFrame = CreateFrameWithBackdrop(parentFrame, nil)
+    scrollHolderFrame:SetBackdropColor(0, 0, 0, 0.9)
+    --scrollHolderFrame.widthMulti = 6
+    -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
+    scrollHolderFrame:SetSize(parentFrame:GetWidth(), 200)
+    scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
+
+    scrollHolderFrame.scrollFrame = CreateFrame("ScrollFrame", "testing", scrollHolderFrame, "UIPanelScrollFrameTemplate")
+    -- define the scrollframe's objects/elements:
+    local scrollbarName = scrollHolderFrame.scrollFrame:GetName()
+    scrollHolderFrame.scrollFrame.scrollbar = _G[scrollbarName .."ScrollBar"];
+    scrollHolderFrame.scrollFrame.scrollupbutton = _G[scrollbarName .."ScrollBarScrollUpButton"];
+    scrollHolderFrame.scrollFrame.scrolldownbutton = _G[scrollbarName .."ScrollBarScrollDownButton"];
+    scrollHolderFrame.scrollFrame.scrollupbutton:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.scrollupbutton:SetPoint("TOPRIGHT", scrollHolderFrame.scrollFrame, "TOPRIGHT", 20, 0)
+    scrollHolderFrame.scrollFrame.scrolldownbutton:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.scrolldownbutton:SetPoint("BOTTOMRIGHT", scrollHolderFrame.scrollFrame, "BOTTOMRIGHT", 20, 0)
+    scrollHolderFrame.scrollFrame.scrollbar:ClearAllPoints();
+    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("TOP", scrollHolderFrame.scrollFrame.scrollupbutton, "BOTTOM", 0, -2)
+    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("BOTTOM", scrollHolderFrame.scrollFrame.scrolldownbutton, "TOP", 0, 2)
+    local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-Left-Default.PNG"
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetTexture(textureName)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetPoint("CENTER")
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetVertexColor(1, 1, 1, 0.7)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetRotation(math.pi/2)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetTexture(textureName)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetPoint("CENTER")
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetScale(0.9)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetRotation(math.pi/2)
+    scrollHolderFrame.scrollFrame.scrolldownbutton:SetNormalTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp)
+    scrollHolderFrame.scrollFrame.scrolldownbutton:SetPushedTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetTexture(textureName)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetPoint("CENTER")
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetScale(0.9)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetRotation(math.pi/2)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetTexture(textureName)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetPoint("CENTER")
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetScale(0.9)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetVertexColor(1, 1, 1, 0.3)
+    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetRotation(math.pi/2)
+    scrollHolderFrame.scrollFrame.scrolldownbutton:SetDisabledTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture)
+    scrollHolderFrame.scrollFrame.scrolldownbutton:SetHighlightTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture)
+    --scrollHolderFrame.scrollFrame.scrolldownbutton:SetNormalTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, scrollHolderFrame.scrollFrame.scrolldownbutton))
+    print(scrollHolderFrame.scrollFrame.scrolldownbutton.Pushed)
+    for i, v in pairs(scrollHolderFrame.scrollFrame.scrolldownbutton.Pushed) do
+        print(i)
+        print(v)
+    end
+    --scrollHolderFrame.scrollFrame.minScrollRange = 1
+    --scrollHolderFrame.scrollFrame.maxScrollRange = 1
+    --scrollFrame.ScrollBar:SetBackdropColor(0, 0, 0, 1)
+    --scrollFrame.ScrollBar:Hide()
+    --scrollFrame.ScrollBar:Disable()
+    -- up left, down right
+    -- scroll to the nearest button edge in the direction the user inputed.
+    --scrollFrame:SetScript("OnMouseWheel", ScrollButtonRow)
+    scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
+    scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth(), scrollHolderFrame:GetHeight())
+
+    scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
+    scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
+    scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), scrollHolderFrame.scrollFrame:GetHeight())
+    local temp = scrollHolderFrame.scrollChild
+    for i = 1, 20 do
+        local newFrame = CreateFrame("Button", nil, scrollHolderFrame.scrollChild)
+        newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), 20)
+        newFrame:SetPoint("TOPLEFT", temp, (i == 1) and "TOPLEFT" or "BOTTOMLEFT")
+        newFrame.texture = newFrame:CreateTexture()
+        newFrame.texture:SetTexture("Interface\\buttons\\white8x8")
+        newFrame.texture:ClearAllPoints()
+        newFrame.texture:SetPoint("CENTER")
+        newFrame.texture:SetSize(newFrame:GetWidth(), newFrame:GetHeight())
+        newFrame.texture:SetVertexColor(math.random(0, 255)/255, math.random(0, 255)/255, math.random(0, 255)/255, 1)
+        newFrame:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, newFrame))
+        temp = newFrame
+    end
+    return scrollHolderFrame
+end
+
 local function CreateDropDown(parentFrame, anchorFrame)
     -- Button frame
     local fontDropDownButton = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
     fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
-    fontDropDownButton:SetSize(parentFrame:GetWidth()/2, parentFrame:GetHeight())
+    fontDropDownButton:SetSize(parentFrame:GetWidth()/2, parentFrame:GetHeight() + 0.1)
     fontDropDownButton:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -423,6 +513,7 @@ local function CreateDropDown(parentFrame, anchorFrame)
         self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
         textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
     end)
+    local scrollFrame = CreateSettingsScrollFrame(fontDropDownButton)
     return fontDropDownButton
 end
 
@@ -467,7 +558,7 @@ end
 end--]]
 
 local function CreateSettingsWindow(parentFrame)
-    local rowHeight = 20.1
+    local rowHeight = 20
     local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
     frame:SetSize(240, 200)
     frame:SetPoint("CENTER")
@@ -518,7 +609,7 @@ local function CreateSettingsWindow(parentFrame)
     scalingSlider.text:SetPoint("LEFT")
     scalingSlider.text:SetText("Scale Slider")
     -- frame height
-    frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame))
+    frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
 end
 
