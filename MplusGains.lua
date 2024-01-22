@@ -395,22 +395,22 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollBarHolder.texture = CreateNewTexture(66, 66, 66, 1, scrollBarHolder)
     scrollHolderFrame.scrollFrame = CreateFrame("ScrollFrame", "Settings-Font", scrollHolderFrame, "UIPanelScrollFrameTemplate")
     local scrollbarName = scrollHolderFrame.scrollFrame:GetName()
-    scrollHolderFrame.scrollFrame.scrollbar = _G[scrollbarName .."ScrollBar"]
-    scrollHolderFrame.scrollFrame.scrollupbutton = _G[scrollbarName .."ScrollBarScrollUpButton"]
-    scrollHolderFrame.scrollFrame.scrolldownbutton = _G[scrollbarName .."ScrollBarScrollDownButton"]
-    scrollHolderFrame.scrollFrame.slider = _G[scrollbarName .."ScrollBarThumbTexture"]
-    scrollHolderFrame.scrollFrame.scrollbar.scrollStep = buttonSize
-    scrollHolderFrame.scrollFrame.scrollupbutton:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.scrollupbutton:SetPoint("TOPRIGHT", scrollHolderFrame.scrollFrame, "TOPRIGHT", 20, 0)
-    scrollHolderFrame.scrollFrame.scrolldownbutton:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.scrolldownbutton:SetPoint("BOTTOMRIGHT", scrollHolderFrame.scrollFrame, "BOTTOMRIGHT", 20, 0)
-    scrollHolderFrame.scrollFrame.scrollbar:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.slider:SetTexture("Interface\\buttons\\white8x8")
-    scrollHolderFrame.scrollFrame.slider:SetVertexColor(1, 1, 1, 0.2)
-    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("TOP", scrollHolderFrame.scrollFrame.scrollupbutton, "BOTTOM", -2, 0)
-    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("BOTTOM", scrollHolderFrame.scrollFrame.scrolldownbutton, "TOP", -2, 0)
-    SetupDropdownScrollButton(scrollHolderFrame.scrollFrame.scrollupbutton, true)
-    SetupDropdownScrollButton(scrollHolderFrame.scrollFrame.scrolldownbutton, false)
+    local scrollBar = scrollHolderFrame.scrollFrame.ScrollBar or _G[scrollbarName .."ScrollBar"]
+    local scrollUpButton = scrollHolderFrame.scrollFrame.ScrollUpButton or _G[scrollbarName .."ScrollBarScrollUpButton"]
+    local scrollDownButton = scrollHolderFrame.scrollFrame.ScrollDownButton or _G[scrollbarName .."ScrollBarScrollDownButton"]
+    local thumbTexture = scrollHolderFrame.scrollFrame.ThumbTexture or _G[scrollbarName .."ScrollBarThumbTexture"]
+    scrollBar.scrollStep = buttonSize
+    scrollUpButton:ClearAllPoints()
+    scrollUpButton:SetPoint("TOPRIGHT", scrollHolderFrame.scrollFrame, "TOPRIGHT", 20, 0)
+    scrollDownButton:ClearAllPoints()
+    scrollDownButton:SetPoint("BOTTOMRIGHT", scrollHolderFrame.scrollFrame, "BOTTOMRIGHT", 20, 0)
+    scrollBar:ClearAllPoints()
+    thumbTexture:SetTexture("Interface\\buttons\\white8x8")
+    thumbTexture:SetVertexColor(1, 1, 1, 0.2)
+    scrollBar:SetPoint("TOP", scrollUpButton, "BOTTOM", -2, 0)
+    scrollBar:SetPoint("BOTTOM", scrollDownButton, "TOP", -2, 0)
+    SetupDropdownScrollButton(scrollUpButton, true)
+    SetupDropdownScrollButton(scrollDownButton, false)
     scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth(), scrollHolderFrame:GetHeight())
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
@@ -467,9 +467,6 @@ local function CreateSettingsScrollFrame(parentFrame)
         temp = newFrame
         i = i + 1
     end
-    print(scrollHolderFrame.scrollFrame.scrollbar:GetValueStep())
-    print(scrollHolderFrame.scrollFrame.scrollbar:GetStepsPerPage())
-    scrollHolderFrame.scrollFrame.scrollbar:SetStepsPerPage(20)
     return scrollHolderFrame
 end
 
