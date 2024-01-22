@@ -399,6 +399,7 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollHolderFrame.scrollFrame.scrollupbutton = _G[scrollbarName .."ScrollBarScrollUpButton"]
     scrollHolderFrame.scrollFrame.scrolldownbutton = _G[scrollbarName .."ScrollBarScrollDownButton"]
     scrollHolderFrame.scrollFrame.slider = _G[scrollbarName .."ScrollBarThumbTexture"]
+    scrollHolderFrame.scrollFrame.scrollbar.scrollStep = buttonSize
     scrollHolderFrame.scrollFrame.scrollupbutton:ClearAllPoints()
     scrollHolderFrame.scrollFrame.scrollupbutton:SetPoint("TOPRIGHT", scrollHolderFrame.scrollFrame, "TOPRIGHT", 20, 0)
     scrollHolderFrame.scrollFrame.scrolldownbutton:ClearAllPoints()
@@ -414,7 +415,7 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth(), scrollHolderFrame:GetHeight())
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
-    scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), scrollHolderFrame.scrollFrame:GetHeight())
+    scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), 1)
     scrollHolderFrame.scrollChild.selected = nil
     local i = 1
     local temp = scrollHolderFrame.scrollChild
@@ -466,6 +467,9 @@ local function CreateSettingsScrollFrame(parentFrame)
         temp = newFrame
         i = i + 1
     end
+    print(scrollHolderFrame.scrollFrame.scrollbar:GetValueStep())
+    print(scrollHolderFrame.scrollFrame.scrollbar:GetStepsPerPage())
+    scrollHolderFrame.scrollFrame.scrollbar:SetStepsPerPage(20)
     return scrollHolderFrame
 end
 
