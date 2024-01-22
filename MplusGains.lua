@@ -415,10 +415,13 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), scrollHolderFrame.scrollFrame:GetHeight())
-    scrollHolderFrame.scrollChild.selected = 6
+    scrollHolderFrame.scrollChild.selected = nil
     local temp = scrollHolderFrame.scrollChild
     for i = 1, 20 do
         local newFrame = CreateFrame("Button", nil, scrollHolderFrame.scrollChild)
+        if(i == selectedFont) then 
+            scrollHolderFrame.scrollChild.selected = newFrame
+        end
         newFrame.value = i
         newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), 20)
         newFrame:SetPoint("TOPLEFT", temp, (i == 1) and "TOPLEFT" or "BOTTOMLEFT")
@@ -427,9 +430,11 @@ local function CreateSettingsScrollFrame(parentFrame)
         newFrame.texture:ClearAllPoints()
         newFrame.texture:SetPoint("CENTER")
         newFrame.texture:SetSize(newFrame:GetWidth(), newFrame:GetHeight())
-        --newFrame.texture:SetVertexColor(math.random(0, 255)/255, math.random(0, 255)/255, math.random(0, 255)/255, 1)
-        if(i == scrollHolderFrame.scrollChild.selected) then
-            newFrame.texture:SetVertexColor(textColor.r, textColor.g, textColor.b, 0.08)
+        newFrame.highlightTexture = CreateNewTexture(hover.r, hover.g, hover.b, hover.a, newFrame)
+        newFrame:SetHighlightTexture(newFrame.highlightTexture)
+        if(newFrame == scrollHolderFrame.scrollChild.selected) then
+            newFrame.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
+            newFrame.highlightTexture:SetVertexColor(0, 0, 0, 0)
         else
             newFrame.texture:SetVertexColor(0, 0, 0, 0)
         end
@@ -437,7 +442,21 @@ local function CreateSettingsScrollFrame(parentFrame)
         newFrame.text:ClearAllPoints()
         newFrame.text:SetPoint("LEFT", 2, 0)
         newFrame.text:SetText("Test: " .. i)
-        newFrame:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, newFrame))
+        newFrame:SetScript("OnClick", function(self, btn, down)
+            if(btn == "LeftButton") then
+                if(newFrame ~= scrollHolderFrame.scrollChild.selected) then
+                    print("CLICKED")
+                    -- Set unselected texture colors.
+                    scrollHolderFrame.scrollChild.selected.texture:SetVertexColor(0, 0, 0, 0)
+                    scrollHolderFrame.scrollChild.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
+                    -- Set up new selected.
+                    scrollHolderFrame.scrollChild.selected = self
+                    self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
+                    self.highlightTexture:SetVertexColor(0, 0, 0, 0)
+                    parentFrame.textFrame.text:SetText(self.value)
+                end
+            end
+        end)
         temp = newFrame
     end
     return scrollHolderFrame
@@ -464,6 +483,7 @@ local function CreateDropDown(parentFrame, anchorFrame)
     end)
     -- text frame
     local textFrame = CreateFrame("Frame", nil, fontDropDownButton)
+    fontDropDownButton.textFrame = textFrame
     textFrame:SetSize(fontDropDownButton:GetWidth()/1.5, fontDropDownButton:GetHeight())
     textFrame:SetPoint("LEFT")
     textFrame.text = CustomFontString(12, textColor, textFrame, "")
