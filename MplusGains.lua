@@ -316,8 +316,6 @@ local function CalculateHeight(frame)
     for _, child in ipairs(children) do
         totalHeight = totalHeight + child:GetHeight()
     end
-    -- xCol and scroll padding used twice each
-    --totalHeight = totalWidth + (2 * xColPadding) + (2 * scrollButtonPadding)
     return totalHeight
 end
 --[[
@@ -365,92 +363,63 @@ end
 local fontsTest = { "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF" }
 local selectedFont = 3
 
---[[function Dropdown_Intializer(frame, level, menuList)
-    local info = UIDropDownMenu_CreateInfo()
-    info.isNotRadio = true
-    info.func = frame.SetValue
-    for i, v in ipairs(fontsTest) do
-        info.checked = (v == selectedFont)
-        info.text, info.arg1 = v, info
-        UIDropDownMenu_AddButton(info)
-    end
-end--]]
+local function ScrollButtonTexture(frame, alpha, sign, scale)
+    local newTexture = frame:CreateTexture()
+    newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/Arrow-Left-Default.PNG")
+    newTexture:SetPoint("CENTER", -2, 2 * sign)
+    newTexture:SetVertexColor(1, 1, 1, alpha)
+    newTexture:SetRotation(math.pi/2 * (-sign))
+    newTexture:SetScale(scale)
+    return newTexture
+end
+
+local function SetupDropdownScrollButton(button, isUp)
+    local sign = (isUp) and 1 or -1
+    button:SetNormalTexture(ScrollButtonTexture(button, 0.7, sign, 1))
+    button:SetPushedTexture(ScrollButtonTexture(button, 0.7, sign, 0.9))
+    button:SetDisabledTexture(ScrollButtonTexture(button, 0.2, sign, 0.9))
+    button:SetHighlightTexture(ScrollButtonTexture(button, 0.3, sign, 1))
+end
+
 
 local function CreateSettingsScrollFrame(parentFrame)
-    local scrollHolderFrame = CreateFrameWithBackdrop(parentFrame, nil)
-    scrollHolderFrame:SetBackdropColor(0, 0, 0, 0.9)
-    --scrollHolderFrame.widthMulti = 6
-    -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
+    local scrollHolderFrame = CreateFrame("FRAME", nil, parentFrame)
+    scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
     scrollHolderFrame:SetSize(parentFrame:GetWidth(), 200)
     scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
-
+    local scrollBarHolder = CreateFrame("FRAME", nil, parentFrame)
+    scrollBarHolder:SetSize(18, scrollHolderFrame:GetHeight())
+    scrollBarHolder:SetPoint("TOPLEFT", scrollHolderFrame, "TOPRIGHT")
+    scrollBarHolder:SetPoint("BOTTOMLEFT", scrollHolderFrame, "BOTTOMRIGHT")
+    scrollBarHolder.texture = CreateNewTexture(66, 66, 66, 1, scrollBarHolder)
     scrollHolderFrame.scrollFrame = CreateFrame("ScrollFrame", "testing", scrollHolderFrame, "UIPanelScrollFrameTemplate")
-    -- define the scrollframe's objects/elements:
+
     local scrollbarName = scrollHolderFrame.scrollFrame:GetName()
-    scrollHolderFrame.scrollFrame.scrollbar = _G[scrollbarName .."ScrollBar"];
-    scrollHolderFrame.scrollFrame.scrollupbutton = _G[scrollbarName .."ScrollBarScrollUpButton"];
-    scrollHolderFrame.scrollFrame.scrolldownbutton = _G[scrollbarName .."ScrollBarScrollDownButton"];
+    scrollHolderFrame.scrollFrame.scrollbar = _G[scrollbarName .."ScrollBar"]
+    scrollHolderFrame.scrollFrame.scrollupbutton = _G[scrollbarName .."ScrollBarScrollUpButton"]
+    scrollHolderFrame.scrollFrame.scrolldownbutton = _G[scrollbarName .."ScrollBarScrollDownButton"]
+    scrollHolderFrame.scrollFrame.slider = _G[scrollbarName .."ScrollBarThumbTexture"]
     scrollHolderFrame.scrollFrame.scrollupbutton:ClearAllPoints()
     scrollHolderFrame.scrollFrame.scrollupbutton:SetPoint("TOPRIGHT", scrollHolderFrame.scrollFrame, "TOPRIGHT", 20, 0)
     scrollHolderFrame.scrollFrame.scrolldownbutton:ClearAllPoints()
     scrollHolderFrame.scrollFrame.scrolldownbutton:SetPoint("BOTTOMRIGHT", scrollHolderFrame.scrollFrame, "BOTTOMRIGHT", 20, 0)
-    scrollHolderFrame.scrollFrame.scrollbar:ClearAllPoints();
-    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("TOP", scrollHolderFrame.scrollFrame.scrollupbutton, "BOTTOM", 0, -2)
-    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("BOTTOM", scrollHolderFrame.scrollFrame.scrolldownbutton, "TOP", 0, 2)
-    local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-Left-Default.PNG"
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetTexture(textureName)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetPoint("CENTER")
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetVertexColor(1, 1, 1, 0.7)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp:SetRotation(math.pi/2)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetTexture(textureName)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetPoint("CENTER")
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetScale(0.9)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown:SetRotation(math.pi/2)
-    scrollHolderFrame.scrollFrame.scrolldownbutton:SetNormalTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.textureUp)
-    scrollHolderFrame.scrollFrame.scrolldownbutton:SetPushedTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.textureDown)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetTexture(textureName)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetPoint("CENTER")
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetScale(0.9)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture:SetRotation(math.pi/2)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture = scrollHolderFrame.scrollFrame.scrolldownbutton:CreateTexture()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetTexture(textureName)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:ClearAllPoints()
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetPoint("CENTER")
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetScale(0.9)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetVertexColor(1, 1, 1, 0.3)
-    scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture:SetRotation(math.pi/2)
-    scrollHolderFrame.scrollFrame.scrolldownbutton:SetDisabledTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.disabledTexture)
-    scrollHolderFrame.scrollFrame.scrolldownbutton:SetHighlightTexture(scrollHolderFrame.scrollFrame.scrolldownbutton.highlightTexture)
-    --scrollHolderFrame.scrollFrame.scrolldownbutton:SetNormalTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, scrollHolderFrame.scrollFrame.scrolldownbutton))
-    print(scrollHolderFrame.scrollFrame.scrolldownbutton.Pushed)
-    for i, v in pairs(scrollHolderFrame.scrollFrame.scrolldownbutton.Pushed) do
-        print(i)
-        print(v)
-    end
-    --scrollHolderFrame.scrollFrame.minScrollRange = 1
-    --scrollHolderFrame.scrollFrame.maxScrollRange = 1
-    --scrollFrame.ScrollBar:SetBackdropColor(0, 0, 0, 1)
-    --scrollFrame.ScrollBar:Hide()
-    --scrollFrame.ScrollBar:Disable()
-    -- up left, down right
-    -- scroll to the nearest button edge in the direction the user inputed.
-    --scrollFrame:SetScript("OnMouseWheel", ScrollButtonRow)
+    scrollHolderFrame.scrollFrame.scrollbar:ClearAllPoints()
+    scrollHolderFrame.scrollFrame.slider:SetTexture("Interface\\buttons\\white8x8")
+    scrollHolderFrame.scrollFrame.slider:SetVertexColor(1, 1, 1, 0.2)
+    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("TOP", scrollHolderFrame.scrollFrame.scrollupbutton, "BOTTOM", -2, 0)
+    scrollHolderFrame.scrollFrame.scrollbar:SetPoint("BOTTOM", scrollHolderFrame.scrollFrame.scrolldownbutton, "TOP", -2, 0)
+    SetupDropdownScrollButton(scrollHolderFrame.scrollFrame.scrollupbutton, true)
+    SetupDropdownScrollButton(scrollHolderFrame.scrollFrame.scrolldownbutton, false)
     scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth(), scrollHolderFrame:GetHeight())
-
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), scrollHolderFrame.scrollFrame:GetHeight())
+    scrollHolderFrame.scrollChild.selected = 6
     local temp = scrollHolderFrame.scrollChild
     for i = 1, 20 do
         local newFrame = CreateFrame("Button", nil, scrollHolderFrame.scrollChild)
+        newFrame.value = i
         newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), 20)
         newFrame:SetPoint("TOPLEFT", temp, (i == 1) and "TOPLEFT" or "BOTTOMLEFT")
         newFrame.texture = newFrame:CreateTexture()
@@ -458,7 +427,16 @@ local function CreateSettingsScrollFrame(parentFrame)
         newFrame.texture:ClearAllPoints()
         newFrame.texture:SetPoint("CENTER")
         newFrame.texture:SetSize(newFrame:GetWidth(), newFrame:GetHeight())
-        newFrame.texture:SetVertexColor(math.random(0, 255)/255, math.random(0, 255)/255, math.random(0, 255)/255, 1)
+        --newFrame.texture:SetVertexColor(math.random(0, 255)/255, math.random(0, 255)/255, math.random(0, 255)/255, 1)
+        if(i == scrollHolderFrame.scrollChild.selected) then
+            newFrame.texture:SetVertexColor(textColor.r, textColor.g, textColor.b, 0.08)
+        else
+            newFrame.texture:SetVertexColor(0, 0, 0, 0)
+        end
+        newFrame.text = CustomFontString(12, textColor, newFrame, "")
+        newFrame.text:ClearAllPoints()
+        newFrame.text:SetPoint("LEFT", 2, 0)
+        newFrame.text:SetText("Test: " .. i)
         newFrame:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, newFrame))
         temp = newFrame
     end
@@ -516,46 +494,6 @@ local function CreateDropDown(parentFrame, anchorFrame)
     local scrollFrame = CreateSettingsScrollFrame(fontDropDownButton)
     return fontDropDownButton
 end
-
---[[local function CreateDropDown(parentFrame)
-    -- Create the dropdown, and configure its appearance
-    local dropDown = CreateFrame("Frame", "FONTDROPDOWN", parentFrame, "UIDropDownMenuTemplate")
-    UIDropDownMenu_SetWidth(dropDown, (parentFrame:GetWidth()/2))
-    UIDropDownMenu_SetText(dropDown, fontsTest[selectedFont])
-    function GetChild(frame, name, key)
-        if (frame[key]) then
-            return frame[key];
-        elseif name then
-            return _G[name..key];
-        end
-        return nil;
-    end
-    -- OnClick
-    function Dropdown_OnClick(self, arg1, arg2, checked)
-        selectedFont = arg1
-        UIDropDownMenu_SetText(dropDown, arg2)
-        GetChild(dropDown, "FONTDROPDOWN", "Text"):SetFont("Fonts\\" .. fontsTest[selectedFont], 12, "")
-    end
-    -- Create and bind data
-    UIDropDownMenu_Initialize(dropDown, function(self, level, menuList)
-        local info = UIDropDownMenu_CreateInfo()
-	    --local testframe = GetChild(frame, frameName, "Text")
-        GetChild(dropDown, "FONTDROPDOWN", "Text"):SetFont("Fonts\\" .. fontsTest[selectedFont], 12, "")
-        --info.notCheckable = true
-        info.isNotRadio = true
-        info.func = Dropdown_OnClick
-        for i, v in ipairs(fontsTest) do
-            local myFont = CreateFont(v)
-            myFont:SetFont("Fonts\\" .. v, 12, "")
-            myFont:SetTextColor(1, 1, 1, 1)
-            info.fontObject = myFont
-            info.checked = (i == selectedFont)
-            info.text, info.arg1, info.arg2 = v, i, v
-            UIDropDownMenu_AddButton(info)
-        end
-    end)
-    return dropDown
-end--]]
 
 local function CreateSettingsWindow(parentFrame)
     local rowHeight = 20
