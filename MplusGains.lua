@@ -42,8 +42,7 @@ local function CustomFontString(textSize, color, parentFrame, flags)
 
     text:SetFont(MplusGainsSettings.Font, textSize, flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
-    --frame.text:SetPoint("CENTER")
-    --frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
+
     return text
 end
 
@@ -360,7 +359,7 @@ local function CreateExitButton(closeFrame, parentFrame, headerHeight)
     return exitButton
 end
 
-local fontsTest = { "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF" }
+local fontsTest = { "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF", "FRIZQT__.TTF", "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF", "FRIZQT__.TTF" }
 local selectedFont = 3
 
 local function ScrollButtonTexture(frame, alpha, sign, scale)
@@ -383,17 +382,18 @@ end
 
 
 local function CreateSettingsScrollFrame(parentFrame)
+    local buttonSize = 20
+    local displayLength = 6
     local scrollHolderFrame = CreateFrame("FRAME", nil, parentFrame)
     scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
-    scrollHolderFrame:SetSize(parentFrame:GetWidth(), 200)
+    scrollHolderFrame:SetSize(parentFrame:GetWidth(), (#fontsTest < 6) and (buttonSize * #fontsTest) or (displayLength * buttonSize))
     scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
     local scrollBarHolder = CreateFrame("FRAME", nil, scrollHolderFrame)
     scrollBarHolder:SetSize(18, parentFrame:GetHeight())
     scrollBarHolder:SetPoint("TOPLEFT", scrollHolderFrame, "TOPRIGHT")
     scrollBarHolder:SetPoint("BOTTOMLEFT", scrollHolderFrame, "BOTTOMRIGHT")
     scrollBarHolder.texture = CreateNewTexture(66, 66, 66, 1, scrollBarHolder)
-    scrollHolderFrame.scrollFrame = CreateFrame("ScrollFrame", "testing", scrollHolderFrame, "UIPanelScrollFrameTemplate")
-
+    scrollHolderFrame.scrollFrame = CreateFrame("ScrollFrame", "Settings-Font", scrollHolderFrame, "UIPanelScrollFrameTemplate")
     local scrollbarName = scrollHolderFrame.scrollFrame:GetName()
     scrollHolderFrame.scrollFrame.scrollbar = _G[scrollbarName .."ScrollBar"]
     scrollHolderFrame.scrollFrame.scrollupbutton = _G[scrollbarName .."ScrollBarScrollUpButton"]
@@ -416,14 +416,15 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
     scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), scrollHolderFrame.scrollFrame:GetHeight())
     scrollHolderFrame.scrollChild.selected = nil
+    local i = 1
     local temp = scrollHolderFrame.scrollChild
-    for i = 1, 20 do
+    for _, v in pairs(fontsTest) do
         local newFrame = CreateFrame("Button", nil, scrollHolderFrame.scrollChild)
         if(i == selectedFont) then 
             scrollHolderFrame.scrollChild.selected = newFrame
         end
         newFrame.value = i
-        newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), 20)
+        newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), buttonSize)
         newFrame:SetPoint("TOPLEFT", temp, (i == 1) and "TOPLEFT" or "BOTTOMLEFT")
         newFrame.texture = newFrame:CreateTexture()
         newFrame.texture:SetTexture("Interface\\buttons\\white8x8")
@@ -438,14 +439,15 @@ local function CreateSettingsScrollFrame(parentFrame)
         else
             newFrame.texture:SetVertexColor(0, 0, 0, 0)
         end
-        newFrame.text = CustomFontString(12, textColor, newFrame, "")
+        newFrame.text = newFrame:CreateFontString(nil, "OVERLAY")
+        newFrame.text:SetFont("Fonts\\" .. fontsTest[i], 12, "")
+        newFrame.text:SetTextColor(textColor.r, textColor.g, textColor.b, 1)
         newFrame.text:ClearAllPoints()
         newFrame.text:SetPoint("LEFT", 2, 0)
-        newFrame.text:SetText("Test: " .. i)
+        newFrame.text:SetText(v)
         newFrame:SetScript("OnClick", function(self, btn, down)
             if(btn == "LeftButton") then
                 if(newFrame ~= scrollHolderFrame.scrollChild.selected) then
-                    print("CLICKED")
                     -- Set unselected texture colors.
                     scrollHolderFrame.scrollChild.selected.texture:SetVertexColor(0, 0, 0, 0)
                     scrollHolderFrame.scrollChild.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
@@ -453,12 +455,16 @@ local function CreateSettingsScrollFrame(parentFrame)
                     scrollHolderFrame.scrollChild.selected = self
                     self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
                     self.highlightTexture:SetVertexColor(0, 0, 0, 0)
-                    parentFrame.textFrame.text:SetText(self.value)
-                    scrollHolderFrame:Hide()
+                    parentFrame.textFrame.text:SetText(self.text:GetText())
+                    local fontName, fontHeight, fontFlags = self.text:GetFont()
+                    parentFrame.textFrame.text:SetFont(fontName, fontHeight, fontFlags)
+                    -- TODO: Set saved variable to font
                 end
+                scrollHolderFrame:Hide()
             end
         end)
         temp = newFrame
+        i = i + 1
     end
     return scrollHolderFrame
 end
@@ -513,6 +519,7 @@ local function CreateDropDown(parentFrame, anchorFrame)
         textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
     end)
     local scrollFrameHolder = CreateSettingsScrollFrame(fontDropDownButton)
+    scrollFrameHolder:Hide()
     fontDropDownButton:SetScript("OnClick", function(self, btn, down)
         if(btn == "LeftButton") then
             if(scrollFrameHolder:IsShown()) then
