@@ -387,8 +387,8 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
     scrollHolderFrame:SetSize(parentFrame:GetWidth(), 200)
     scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
-    local scrollBarHolder = CreateFrame("FRAME", nil, parentFrame)
-    scrollBarHolder:SetSize(18, scrollHolderFrame:GetHeight())
+    local scrollBarHolder = CreateFrame("FRAME", nil, scrollHolderFrame)
+    scrollBarHolder:SetSize(18, parentFrame:GetHeight())
     scrollBarHolder:SetPoint("TOPLEFT", scrollHolderFrame, "TOPRIGHT")
     scrollBarHolder:SetPoint("BOTTOMLEFT", scrollHolderFrame, "BOTTOMRIGHT")
     scrollBarHolder.texture = CreateNewTexture(66, 66, 66, 1, scrollBarHolder)
@@ -454,6 +454,7 @@ local function CreateSettingsScrollFrame(parentFrame)
                     self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
                     self.highlightTexture:SetVertexColor(0, 0, 0, 0)
                     parentFrame.textFrame.text:SetText(self.value)
+                    scrollHolderFrame:Hide()
                 end
             end
         end)
@@ -464,9 +465,9 @@ end
 
 local function CreateDropDown(parentFrame, anchorFrame)
     -- Button frame
-    local fontDropDownButton = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    local fontDropDownButton = CreateFrame("Button", nil, parentFrame, "BackdropTemplate")
     fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
-    fontDropDownButton:SetSize(parentFrame:GetWidth()/2, parentFrame:GetHeight() + 0.1)
+    fontDropDownButton:SetSize(parentFrame:GetWidth()/2, parentFrame:GetHeight())
     fontDropDownButton:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -511,7 +512,16 @@ local function CreateDropDown(parentFrame, anchorFrame)
         self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
         textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
     end)
-    local scrollFrame = CreateSettingsScrollFrame(fontDropDownButton)
+    local scrollFrameHolder = CreateSettingsScrollFrame(fontDropDownButton)
+    fontDropDownButton:SetScript("OnClick", function(self, btn, down)
+        if(btn == "LeftButton") then
+            if(scrollFrameHolder:IsShown()) then
+                scrollFrameHolder:Hide()
+            else
+                scrollFrameHolder:Show()
+            end
+        end
+    end)
     return fontDropDownButton
 end
 
