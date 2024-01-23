@@ -449,9 +449,7 @@ local function CreateSettingsScrollFrame(parentFrame)
         else
             newFrame.texture:SetVertexColor(0, 0, 0, 0)
         end
-        newFrame.text = newFrame:CreateFontString(nil, "OVERLAY")
-        newFrame.text:SetFont("Fonts\\" .. fontsTest[i], 12, "")
-        newFrame.text:SetTextColor(textColor.r, textColor.g, textColor.b, 1)
+        newFrame.text = CustomFontString(12, textColor, "Fonts\\" .. fontsTest[i], newFrame, "")
         newFrame.text:ClearAllPoints()
         newFrame.text:SetPoint("LEFT", 2, 0)
         newFrame.text:SetText(v)
@@ -1152,9 +1150,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame:SetSize(32, parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
     frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font, frame, nil)
-    --frame.oppText:SetFont("Fonts\\FRIZQT__.TTF", 9)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
-    --frame.oppText:SetTextColor(0.8, 0.8, 0.8)
     frame.oppText:SetText("")
     return frame
 end
@@ -1309,7 +1305,6 @@ local function CreateSummaryHeaderFrame(parentFrame)
     scoreHeader.ratingText:SetPoint("TOP", scoreHeader, "TOP")
     scoreHeader.ratingText:SetText("0.0")
     scoreHeader.gainText = DefaultFontString(10, scoreHeader, "OUTLINE")
-    --scoreHeader.gainText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     scoreHeader.gainText:SetPoint("LEFT", scoreHeader.ratingText, "RIGHT", 0, 0)
     scoreHeader.gainText:SetText("")
     frame.playerName = playerName
