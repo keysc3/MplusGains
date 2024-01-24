@@ -394,8 +394,8 @@ local function CreateSettingsScrollFrame(parentFrame)
     print("------")
     print(LSM)
     print("------")
-    local testingFonts = LSM:List("font")
-    for i, v in pairs(testingFonts) do
+    local testingFonts1 = LSM:List("font")
+    for i, v in pairs(testingFonts1) do
         print(i)
         print(v)
     end
@@ -405,9 +405,11 @@ local function CreateSettingsScrollFrame(parentFrame)
         print(i)
         print(v)
     end
+    local testingFonts = LSM:List("font")
     LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
     local buttonSize = 20
     local displayLength = 6
+    local maxFrameWidth = 300
     local scrollHolderFrame = CreateFrame("FRAME", nil, parentFrame)
     scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
     scrollHolderFrame:SetSize(1, (#fontsTest < 6) and (buttonSize * #fontsTest) or (displayLength * buttonSize))
@@ -456,7 +458,7 @@ local function CreateSettingsScrollFrame(parentFrame)
         newFrame.texture:SetTexture("Interface\\buttons\\white8x8")
         newFrame.texture:ClearAllPoints()
         newFrame.texture:SetPoint("CENTER")
-        newFrame.texture:SetSize(newFrame:GetWidth(), newFrame:GetHeight())
+        newFrame.texture:SetSize(1, newFrame:GetHeight())
         newFrame.highlightTexture = CreateNewTexture(hover.r, hover.g, hover.b, hover.a, newFrame)
         newFrame:SetHighlightTexture(newFrame.highlightTexture)
         if(newFrame == scrollHolderFrame.selected) then
@@ -467,7 +469,6 @@ local function CreateSettingsScrollFrame(parentFrame)
         end
         newFrame.text = CustomFontString(12, textColor, LSM:Fetch("font", v), newFrame, "")
         newFrame.text:ClearAllPoints()
-        newFrame.text:SetPoint("LEFT", 2, 0)
         newFrame.text:SetText(v)
         if(newFrame.text:GetWidth() > largestWidth) then largestWidth = newFrame.text:GetWidth() end
         newFrame:SetScript("OnClick", function(self, btn, down)
@@ -490,6 +491,7 @@ local function CreateSettingsScrollFrame(parentFrame)
         end)
         temp = newFrame
     end
+    if(largestWidth > maxFrameWidth) then largestWidth = maxFrameWidth end
     largestWidth = largestWidth + 4
     scrollHolderFrame.scrollFrame:SetWidth(largestWidth)
     scrollHolderFrame.scrollChild:SetWidth(largestWidth)
@@ -497,6 +499,11 @@ local function CreateSettingsScrollFrame(parentFrame)
     local children = { scrollHolderFrame.scrollChild:GetChildren() }
     for _, v in pairs(children) do
         v:SetWidth(largestWidth)
+        v.text:SetPoint("TOPLEFT", 2, 0)
+        v.text:SetPoint("BOTTOMLEFT")
+        v.text:SetPoint("RIGHT")
+        v.text:SetJustifyH("LEFT")
+        v.texture:SetWidth(largestWidth)
     end
     return scrollHolderFrame
 end
