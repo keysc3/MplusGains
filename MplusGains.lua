@@ -18,6 +18,8 @@ local scrollButtonPadding = 4
 local totalGained = 0
 local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
+local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
+
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -48,7 +50,7 @@ end
 local function DefaultFontString(textSize, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
 
-    text:SetFont(MplusGainsSettings.Font, textSize, flags)
+    text:SetFont(MplusGainsSettings.Font.path, textSize, flags)
     text:SetTextColor(textColor.r, textColor.g, textColor.b, 1)
 
     return text
@@ -367,9 +369,6 @@ local function CreateExitButton(closeFrame, parentFrame, headerHeight)
     return exitButton
 end
 
-local fontsTest = { "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF", "FRIZQT__.TTF", "ARIALN.TTF", "FRIZQT__.TTF", "MORPHEUS.TTF", "SKURRI.TTF", "FRIZQT__.TTF" }
-local selectedFont = 3
-
 local function ScrollButtonTexture(frame, alpha, sign, scale)
     local newTexture = frame:CreateTexture()
     newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/Arrow-Left-Default.PNG")
@@ -412,7 +411,7 @@ local function CreateSettingsScrollFrame(parentFrame)
     local maxFrameWidth = 300
     local scrollHolderFrame = CreateFrame("FRAME", nil, parentFrame)
     scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
-    scrollHolderFrame:SetSize(1, (#fontsTest < 6) and (buttonSize * #fontsTest) or (displayLength * buttonSize))
+    scrollHolderFrame:SetSize(1, (#testingFonts < 6) and (buttonSize * #testingFonts) or (displayLength * buttonSize))
     scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
     local scrollBarHolder = CreateFrame("FRAME", nil, scrollHolderFrame)
     scrollBarHolder:SetSize(18, parentFrame:GetHeight())
@@ -444,11 +443,10 @@ local function CreateSettingsScrollFrame(parentFrame)
     scrollHolderFrame.scrollChild:SetSize(1, 1)
     scrollHolderFrame.selected = nil
     local temp = scrollHolderFrame.scrollChild
-    local selectedFont = "Titillium Web"
     local largestWidth = 0
     for _, v in pairs(testingFonts) do
         local newFrame = CreateFrame("Button", nil, scrollHolderFrame.scrollChild)
-        if(v == selectedFont) then 
+        if(v == MplusGainsSettings.Font.name) then 
             scrollHolderFrame.selected = newFrame
         end
         newFrame.value = v
@@ -473,7 +471,7 @@ local function CreateSettingsScrollFrame(parentFrame)
         if(newFrame.text:GetWidth() > largestWidth) then largestWidth = newFrame.text:GetWidth() end
         newFrame:SetScript("OnClick", function(self, btn, down)
             if(btn == "LeftButton") then
-                if(newFrame ~= scrollHolderFrameselected) then
+                if(newFrame ~= scrollHolderFrame.selected) then
                     -- Set unselected texture colors.
                     scrollHolderFrame.selected.texture:SetVertexColor(0, 0, 0, 0)
                     scrollHolderFrame.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
@@ -483,8 +481,11 @@ local function CreateSettingsScrollFrame(parentFrame)
                     self.highlightTexture:SetVertexColor(0, 0, 0, 0)
                     parentFrame.textFrame.text:SetText(self.text:GetText())
                     local fontName, fontHeight, fontFlags = self.text:GetFont()
+                    print("ASD" .. fontName)
                     parentFrame.textFrame.text:SetFont(fontName, fontHeight, fontFlags)
-                    -- TODO: Set saved variable to font
+                    MplusGainsSettings.Font.path = fontName
+                    MplusGainsSettings.Font.name = v
+                    -- TODO: FIX INITIAL LOAD PROBLEMS
                 end
                 scrollHolderFrame:Hide()
             end
@@ -537,7 +538,7 @@ local function CreateDropDown(parentFrame, anchorFrame)
     textFrame.text:SetPoint("TOPLEFT", 2, 0)
     textFrame.text:SetPoint("BOTTOMLEFT")
     textFrame.text:SetPoint("RIGHT")
-    textFrame.text:SetText("SETTINGSfcyugfcthfdctfcujfctujrfc")
+    textFrame.text:SetText(MplusGainsSettings.Font.name)
     textFrame.text:SetJustifyH("LEFT")
     -- texture frame
     local textureFrame = CreateFrame("Frame", nil, fontDropDownButton)
@@ -805,7 +806,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
     local myFont = CreateFont("Font")
-    myFont:SetFont(MplusGainsSettings.Font, 12, "OUTLINE, MONOCHROME")
+    myFont:SetFont(MplusGainsSettings.Font.path, 12, "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
     btn:SetNormalFontObject(myFont)
     return btn
@@ -1181,7 +1182,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text:SetText("+0.0")
     frame:SetSize(32, parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
-    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font, frame, nil)
+    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
     frame.oppText:SetText("")
     return frame
@@ -1852,16 +1853,21 @@ local function StartUp()
             local addonLoaded = ...
             --print(addonLoaded)
             if(addonLoaded == "MplusGains") then
-                if(MplusGainsSettings.Count == nil) then
+                if(MplusGainsSettings == nil) then
                     --print("NILLLL")
                     -- Set initial font
-                    MplusGainsSettings = {Count = 1, Font = "Fonts\\FRIZQT__.TTF"}
+                    MplusGainsSettings = {Count = 1, Font = { path = "Fonts\\FRIZQT__.TTF", name = "Friz Quadrata TT" }}
                 else
                     --print("NOT NILLLL")
                     -- Used saved variable font
                     MplusGainsSettings.Count = MplusGainsSettings.Count + 1
+                    local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name)
+                    if(fontCheck == nil) then 
+                        MplusGainsSettings.Font.path = "Fonts\\FRIZQT__.TTF"
+                        MplusGainsSettings.Font.name = "Friz Quadrata TT"
+                    end
                     --MplusGainsSettings.Font = "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf"
-                    MplusGainsSettings.Font = "Fonts\\FRIZQT__.TTF"
+                    --MplusGainsSettings.Font = "Fonts\\FRIZQT__.TTF"
                     --MplusGainsSettings.Font = "Fonts\\SKURRI.TTF"
                 end
                 headerFrame = CreateHeaderFrame(mainFrame)
