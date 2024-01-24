@@ -18,7 +18,6 @@ local scrollButtonPadding = 4
 local totalGained = 0
 local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
-
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -391,11 +390,27 @@ end
 
 
 local function CreateSettingsScrollFrame(parentFrame)
+    local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
+    print("------")
+    print(LSM)
+    print("------")
+    local testingFonts = LSM:List("font")
+    for i, v in pairs(testingFonts) do
+        print(i)
+        print(v)
+    end
+    print("##########")
+    local testingFonts2 = LSM:HashTable("font")
+    for i, v in pairs(testingFonts2) do
+        print(i)
+        print(v)
+    end
+    LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
     local buttonSize = 20
     local displayLength = 6
     local scrollHolderFrame = CreateFrame("FRAME", nil, parentFrame)
     scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
-    scrollHolderFrame:SetSize(parentFrame:GetWidth(), (#fontsTest < 6) and (buttonSize * #fontsTest) or (displayLength * buttonSize))
+    scrollHolderFrame:SetSize(1, (#fontsTest < 6) and (buttonSize * #fontsTest) or (displayLength * buttonSize))
     scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
     local scrollBarHolder = CreateFrame("FRAME", nil, scrollHolderFrame)
     scrollBarHolder:SetSize(18, parentFrame:GetHeight())
@@ -421,21 +436,22 @@ local function CreateSettingsScrollFrame(parentFrame)
     SetupDropdownScrollButton(scrollUpButton, true)
     SetupDropdownScrollButton(scrollDownButton, false)
     scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
-    scrollHolderFrame.scrollFrame:SetSize(scrollHolderFrame:GetWidth(), scrollHolderFrame:GetHeight())
+    scrollHolderFrame.scrollFrame:SetSize(1, scrollHolderFrame:GetHeight())
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
     scrollHolderFrame.scrollFrame:SetScrollChild(scrollHolderFrame.scrollChild)
-    scrollHolderFrame.scrollChild:SetSize(scrollHolderFrame.scrollFrame:GetWidth(), 1)
-    scrollHolderFrame.scrollChild.selected = nil
-    local i = 1
+    scrollHolderFrame.scrollChild:SetSize(1, 1)
+    scrollHolderFrame.selected = nil
     local temp = scrollHolderFrame.scrollChild
-    for _, v in pairs(fontsTest) do
+    local selectedFont = "Titillium Web"
+    local largestWidth = 0
+    for _, v in pairs(testingFonts) do
         local newFrame = CreateFrame("Button", nil, scrollHolderFrame.scrollChild)
-        if(i == selectedFont) then 
-            scrollHolderFrame.scrollChild.selected = newFrame
+        if(v == selectedFont) then 
+            scrollHolderFrame.selected = newFrame
         end
-        newFrame.value = i
+        newFrame.value = v
         newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), buttonSize)
-        newFrame:SetPoint("TOPLEFT", temp, (i == 1) and "TOPLEFT" or "BOTTOMLEFT")
+        newFrame:SetPoint("TOPLEFT", temp, (temp == scrollHolderFrame.scrollChild) and "TOPLEFT" or "BOTTOMLEFT")
         newFrame.texture = newFrame:CreateTexture()
         newFrame.texture:SetTexture("Interface\\buttons\\white8x8")
         newFrame.texture:ClearAllPoints()
@@ -443,24 +459,25 @@ local function CreateSettingsScrollFrame(parentFrame)
         newFrame.texture:SetSize(newFrame:GetWidth(), newFrame:GetHeight())
         newFrame.highlightTexture = CreateNewTexture(hover.r, hover.g, hover.b, hover.a, newFrame)
         newFrame:SetHighlightTexture(newFrame.highlightTexture)
-        if(newFrame == scrollHolderFrame.scrollChild.selected) then
+        if(newFrame == scrollHolderFrame.selected) then
             newFrame.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
             newFrame.highlightTexture:SetVertexColor(0, 0, 0, 0)
         else
             newFrame.texture:SetVertexColor(0, 0, 0, 0)
         end
-        newFrame.text = CustomFontString(12, textColor, "Fonts\\" .. fontsTest[i], newFrame, "")
+        newFrame.text = CustomFontString(12, textColor, LSM:Fetch("font", v), newFrame, "")
         newFrame.text:ClearAllPoints()
         newFrame.text:SetPoint("LEFT", 2, 0)
         newFrame.text:SetText(v)
+        if(newFrame.text:GetWidth() > largestWidth) then largestWidth = newFrame.text:GetWidth() end
         newFrame:SetScript("OnClick", function(self, btn, down)
             if(btn == "LeftButton") then
-                if(newFrame ~= scrollHolderFrame.scrollChild.selected) then
+                if(newFrame ~= scrollHolderFrameselected) then
                     -- Set unselected texture colors.
-                    scrollHolderFrame.scrollChild.selected.texture:SetVertexColor(0, 0, 0, 0)
-                    scrollHolderFrame.scrollChild.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
+                    scrollHolderFrame.selected.texture:SetVertexColor(0, 0, 0, 0)
+                    scrollHolderFrame.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
                     -- Set up new selected.
-                    scrollHolderFrame.scrollChild.selected = self
+                    scrollHolderFrame.selected = self
                     self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
                     self.highlightTexture:SetVertexColor(0, 0, 0, 0)
                     parentFrame.textFrame.text:SetText(self.text:GetText())
@@ -472,7 +489,14 @@ local function CreateSettingsScrollFrame(parentFrame)
             end
         end)
         temp = newFrame
-        i = i + 1
+    end
+    largestWidth = largestWidth + 4
+    scrollHolderFrame.scrollFrame:SetWidth(largestWidth)
+    scrollHolderFrame.scrollChild:SetWidth(largestWidth)
+    scrollHolderFrame:SetWidth(largestWidth)
+    local children = { scrollHolderFrame.scrollChild:GetChildren() }
+    for _, v in pairs(children) do
+        v:SetWidth(largestWidth)
     end
     return scrollHolderFrame
 end
@@ -481,7 +505,7 @@ local function CreateDropDown(parentFrame, anchorFrame)
     -- Button frame
     local fontDropDownButton = CreateFrame("Button", nil, parentFrame, "BackdropTemplate")
     fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
-    fontDropDownButton:SetSize(parentFrame:GetWidth()/2, parentFrame:GetHeight())
+    fontDropDownButton:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
     fontDropDownButton:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -499,11 +523,12 @@ local function CreateDropDown(parentFrame, anchorFrame)
     -- text frame
     local textFrame = CreateFrame("Frame", nil, fontDropDownButton)
     fontDropDownButton.textFrame = textFrame
-    textFrame:SetSize(fontDropDownButton:GetWidth()/1.5, fontDropDownButton:GetHeight())
+    textFrame:SetSize(fontDropDownButton:GetWidth() - fontDropDownButton:GetHeight(), fontDropDownButton:GetHeight())
     textFrame:SetPoint("LEFT")
     textFrame.text = DefaultFontString(12, textFrame, "")
     textFrame.text:ClearAllPoints()
-    textFrame.text:SetPoint("LEFT", 2, 0)
+    textFrame.text:SetPoint("TOPLEFT", 2, 0)
+    textFrame.text:SetPoint("BOTTOMLEFT")
     textFrame.text:SetPoint("RIGHT")
     textFrame.text:SetText("SETTINGSfcyugfcthfdctfcujfctujrfc")
     textFrame.text:SetJustifyH("LEFT")

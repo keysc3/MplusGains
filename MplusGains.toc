@@ -5,6 +5,9 @@
 ## Version: 1.4.0
 ## SavedVariables: MplusGainsSettings
 
+Libs/LibStub.lua
+Libs/LibSharedMedia-3.0.lua
+
 FormatHelpers.lua
 KeystoneButton.lua
 DungeonInfo.lua
