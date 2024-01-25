@@ -239,11 +239,9 @@ local function CreateTooltip(parentFrame, textString)
     tooltip:SetBackdropColor(0, 0, 0, 0.9)
     tooltip:SetFrameLevel(20)
     tooltip.text = DefaultFontString(12, tooltip, nil)
-    --TODO: FIX INTIAL LOAD WIDTH
+    tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
     tooltip.text:SetText(textString)
     tooltip:SetWidth(math.ceil(tooltip.text:GetStringWidth() + 16))
-    tooltip.text:ClearAllPoints()
-    tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
     tooltip:Hide()
     return tooltip
 end
@@ -449,7 +447,6 @@ local function CreateSettingsScrollFrame(parentFrame)
         if(v == MplusGainsSettings.Font.name) then 
             scrollHolderFrame.selected = newFrame
         end
-        newFrame.value = v
         newFrame:SetSize(scrollHolderFrame.scrollChild:GetWidth(), buttonSize)
         newFrame:SetPoint("TOPLEFT", temp, (temp == scrollHolderFrame.scrollChild) and "TOPLEFT" or "BOTTOMLEFT")
         newFrame.texture = newFrame:CreateTexture()
@@ -466,7 +463,7 @@ local function CreateSettingsScrollFrame(parentFrame)
             newFrame.texture:SetVertexColor(0, 0, 0, 0)
         end
         newFrame.text = CustomFontString(12, textColor, LSM:Fetch("font", v), newFrame, "")
-        newFrame.text:ClearAllPoints()
+        newFrame.text:SetPoint("CENTER")
         newFrame.text:SetText(v)
         if(newFrame.text:GetWidth() > largestWidth) then largestWidth = newFrame.text:GetWidth() end
         newFrame:SetScript("OnClick", function(self, btn, down)
@@ -481,11 +478,9 @@ local function CreateSettingsScrollFrame(parentFrame)
                     self.highlightTexture:SetVertexColor(0, 0, 0, 0)
                     parentFrame.textFrame.text:SetText(self.text:GetText())
                     local fontName, fontHeight, fontFlags = self.text:GetFont()
-                    print("ASD" .. fontName)
                     parentFrame.textFrame.text:SetFont(fontName, fontHeight, fontFlags)
                     MplusGainsSettings.Font.path = fontName
                     MplusGainsSettings.Font.name = v
-                    -- TODO: FIX INITIAL LOAD PROBLEMS
                 end
                 scrollHolderFrame:Hide()
             end
@@ -493,13 +488,14 @@ local function CreateSettingsScrollFrame(parentFrame)
         temp = newFrame
     end
     if(largestWidth > maxFrameWidth) then largestWidth = maxFrameWidth end
-    largestWidth = largestWidth + 4
+    largestWidth = math.ceil(largestWidth) + 4
     scrollHolderFrame.scrollFrame:SetWidth(largestWidth)
     scrollHolderFrame.scrollChild:SetWidth(largestWidth)
     scrollHolderFrame:SetWidth(largestWidth)
     local children = { scrollHolderFrame.scrollChild:GetChildren() }
     for _, v in pairs(children) do
         v:SetWidth(largestWidth)
+        v.text:ClearAllPoints()
         v.text:SetPoint("TOPLEFT", 2, 0)
         v.text:SetPoint("BOTTOMLEFT")
         v.text:SetPoint("RIGHT")
