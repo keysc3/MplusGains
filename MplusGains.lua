@@ -640,33 +640,29 @@ local function CreateSettingsWindow(parentFrame)
     scalingSlider.ThumbTexture:SetSize(30, scalingSlider:GetHeight() - 2)
     scalingSlider:SetThumbTexture(scalingSlider.ThumbTexture)
     scalingSlider.text = DefaultFontString(12, scalingSlider, "")
-    --scalingSlider.text:SetPoint("CENTER")
-    -- TODO: Set text and start value based on saved variables
-    local maxValue = 8
+    local maxValue = 1.4
+    local minValue = 0.6
     local halfThumb = scalingSlider.ThumbTexture:GetWidth()/2
-    scalingSlider.text:SetText("1.0")
-    scalingSlider:SetMinMaxValues(0, maxValue)
-    scalingSlider:SetValue(4)
+    scalingSlider.text:SetText(addon:FormatDecimal(MplusGainsSettings.scale))
+    scalingSlider:SetMinMaxValues(minValue, maxValue)
+    scalingSlider:SetValue(MplusGainsSettings.scale)
     scalingSlider:Enable()
     scalingSlider:Show()
-    scalingSlider.oldValue = scalingSlider:GetValue()
     scalingSlider.mouseDown = false
     scalingSlider.entered = false
     scalingSlider.width = scalingSlider:GetWidth()
-    scalingSlider.maxValue = maxValue
     scalingSlider.halfThumb = halfThumb
     -- Better way to do this than a lerp?
-    local offset = lerp(halfThumb, scalingSlider.width - halfThumb, scalingSlider:GetValue()/maxValue)
+    local offset = lerp(halfThumb, scalingSlider.width - halfThumb, (scalingSlider:GetValue() - minValue)/(maxValue - minValue))
     scalingSlider.text:SetPoint("CENTER", scalingSlider, "LEFT", offset, 0)
     scalingSlider:SetScript("OnValueChanged", function(self, value)
-        offset = lerp(self.halfThumb, self.width - self.halfThumb, value/self.maxValue)
+        local rMin, rMax = self:GetMinMaxValues()
+        offset = lerp(self.halfThumb, self.width - self.halfThumb, (scalingSlider:GetValue() - rMin)/(rMax - rMin))
         self.text:SetPoint("CENTER", self, "LEFT", offset, 0)
-        local newValue = math.floor(value)
-        if(newValue ~= self.oldValue) then
-            local old = self.text:GetText()
-            local multi = self.oldValue - newValue
-            self.text:SetText(addon:FormatDecimal(tostring(old - (0.1 * multi))))
-            self.oldValue = newValue
+        local newValue = addon:RoundToOneDecimal(value)
+        if(newValue ~= MplusGainsSettings.scale) then
+            self.text:SetText(addon:FormatDecimal(newValue))
+            MplusGainsSettings.scale = newValue
         end
     end)
     scalingSlider:SetScript("OnEnter", function(self, motion)
@@ -1927,7 +1923,7 @@ local function StartUp()
                 if(MplusGainsSettings == nil) then
                     --print("NILLLL")
                     -- Set initial font
-                    MplusGainsSettings = {Count = 1, Font = { path = "Fonts\\FRIZQT__.TTF", name = "Friz Quadrata TT" }}
+                    MplusGainsSettings = {Count = 1, Font = { path = "Fonts\\FRIZQT__.TTF", name = "Friz Quadrata TT" }, scale = 1.0 }
                 else
                     --print("NOT NILLLL")
                     -- Used saved variable font
@@ -1937,6 +1933,7 @@ local function StartUp()
                         MplusGainsSettings.Font.path = "Fonts\\FRIZQT__.TTF"
                         MplusGainsSettings.Font.name = "Friz Quadrata TT"
                     end
+                    --if(MplusGainsSettings.scale == nil) then MplusGainsSettings.scale = 1.0 end
                     --MplusGainsSettings.Font = "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf"
                     --MplusGainsSettings.Font = "Fonts\\FRIZQT__.TTF"
                     --MplusGainsSettings.Font = "Fonts\\SKURRI.TTF"
