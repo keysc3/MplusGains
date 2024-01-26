@@ -641,8 +641,11 @@ local function CreateSettingsWindow(parentFrame)
     scalingSlider:SetThumbTexture(scalingSlider.ThumbTexture)
     scalingSlider.text = DefaultFontString(12, scalingSlider, "")
     --scalingSlider.text:SetPoint("CENTER")
+    -- TODO: Set text and start value based on saved variables
+    local maxValue = 8
+    local halfThumb = scalingSlider.ThumbTexture:GetWidth()/2
     scalingSlider.text:SetText("1.0")
-    scalingSlider:SetMinMaxValues(0, 8)
+    scalingSlider:SetMinMaxValues(0, maxValue)
     scalingSlider:SetValue(4)
     scalingSlider:Enable()
     scalingSlider:Show()
@@ -650,23 +653,20 @@ local function CreateSettingsWindow(parentFrame)
     scalingSlider.mouseDown = false
     scalingSlider.entered = false
     scalingSlider.width = scalingSlider:GetWidth()
-    local minimum, maximum = scalingSlider:GetMinMaxValues()
-    scalingSlider.maxValue = maximum
-    local offset = lerp(15, scalingSlider.width - 15, scalingSlider:GetValue()/scalingSlider.maxValue)
+    scalingSlider.maxValue = maxValue
+    scalingSlider.halfThumb = halfThumb
+    -- Better way to do this than a lerp?
+    local offset = lerp(halfThumb, scalingSlider.width - halfThumb, scalingSlider:GetValue()/maxValue)
     scalingSlider.text:SetPoint("CENTER", scalingSlider, "LEFT", offset, 0)
     scalingSlider:SetScript("OnValueChanged", function(self, value)
-        --print(scalingSlider.ThumbTexture:GetCenter())
-        --point, relativeTo, relativePoint, xOfs, yOfs = scalingSlider.ThumbTexture:GetPoint(scalingSlider.ThumbTexture:GetNumPoints())
-        --scalingSlider.text:SetPoint(point, relativeTo, relativePoint, xOfs, yOfs)
-        offset = lerp(15, scalingSlider.width - 15, value/scalingSlider.maxValue)
-        scalingSlider.text:SetPoint("CENTER", scalingSlider, "LEFT", offset, 0)
-        --local newValue = (value < 5) and math.ceil(value) or math.floor(value)
+        offset = lerp(self.halfThumb, self.width - self.halfThumb, value/self.maxValue)
+        self.text:SetPoint("CENTER", self, "LEFT", offset, 0)
         local newValue = math.floor(value)
         if(newValue ~= self.oldValue) then
             local old = self.text:GetText()
             local multi = self.oldValue - newValue
             self.text:SetText(addon:FormatDecimal(tostring(old - (0.1 * multi))))
-            scalingSlider.oldValue = newValue
+            self.oldValue = newValue
         end
     end)
     scalingSlider:SetScript("OnEnter", function(self, motion)
