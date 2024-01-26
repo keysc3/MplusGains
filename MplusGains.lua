@@ -570,6 +570,10 @@ local function CreateDropDown(parentFrame, anchorFrame)
     return fontDropDownButton
 end
 
+local function lerp(a, b, t)
+    return ((1 - t) * a) + (t * b)
+end
+
 local function CreateSettingsWindow(parentFrame)
     local rowHeight = 20
     local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
@@ -627,7 +631,7 @@ local function CreateSettingsWindow(parentFrame)
     scalingSlider:SetSize(scalingFrame:GetWidth()/1.8, scalingFrame:GetHeight())
     scalingSlider:SetOrientation("HORIZONTAL")
     scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT")
-    --TODO: TEXT ON THUMB BUTTON
+    --TODO: TEXT ON THUMB
     scalingSlider.ThumbTexture = scalingSlider:CreateTexture()
     scalingSlider.ThumbTexture:SetTexture("Interface\\buttons\\white8x8")
     local c1 = 40/255
@@ -636,16 +640,26 @@ local function CreateSettingsWindow(parentFrame)
     scalingSlider.ThumbTexture:SetSize(30, scalingSlider:GetHeight() - 2)
     scalingSlider:SetThumbTexture(scalingSlider.ThumbTexture)
     scalingSlider.text = DefaultFontString(12, scalingSlider, "")
-    scalingSlider.text:SetPoint("CENTER")
+    --scalingSlider.text:SetPoint("CENTER")
     scalingSlider.text:SetText("1.0")
-    scalingSlider:SetMinMaxValues(1, 9)
-    scalingSlider:SetValue(5)
+    scalingSlider:SetMinMaxValues(0, 8)
+    scalingSlider:SetValue(4)
     scalingSlider:Enable()
     scalingSlider:Show()
     scalingSlider.oldValue = scalingSlider:GetValue()
     scalingSlider.mouseDown = false
     scalingSlider.entered = false
+    scalingSlider.width = scalingSlider:GetWidth()
+    local minimum, maximum = scalingSlider:GetMinMaxValues()
+    scalingSlider.maxValue = maximum
+    local offset = lerp(15, scalingSlider.width - 15, scalingSlider:GetValue()/scalingSlider.maxValue)
+    scalingSlider.text:SetPoint("CENTER", scalingSlider, "LEFT", offset, 0)
     scalingSlider:SetScript("OnValueChanged", function(self, value)
+        --print(scalingSlider.ThumbTexture:GetCenter())
+        --point, relativeTo, relativePoint, xOfs, yOfs = scalingSlider.ThumbTexture:GetPoint(scalingSlider.ThumbTexture:GetNumPoints())
+        --scalingSlider.text:SetPoint(point, relativeTo, relativePoint, xOfs, yOfs)
+        offset = lerp(15, scalingSlider.width - 15, value/scalingSlider.maxValue)
+        scalingSlider.text:SetPoint("CENTER", scalingSlider, "LEFT", offset, 0)
         --local newValue = (value < 5) and math.ceil(value) or math.floor(value)
         local newValue = math.floor(value)
         if(newValue ~= self.oldValue) then
