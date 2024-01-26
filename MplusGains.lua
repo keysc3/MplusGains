@@ -6,6 +6,7 @@ local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
 local textColor = { r = 1, g = 0.82, b = 0, a = 1}
+local mainColor = { r = 26/255, g = 26/255, b = 27/255, a = 0.9 }
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
@@ -605,7 +606,7 @@ local function CreateSettingsWindow(parentFrame)
     local fontDropDown = CreateDropDown(fontFrame, fontLabel)
     local scalingFrame = CreateFrame("Frame", nil, frame)
     scalingFrame:SetSize(frame:GetWidth(), rowHeight)
-    scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM")
+    scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM", 0, -2)
     local scalingLabel = CreateFrame("Frame", nil, scalingFrame)
     scalingLabel:SetSize(scalingFrame:GetWidth()/4, scalingFrame:GetHeight())
     scalingLabel:SetPoint("LEFT", 2, 0)
@@ -613,13 +614,73 @@ local function CreateSettingsWindow(parentFrame)
     scalingLabel.text:ClearAllPoints()
     scalingLabel.text:SetPoint("LEFT")
     scalingLabel.text:SetText("Scale")
-    local scalingSlider = CreateFrame("Frame", nil, scalingFrame)
-    scalingSlider:SetSize((scalingFrame:GetWidth()/4)*3, scalingFrame:GetHeight())
-    scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT", 2, 0)
-    scalingSlider.text = DefaultFontString(12, scalingSlider, "OUTLINE")
-    scalingSlider.text:ClearAllPoints()
-    scalingSlider.text:SetPoint("LEFT")
-    scalingSlider.text:SetText("Scale Slider")
+    
+    local scalingSlider = CreateFrame("Slider", nil, scalingFrame, "BackdropTemplate")
+    scalingSlider:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 },
+    })
+    scalingSlider:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    scalingSlider:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
+    scalingSlider:SetSize(scalingFrame:GetWidth()/1.8, scalingFrame:GetHeight())
+    scalingSlider:SetOrientation("HORIZONTAL")
+    scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT")
+    --TODO: TEXT ON THUMB BUTTON
+    scalingSlider.ThumbTexture = scalingSlider:CreateTexture()
+    scalingSlider.ThumbTexture:SetTexture("Interface\\buttons\\white8x8")
+    local c1 = 40/255
+    local c2 = 20/255
+    scalingSlider.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
+    scalingSlider.ThumbTexture:SetSize(30, scalingSlider:GetHeight() - 2)
+    scalingSlider:SetThumbTexture(scalingSlider.ThumbTexture)
+    scalingSlider.text = DefaultFontString(12, scalingSlider, "")
+    scalingSlider.text:SetPoint("CENTER")
+    scalingSlider.text:SetText("1.0")
+    scalingSlider:SetMinMaxValues(1, 9)
+    scalingSlider:SetValue(5)
+    scalingSlider:Enable()
+    scalingSlider:Show()
+    scalingSlider.oldValue = scalingSlider:GetValue()
+    scalingSlider.mouseDown = false
+    scalingSlider.entered = false
+    scalingSlider:SetScript("OnValueChanged", function(self, value)
+        --local newValue = (value < 5) and math.ceil(value) or math.floor(value)
+        local newValue = math.floor(value)
+        if(newValue ~= self.oldValue) then
+            local old = self.text:GetText()
+            local multi = self.oldValue - newValue
+            self.text:SetText(addon:FormatDecimal(tostring(old - (0.1 * multi))))
+            scalingSlider.oldValue = newValue
+        end
+    end)
+    scalingSlider:SetScript("OnEnter", function(self, motion)
+        self.entered = true
+        self.ThumbTexture:SetVertexColor(c2, c2, c2, 1)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
+    end)
+    scalingSlider:SetScript("OnLeave", function(self, motion)
+        self.entered = false
+        if(not self.mouseDown) then
+            self.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
+            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+        end
+    end)
+    scalingSlider:SetScript("OnMouseDown", function(self, button)
+        if(button == "LeftButton") then
+            self.mouseDown = true
+        end
+    end)
+    scalingSlider:SetScript("OnMouseUp", function(self, button)
+        if(button == "LeftButton") then
+            self.mouseDown = false
+        end
+        if(not self.entered) then
+            self.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
+            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+        end
+    end)
     -- frame height
     frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
