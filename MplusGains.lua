@@ -21,6 +21,10 @@ local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 
+local function ApplyScale(value)
+    return addon:RoundToOneDecimal(value * MplusGainsSettings.scale)
+end
+
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -41,8 +45,7 @@ end
 
 local function CustomFontString(textSize, color, font, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
-
-    text:SetFont(font, textSize, flags)
+    text:SetFont(font, ApplyScale(textSize), flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
 
     return text
@@ -50,8 +53,7 @@ end
 
 local function DefaultFontString(textSize, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
-
-    text:SetFont(MplusGainsSettings.Font.path, textSize, flags)
+    text:SetFont(MplusGainsSettings.Font.path, ApplyScale(textSize), flags)
     text:SetTextColor(textColor.r, textColor.g, textColor.b, 1)
 
     return text
@@ -84,7 +86,7 @@ end
 local function CreateMainFrame()
     local frame = CreateFrameWithBackdrop(UIParent, "MainMplusGainsFrame")
     frame:SetPoint("CENTER", nil, 0, 100)
-    frame:SetSize(1000, 600)
+    frame:SetSize(1, 1)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
     frame:SetMovable(true)
     frame:EnableMouse(true)
@@ -139,7 +141,7 @@ local function CheckForScrollButtonEnable(scrollHolderFrame, affixID)
     local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
     local leftEnabled = scrollHolderFrame.leftScrollButton:IsEnabled()
     local rightEnabled = scrollHolderFrame.rightScrollButton:IsEnabled()
-    if(scrollFrame.minScrollRange[affixID] >= scroll) then
+    if(addon:RoundToOneDecimal(scrollFrame.minScrollRange[affixID]) >= scroll) then
         if(leftEnabled) then
             scrollHolderFrame.leftScrollButton:Disable()
         end
@@ -148,7 +150,7 @@ local function CheckForScrollButtonEnable(scrollHolderFrame, affixID)
             scrollHolderFrame.leftScrollButton:Enable()
         end
     end
-    if(scrollFrame.maxScrollRange[affixID] <= scroll) then
+    if(addon:RoundToOneDecimal(scrollFrame.maxScrollRange[affixID]) <= scroll) then
         if(rightEnabled) then
             scrollHolderFrame.rightScrollButton:Disable()
         end
@@ -230,7 +232,7 @@ end--]]
 --]]
 local function CreateTooltip(parentFrame, textString)
     local tooltip = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-    tooltip:SetSize(1, 30)
+    tooltip:SetSize(1, ApplyScale(30))
     tooltip:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
         edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
@@ -374,7 +376,7 @@ local function ScrollButtonTexture(frame, alpha, sign, scale)
     newTexture:SetPoint("CENTER", -2, 2 * sign)
     newTexture:SetVertexColor(1, 1, 1, alpha)
     newTexture:SetRotation(math.pi/2 * (-sign))
-    newTexture:SetScale(scale)
+    newTexture:SetScale(ApplyScale(scale))
     return newTexture
 end
 
@@ -405,15 +407,15 @@ local function CreateSettingsScrollFrame(parentFrame)
     end
     local testingFonts = LSM:List("font")
     LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
-    local buttonSize = 20
+    local buttonSize = ApplyScale(20)
     local displayLength = 6
-    local maxFrameWidth = 300
+    local maxFrameWidth = ApplyScale(300)
     local scrollHolderFrame = CreateFrame("FRAME", nil, parentFrame)
     scrollHolderFrame.texture = CreateNewTexture(0, 0, 0, 1, scrollHolderFrame)
     scrollHolderFrame:SetSize(1, (#testingFonts < 6) and (buttonSize * #testingFonts) or (displayLength * buttonSize))
     scrollHolderFrame:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT")
     local scrollBarHolder = CreateFrame("FRAME", nil, scrollHolderFrame)
-    scrollBarHolder:SetSize(18, parentFrame:GetHeight())
+    scrollBarHolder:SetSize(ApplyScale(18), parentFrame:GetHeight())
     scrollBarHolder:SetPoint("TOPLEFT", scrollHolderFrame, "TOPRIGHT")
     scrollBarHolder:SetPoint("BOTTOMLEFT", scrollHolderFrame, "BOTTOMRIGHT")
     scrollBarHolder.texture = CreateNewTexture(66, 66, 66, 1, scrollBarHolder)
@@ -547,6 +549,7 @@ local function CreateDropDown(parentFrame, anchorFrame)
     textureFrame.texture:ClearAllPoints()
     textureFrame.texture:SetPoint("CENTER", 0, -4)
     textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
+    textureFrame.texture:SetScale(MplusGainsSettings.scale)
     -- Mouse enter and leave
     fontDropDownButton:SetScript("OnEnter", function(self, motion)
         self:SetBackdropBorderColor(0.8, 0.8, 0.8 , 1)
@@ -575,9 +578,9 @@ local function lerp(a, b, t)
 end
 
 local function CreateSettingsWindow(parentFrame)
-    local rowHeight = 20
+    local rowHeight = ApplyScale(20)
     local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
-    frame:SetSize(240, 200)
+    frame:SetSize(ApplyScale(240), ApplyScale(200))
     frame:SetPoint("CENTER")
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.95)
     frame:SetMovable(true)
@@ -589,7 +592,7 @@ local function CreateSettingsWindow(parentFrame)
     frame:SetFrameStrata("DIALOG")
     local header = CreateFrame("Frame", nil, frame)
     header:SetPoint("TOP")
-    header:SetSize(frame:GetWidth(), 40)
+    header:SetSize(frame:GetWidth(), ApplyScale(40))
     header.text = DefaultFontString(14, header, "OUTLINE")
     header.text:ClearAllPoints()
     header.text:SetPoint("LEFT", 2, 0)
@@ -637,7 +640,7 @@ local function CreateSettingsWindow(parentFrame)
     local c1 = 40/255
     local c2 = 20/255
     scalingSlider.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
-    scalingSlider.ThumbTexture:SetSize(30, scalingSlider:GetHeight() - 2)
+    scalingSlider.ThumbTexture:SetSize(ApplyScale(30), scalingSlider:GetHeight() - 2)
     scalingSlider:SetThumbTexture(scalingSlider.ThumbTexture)
     scalingSlider.text = DefaultFontString(12, scalingSlider, "")
     local maxValue = 1.4
@@ -703,7 +706,7 @@ end
 --]]
 local function CreateHeaderFrame(parentFrame)
     local headerWidthDiff = 8
-    local headerHeight = 40
+    local headerHeight = ApplyScale(40)
     local frame = CreateFrameWithBackdrop(parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, - (headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
@@ -716,7 +719,7 @@ local function CreateHeaderFrame(parentFrame)
     -- Settings button
     local settingsButton = CreateFrame("Button", "SETTINGS_BUTTON", frame)
     settingsButton:SetPoint("RIGHT", exitButton, "LEFT")
-    settingsButton:SetSize(100, headerHeight)
+    settingsButton:SetSize(ApplyScale(100), headerHeight)
     settingsButton.text = DefaultFontString(12, settingsButton, "OUTLINE")
     settingsButton.text:ClearAllPoints()
     settingsButton.text:SetPoint("CENTER")
@@ -742,13 +745,14 @@ local function CreateHeaderFrame(parentFrame)
     resetButton.texture:SetPoint("CENTER")
     resetButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
     resetButton.texture:SetVertexColor(1, 1, 1, 0.8)
+    resetButton.texture:SetScale(MplusGainsSettings.scale)
     resetButton:SetNormalTexture(resetButton.texture)
     resetButton.texture1 = resetButton:CreateTexture()
     resetButton.texture1:ClearAllPoints()
     resetButton.texture1:SetPoint("CENTER")
     resetButton.texture1:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
     resetButton.texture1:SetVertexColor(1, 1, 1, 0.9)
-    resetButton.texture1:SetScale(0.9)
+    resetButton.texture1:SetScale(ApplyScale(0.9))
     resetButton:SetPushedTexture(resetButton.texture1)
     resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
     resetButton:SetScript("OnClick", function(self, btn, down)
@@ -806,7 +810,7 @@ local function CreateDungeonRowFrame(anchorFrame, parentFrame)
         anchorPoint = "TOPLEFT"
     end
     frame:SetPoint("TOPLEFT", anchorFrame, anchorPoint, 0, yOffset)
-    frame:SetSize(600, dungeonRowHeight)
+    frame:SetSize(ApplyScale(600), dungeonRowHeight)
     return frame
 end
 
@@ -818,7 +822,7 @@ end
 local function CreateDungeonNameFrame(parentRow)
     local frame = CreateFrame("Frame", nil, parentRow)
     frame:SetPoint("LEFT", rowEdgePadding, 0)
-    frame:SetSize(150, parentRow:GetHeight())
+    frame:SetSize(ApplyScale(150), parentRow:GetHeight())
     frame.text = DefaultFontString(12, frame, nil)
     frame.text:SetText("Default Dungeon")
     frame.text:ClearAllPoints()
@@ -839,7 +843,7 @@ local function CreateDungeonTimerFrame(parentRow)
     frame.text = DefaultFontString(12, frame, nil)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("xx:xx")
-    frame:SetSize(40, parentRow:GetHeight())
+    frame:SetSize(ApplyScale(40), parentRow:GetHeight())
 
     return frame
 end
@@ -873,7 +877,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
     local myFont = CreateFont("Font")
-    myFont:SetFont(MplusGainsSettings.Font.path, 12, "OUTLINE, MONOCHROME")
+    myFont:SetFont(MplusGainsSettings.Font.path, ApplyScale(12), "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
     btn:SetNormalFontObject(myFont)
     return btn
@@ -1118,8 +1122,8 @@ end
 local function ScrollButtonRow(self, delta)
     if(IsMouseButtonDown("RightButton")) then return end
     -- Find the number of buttons before the new to be set scroll position
-    local numButtonsPrior = math.floor((self:GetHorizontalScroll()-self.minScrollRange[selectedAffix])/(buttonWidth - 1))
-    local remainder = math.floor((self:GetHorizontalScroll()-self.minScrollRange[selectedAffix])%(buttonWidth - 1))
+    local numButtonsPrior = math.floor(addon:RoundToOneDecimal((self:GetHorizontalScroll()-self.minScrollRange[selectedAffix]))/(buttonWidth - 1))
+    local remainder = math.floor(addon:RoundToOneDecimal((self:GetHorizontalScroll()-self.minScrollRange[selectedAffix]))%(buttonWidth - 1))
     if(delta == -1) then 
         numButtonsPrior = numButtonsPrior + 1  
     else 
@@ -1179,25 +1183,26 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-" .. direction .. "-Default.PNG"
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (direction == "Left") and scrollButtonPadding or -1, 0)
-    scrollButton:SetSize(20, parentFrame:GetHeight())
+    scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
     -- Set texture up and texture down.
     scrollButton.textureUp = scrollButton:CreateTexture()
     scrollButton.textureUp:SetTexture(textureName)
     scrollButton.textureUp:ClearAllPoints()
     scrollButton.textureUp:SetPoint("CENTER")
     scrollButton.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
+    scrollButton.textureUp:SetScale(MplusGainsSettings.scale)
     scrollButton.textureDown = scrollButton:CreateTexture()
     scrollButton.textureDown:SetTexture(textureName)
     scrollButton.textureDown:ClearAllPoints()
     scrollButton.textureDown:SetPoint("CENTER")
-    scrollButton.textureDown:SetScale(0.9)
+    scrollButton.textureDown:SetScale(ApplyScale(0.9))
     scrollButton:SetNormalTexture(scrollButton.textureUp)
     scrollButton:SetPushedTexture(scrollButton.textureDown)
     scrollButton.disabledTexture = scrollButton:CreateTexture()
     scrollButton.disabledTexture:SetTexture(textureName)
     scrollButton.disabledTexture:ClearAllPoints()
     scrollButton.disabledTexture:SetPoint("CENTER")
-    scrollButton.disabledTexture:SetScale(0.9)
+    scrollButton.disabledTexture:SetScale(ApplyScale(0.9))
     scrollButton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
     scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
     scrollButton:SetScript("OnClick", function(self, button, down)
@@ -1247,7 +1252,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text = DefaultFontString(12, frame, nil)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
-    frame:SetSize(32, parentRow:GetHeight())
+    frame:SetSize(ApplyScale(32), parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
     frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
@@ -1490,7 +1495,7 @@ local function CreateBestRunsFrame(anchorFrame, parentFrame)
     local frame = CreateFrame("Frame", "BestRuns", parentFrame)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     frame:SetSize(parentFrame:GetWidth() - (xPadding*2) - 20, (dungeonRowHeight * 4) + (yPadding * 5))
-    frame.smallColumnWidth = 60
+    frame.smallColumnWidth = ApplyScale(60)
     return frame
 end
 
@@ -1759,7 +1764,7 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     local url = "https://github.com/keysc3/MplusGains/issues/new/choose"
     -- Holder
     local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-    frame:SetSize(300, 80)
+    frame:SetSize(ApplyScale(300), ApplyScale(80))
     frame:SetPoint("BOTTOMRIGHT", anchorFrame, "TOPRIGHT")
     frame:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -1776,7 +1781,8 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     frame.headerText:SetText("Report a Bug")
     -- Edit box
     frame.editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    frame.editBox:SetSize(frame:GetWidth() - 40, 20)
+    frame.editBox:SetSize(frame:GetWidth() - 40, ApplyScale(20))
+    -- TODO: TEXT SIZE
     frame.editBox:SetPoint("TOPLEFT", frame.headerText, "BOTTOMLEFT", 4, -8)
     frame.editBox:SetText(url)
     frame.editBox:SetScript("OnTextChanged", function(self, userInput)
@@ -1933,11 +1939,10 @@ local function StartUp()
                         MplusGainsSettings.Font.path = "Fonts\\FRIZQT__.TTF"
                         MplusGainsSettings.Font.name = "Friz Quadrata TT"
                     end
-                    --if(MplusGainsSettings.scale == nil) then MplusGainsSettings.scale = 1.0 end
-                    --MplusGainsSettings.Font = "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf"
-                    --MplusGainsSettings.Font = "Fonts\\FRIZQT__.TTF"
-                    --MplusGainsSettings.Font = "Fonts\\SKURRI.TTF"
                 end
+                buttonWidth = math.floor(ApplyScale(buttonWidth))
+                dungeonRowHeight = ApplyScale(dungeonRowHeight)
+                mainFrame:SetSize(ApplyScale(1000), ApplyScale(600))
                 headerFrame = CreateHeaderFrame(mainFrame)
                 dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
                 summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
