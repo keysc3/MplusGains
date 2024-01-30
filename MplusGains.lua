@@ -643,6 +643,98 @@ local function lerp(a, b, t)
     return ((1 - t) * a) + (t * b)
 end
 
+--[[
+    CreateSlider - Creates a settings frame slider.
+    @param parentFrame - The new frames parent.
+    @param anchorFrame - The new frames anchor frame.
+    @param minValue - Sliders minimum value.
+    @param maxValue - Sliders maximum value.
+    @param setting - Setting that the slider is changing.
+    @return slider - The newly created slider.
+--]]
+local function CreateSlider(parentFrame, anchorFrame, minValue, maxValue, setting)
+    local c1 = 40/255
+    local c2 = 20/255
+    -- SLider values
+    local slider = CreateFrame("Slider", nil, parentFrame, "BackdropTemplate")
+    slider:SetBackdrop({
+        bgFile = "Interface\\buttons\\white8x8",
+        edgeFile = "Interface\\buttons\\white8x8",
+        edgeSize = 1,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 },
+    })
+    slider:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    slider:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
+    slider:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
+    slider:SetOrientation("HORIZONTAL")
+    slider:SetPoint("LEFT", anchorFrame, "RIGHT")
+    slider:SetMinMaxValues(minValue, maxValue)
+    slider:SetValue(MplusGainsSettings[setting])
+    slider:Enable()
+    slider:Show()
+    slider.mouseDown = false
+    slider.entered = false
+    slider.width = slider:GetWidth()
+    -- Thumb
+    slider.ThumbTexture = slider:CreateTexture()
+    slider.ThumbTexture:SetTexture("Interface\\buttons\\white8x8")
+    slider.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
+    slider.ThumbTexture:SetSize(ApplyScale(30), slider:GetHeight() - 2)
+    slider:SetThumbTexture(slider.ThumbTexture)
+    -- Text
+    slider.text = DefaultFontString(12, slider, "")
+    slider.text:SetText(addon:FormatDecimal(MplusGainsSettings[setting]))
+
+    local halfThumb = slider.ThumbTexture:GetWidth()/2
+    slider.halfThumb = halfThumb
+    -- Better way to do this than a lerp?
+    local offset = lerp(halfThumb, slider.width - halfThumb, (slider:GetValue() - minValue)/(maxValue - minValue))
+    slider.text:SetPoint("CENTER", slider, "LEFT", offset, 0)
+    slider:SetScript("OnValueChanged", function(self, value)
+        local rMin, rMax = self:GetMinMaxValues()
+        offset = lerp(self.halfThumb, self.width - self.halfThumb, (slider:GetValue() - rMin)/(rMax - rMin))
+        self.text:SetPoint("CENTER", self, "LEFT", offset, 0)
+        local newValue = addon:RoundToOneDecimal(value)
+        if(newValue ~= MplusGainsSettings[setting]) then
+            self.text:SetText(addon:FormatDecimal(newValue))
+            MplusGainsSettings[setting] = newValue
+        end
+    end)
+    -- Slider animations
+    slider:SetScript("OnEnter", function(self, motion)
+        self.entered = true
+        self.ThumbTexture:SetVertexColor(c2, c2, c2, 1)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
+    end)
+    slider:SetScript("OnLeave", function(self, motion)
+        self.entered = false
+        if(not self.mouseDown) then
+            self.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
+            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+        end
+    end)
+    slider:SetScript("OnMouseDown", function(self, button)
+        if(button == "LeftButton") then
+            self.mouseDown = true
+        end
+    end)
+    slider:SetScript("OnMouseUp", function(self, button)
+        if(button == "LeftButton") then
+            self.mouseDown = false
+        end
+        if(not self.entered) then
+            self.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
+            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+        end
+    end)
+    return slider
+end
+
+--[[
+    CreateSettingsWindow - Handles the setup of the settings frame.
+    @param parentFrame - The parent frame for the settings frame.
+    @return frame - The newly created frame
+--]]
 local function CreateSettingsWindow(parentFrame)
     local rowHeight = ApplyScale(20)
     local headerHeight = ApplyScale(40)
@@ -680,6 +772,7 @@ local function CreateSettingsWindow(parentFrame)
     -- Font dropdown
     local fontDropDown = CreateDropDown(fontFrame, fontLabel, MplusGainsSettings.Font.name)
     SetupFontChoices(fontDropDown)
+    -- Scaling frame
     local scalingFrame = CreateFrame("Frame", nil, frame)
     scalingFrame:SetSize(frame:GetWidth(), rowHeight)
     scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM", 0, -2)
@@ -690,80 +783,9 @@ local function CreateSettingsWindow(parentFrame)
     scalingLabel.text:ClearAllPoints()
     scalingLabel.text:SetPoint("LEFT")
     scalingLabel.text:SetText("Scale")
-    
-    local scalingSlider = CreateFrame("Slider", nil, scalingFrame, "BackdropTemplate")
-    scalingSlider:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 0, right = 0, top = 0, bottom = 0 },
-    })
-    scalingSlider:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    scalingSlider:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
-    scalingSlider:SetSize(scalingFrame:GetWidth()/1.8, scalingFrame:GetHeight())
-    scalingSlider:SetOrientation("HORIZONTAL")
-    scalingSlider:SetPoint("LEFT", scalingLabel, "RIGHT")
-    --TODO: TEXT ON THUMB
-    scalingSlider.ThumbTexture = scalingSlider:CreateTexture()
-    scalingSlider.ThumbTexture:SetTexture("Interface\\buttons\\white8x8")
-    local c1 = 40/255
-    local c2 = 20/255
-    scalingSlider.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
-    scalingSlider.ThumbTexture:SetSize(ApplyScale(30), scalingSlider:GetHeight() - 2)
-    scalingSlider:SetThumbTexture(scalingSlider.ThumbTexture)
-    scalingSlider.text = DefaultFontString(12, scalingSlider, "")
-    local maxValue = 1.4
-    local minValue = 0.6
-    local halfThumb = scalingSlider.ThumbTexture:GetWidth()/2
-    scalingSlider.text:SetText(addon:FormatDecimal(MplusGainsSettings.scale))
-    scalingSlider:SetMinMaxValues(minValue, maxValue)
-    scalingSlider:SetValue(MplusGainsSettings.scale)
-    scalingSlider:Enable()
-    scalingSlider:Show()
-    scalingSlider.mouseDown = false
-    scalingSlider.entered = false
-    scalingSlider.width = scalingSlider:GetWidth()
-    scalingSlider.halfThumb = halfThumb
-    -- Better way to do this than a lerp?
-    local offset = lerp(halfThumb, scalingSlider.width - halfThumb, (scalingSlider:GetValue() - minValue)/(maxValue - minValue))
-    scalingSlider.text:SetPoint("CENTER", scalingSlider, "LEFT", offset, 0)
-    scalingSlider:SetScript("OnValueChanged", function(self, value)
-        local rMin, rMax = self:GetMinMaxValues()
-        offset = lerp(self.halfThumb, self.width - self.halfThumb, (scalingSlider:GetValue() - rMin)/(rMax - rMin))
-        self.text:SetPoint("CENTER", self, "LEFT", offset, 0)
-        local newValue = addon:RoundToOneDecimal(value)
-        if(newValue ~= MplusGainsSettings.scale) then
-            self.text:SetText(addon:FormatDecimal(newValue))
-            MplusGainsSettings.scale = newValue
-        end
-    end)
-    scalingSlider:SetScript("OnEnter", function(self, motion)
-        self.entered = true
-        self.ThumbTexture:SetVertexColor(c2, c2, c2, 1)
-        self:SetBackdropBorderColor(1, 1, 1, 1)
-    end)
-    scalingSlider:SetScript("OnLeave", function(self, motion)
-        self.entered = false
-        if(not self.mouseDown) then
-            self.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
-            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-        end
-    end)
-    scalingSlider:SetScript("OnMouseDown", function(self, button)
-        if(button == "LeftButton") then
-            self.mouseDown = true
-        end
-    end)
-    scalingSlider:SetScript("OnMouseUp", function(self, button)
-        if(button == "LeftButton") then
-            self.mouseDown = false
-        end
-        if(not self.entered) then
-            self.ThumbTexture:SetVertexColor(c1, c1, c1, 1)
-            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-        end
-    end)
-    -- frame height
+    -- Scale slider
+    local scalingSlider = CreateSlider(scalingFrame, scalingLabel, 0.6, 1.4, "scale")
+    -- Frame height
     frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
 end
