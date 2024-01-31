@@ -19,6 +19,8 @@ local scrollButtonPadding = 4
 local totalGained = 0
 local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
+local colorVar = nil
+local frameToChange = nil
 
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
@@ -70,7 +72,7 @@ end
 local function DefaultFontString(textSize, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(MplusGainsSettings.Font.path, ApplyScale(textSize), flags)
-    text:SetTextColor(textColor.r, textColor.g, textColor.b, 1)
+    text:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
     return text
 end
 
@@ -80,8 +82,8 @@ end
     @param name - the name of the frame
     @return - the created frame
 --]]
-local function CreateFrameWithBackdrop(parentFrame, name)
-    local frame = CreateFrame("Frame", ((name ~= nil) and name or nil), parentFrame, "BackdropTemplate")
+local function CreateFrameWithBackdrop(frameType, parentFrame, name)
+    local frame = CreateFrame(frameType, ((name ~= nil) and name or nil), parentFrame, "BackdropTemplate")
     frame:SetBackdrop({
         bgFile = "Interface\\buttons\\white8x8",
         edgeFile = "Interface\\buttons\\white8x8",
@@ -99,7 +101,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateMainFrame()
-    local frame = CreateFrameWithBackdrop(UIParent, "MainMplusGainsFrame")
+    local frame = CreateFrameWithBackdrop("Frame", UIParent, "MainMplusGainsFrame")
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1, 1)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -367,7 +369,6 @@ local function CreateExitButton(closeFrame, parentFrame)
     exitButton.text:SetText("x")
     exitButton.text:SetTextScale(1.4)
     exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))
-    exitButton.text:SetTextColor(r, g, b, a)
     exitButton:SetScript("OnMouseUp", function(self, btn)
         self.text:SetTextScale(1.4)
     end)
@@ -580,17 +581,10 @@ end
 --]]
 local function CreateDropDown(parentFrame, anchorFrame, text)
     -- Button frame
-    local fontDropDownButton = CreateFrame("Button", nil, parentFrame, "BackdropTemplate")
+    local fontDropDownButton = CreateFrameWithBackdrop("Button", parentFrame, nil)
+    fontDropDownButton:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
     fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
     fontDropDownButton:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
-    fontDropDownButton:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 0, right = 0, top = 0, bottom = 0 },
-    })
-    fontDropDownButton:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    fontDropDownButton:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
     fontDropDownButton:SetScript("OnEnter", function(self, motion)
         self:SetBackdropBorderColor(1, 1, 1, 1)
     end)
@@ -656,14 +650,7 @@ local function CreateSlider(parentFrame, anchorFrame, minValue, maxValue, settin
     local c1 = 40/255
     local c2 = 20/255
     -- SLider values
-    local slider = CreateFrame("Slider", nil, parentFrame, "BackdropTemplate")
-    slider:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 0, right = 0, top = 0, bottom = 0 },
-    })
-    slider:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    local slider = CreateFrameWithBackdrop("Slider", parentFrame, nil)
     slider:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
     slider:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
     slider:SetOrientation("HORIZONTAL")
@@ -730,6 +717,38 @@ local function CreateSlider(parentFrame, anchorFrame, minValue, maxValue, settin
     return slider
 end
 
+local function ColorCallback(restore)
+    local newR, newG, newB, newA;
+    -- If canceled
+    if restore then
+        newR, newG, newB, newA = unpack(restore)
+        
+    else
+        newA, newR, newG, newB = ColorPickerFrame:GetColorAlpha(), ColorPickerFrame:GetColorRGB()
+    end
+    -- Set color variable
+    if(colorVar ~= nil) then
+        MplusGainsSettings.Colors[colorVar].r = newR
+        MplusGainsSettings.Colors[colorVar].g = newG
+        MplusGainsSettings.Colors[colorVar].b = newB
+        MplusGainsSettings.Colors[colorVar].a = newA
+    end
+    if(frameToChange ~= nil) then
+        frameToChange:SetBackdropColor(newR, newG, newB, newA)
+    end
+end
+
+local function ShowColorPicker(r, g, b, a, var, frame)
+    colorVar = var
+    frameToChange = frame
+    ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = true, a
+    ColorPickerFrame.previousValues = {r,g,b,a}
+    ColorPickerFrame.swatchFunc, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = ColorCallback, ColorCallback, ColorCallback
+    ColorPickerFrame:Hide() -- Need to run the OnShow handler.
+    ColorPickerFrame.Content.ColorPicker:SetColorRGB(r, g, b)
+    ColorPickerFrame:Show()
+end
+
 --[[
     CreateSettingsWindow - Handles the setup of the settings frame.
     @param parentFrame - The parent frame for the settings frame.
@@ -738,7 +757,7 @@ end
 local function CreateSettingsWindow(parentFrame)
     local rowHeight = ApplyScale(20)
     local headerHeight = ApplyScale(40)
-    local frame = CreateFrameWithBackdrop(parentFrame, "SETTINGS_FRAME")
+    local frame = CreateFrameWithBackdrop("Frame", parentFrame, "SETTINGS_FRAME")
     frame:SetSize(ApplyScale(240), ApplyScale(200))
     frame:SetPoint("CENTER")
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.95)
@@ -785,6 +804,32 @@ local function CreateSettingsWindow(parentFrame)
     scalingLabel.text:SetText("Scale")
     -- Scale slider
     local scalingSlider = CreateSlider(scalingFrame, scalingLabel, 0.6, 1.4, "scale")
+    -- Main color frame
+    local mainColorFrame = CreateFrame("Frame", nil, frame)
+    mainColorFrame:SetSize(frame:GetWidth(), rowHeight)
+    mainColorFrame:SetPoint("TOP", scalingFrame, "BOTTOM", 0, -2)
+    local mainColorLabel = CreateFrame("Frame", nil, mainColorFrame)
+    mainColorLabel:SetSize(mainColorFrame:GetWidth()/4, mainColorFrame:GetHeight())
+    mainColorLabel:SetPoint("LEFT", 2, 0)
+    mainColorLabel.text = DefaultFontString(12, mainColorLabel, "OUTLINE")
+    mainColorLabel.text:ClearAllPoints()
+    mainColorLabel.text:SetPoint("LEFT")
+    mainColorLabel.text:SetText("Color")
+    -- Main color button
+    local mainColorButton = CreateFrameWithBackdrop("Button", mainColorFrame, nil)
+    mainColorButton:SetBackdropColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
+    mainColorButton:SetPoint("LEFT", mainColorLabel, "RIGHT")
+    mainColorButton:SetSize(mainColorFrame:GetHeight(), mainColorFrame:GetHeight())
+    mainColorButton:SetScript("OnEnter", function(self, motion)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
+    end)
+    mainColorButton:SetScript("OnLeave", function(self, motion)
+            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    end)
+    mainColorButton:SetScript("OnClick", function(self, motion)
+        local color = MplusGainsSettings.Colors.main
+        ShowColorPicker(color.r, color.g, color.b, color.a, "main", mainColorButton)
+    end)
     -- Frame height
     frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
@@ -798,7 +843,7 @@ end
 local function CreateHeaderFrame(parentFrame)
     local headerWidthDiff = 8
     local headerHeight = ApplyScale(40)
-    local frame = CreateFrameWithBackdrop(parentFrame, "Header")
+    local frame = CreateFrameWithBackdrop("Frame", parentFrame, "Header")
     frame:SetPoint("TOP", parentFrame, "TOP", 0, - (headerWidthDiff/2))
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
     frame.text = DefaultFontString(24, frame, "OUTLINE")
@@ -818,7 +863,6 @@ local function CreateHeaderFrame(parentFrame)
     settingsButton.text:SetTextScale(1.4)
     local settingsFrame = CreateSettingsWindow(parentFrame)
     settingsButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, settingsButton))
-    settingsButton.text:SetTextColor(r, g, b, a)
     settingsButton:SetScript("OnMouseUp", function(self, btn)
         self.text:SetTextScale(1.4)
     end)
@@ -893,7 +937,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateDungeonRowFrame(anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, nil)
+    local frame = CreateFrameWithBackdrop("Frame", parentFrame, nil)
     local yOffset = yPadding
     local anchorPoint = "BOTTOMLEFT"
     if(anchorFrame == parentFrame) then
@@ -947,8 +991,8 @@ end
     @return btn - the created button frame
 --]]
 local function CreateButton(keyLevel, anchorButton, parentFrame)
-    local btn = CreateFrame("Button", parentFrame:GetName() .. "Button" .. "+" .. tostring(keyLevel), nil, "BackdropTemplate")
-    btn:SetParent(parentFrame)
+    local btn = CreateFrameWithBackdrop("Button", parentFrame, parentFrame:GetName() .. "Button" .. "+" .. tostring(keyLevel))
+    btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     -- If anchorButton is nil then it is the first in its parent frame, so set anchoring appropriately.
     if(anchorButton ~= nil) then 
         btn:SetPoint("LEFT", anchorButton, "RIGHT", -1, 0)
@@ -956,13 +1000,6 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
         btn:SetPoint("LEFT", parentFrame, "LEFT")
     end
     btn:SetSize(buttonWidth, parentFrame:GetHeight())
-    btn:SetBackdrop({
-        bgFile = "Interface\\buttons\\white8x8",
-        edgeFile = "Interface\\buttons\\white8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    btn:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
     btn:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
     btn:SetText((keyLevel > 1) and ("+" .. keyLevel) or "-")
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
@@ -1316,7 +1353,7 @@ end
     @return scrollHolderFrame - the created frame
 --]]
 local function CreateScrollHolderFrame(parentRow)
-    local scrollHolderFrame = CreateFrameWithBackdrop(parentRow, nil)
+    local scrollHolderFrame = CreateFrameWithBackdrop("Frame", parentRow, nil)
     scrollHolderFrame.widthMulti = 6
     -- Width is multiple of button size minus thee same multiple so button border doesn't overlap/combine with frame border.
     scrollHolderFrame:SetSize((scrollHolderFrame.widthMulti * buttonWidth) - scrollHolderFrame.widthMulti, parentRow:GetHeight())
@@ -1473,7 +1510,7 @@ end
     @return frame - the created summary frame.
 ]]
 local function CreateSummaryFrame(anchorFrame, parentFrame, headerWidth)
-    local frame = CreateFrameWithBackdrop(parentFrame, "Summary")
+    local frame = CreateFrameWithBackdrop("Frame", parentFrame, "Summary")
     frame:SetPoint("LEFT", anchorFrame, "RIGHT", xPadding, 0)
     frame:SetSize(headerWidth - anchorFrame:GetWidth() - xPadding , anchorFrame:GetHeight())
     return frame
@@ -1570,7 +1607,7 @@ end
     Note: Used instead of CreateLine() due to buggy/inconsitent behaviour.
 --]]
 local function CreateSplitFrame(anchorFrame, parentFrame)
-    local frame = CreateFrameWithBackdrop(parentFrame, nil)
+    local frame = CreateFrameWithBackdrop("Frame", parentFrame, nil)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM")
     frame:SetSize(parentFrame:GetWidth()/2, 1)
     frame:SetBackdropBorderColor(outline.r, outline.b, outline.g, outline.a)
@@ -1903,8 +1940,7 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     -- Button rgb values
     local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
     -- Holder
-    local frame = CreateFrameWithBackdrop(parentFrame, nil)
-    frame:SetBackdropBorderColor(0, 0, 0, 0)
+    local frame = CreateFrame("Frame", nil, parentFrame)
     frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
     frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
     -- Creator text
@@ -2016,7 +2052,18 @@ local function StartUp()
             if(addonLoaded == "MplusGains") then
                 if(MplusGainsSettings == nil) then
                     -- Set initial font
-                    MplusGainsSettings = {Count = 1, Font = { path = "Fonts\\FRIZQT__.TTF", name = "Friz Quadrata TT" }, scale = 1.0 }
+                    MplusGainsSettings = {
+                        Count = 1, 
+                        Font = { 
+                            path = "Fonts\\FRIZQT__.TTF", 
+                            name = "Friz Quadrata TT" 
+                        }, 
+                        scale = 1.0, 
+                        Colors = { 
+                            main = { r = 1, g = 0.82, b = 0, a = 1}, 
+                            selectedButton = { r = 212/255, g = 99/255, b = 0, a = 1 } 
+                        } 
+                    }
                 else
                     -- Used saved variable font
                     MplusGainsSettings.Count = MplusGainsSettings.Count + 1
