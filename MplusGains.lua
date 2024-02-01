@@ -448,7 +448,7 @@ local function CreateScrollFrameButton(scrollHolderFrame, anchorFrame, text, sel
     else
         newFrame.texture:SetVertexColor(0, 0, 0, 0)
     end
-    newFrame.text = CustomFontString(12, textColor, font, newFrame, "")
+    newFrame.text = CustomFontString(12, MplusGainsSettings.Colors.main, font, newFrame, "")
     table.insert(mainFrame.textObjects, newFrame.text)
     newFrame.text:SetPoint("CENTER")
     newFrame.text:SetText(text)
@@ -1361,11 +1361,11 @@ end
 --]]
 local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     local defualtAlpha = 0.7
-    local rotation = (direction) and -(math.pi/2) or math.pi/2
+    local rotation = (isLeft) and -(math.pi/2) or math.pi/2
     local color = MplusGainsSettings.Colors.main
     local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-Down.PNG"
     local scrollButton = CreateFrame("Button", nil, parentFrame)
-    scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (direction == "Left") and scrollButtonPadding or -1, 0)
+    scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (isLeft) and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
     -- Set texture up and texture down.
     scrollButton.textureUp = scrollButton:CreateTexture()
@@ -1400,7 +1400,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
     scrollButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then
-            ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (direction == "Left") and 1 or -1)
+            ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (isLeft) and 1 or -1)
         end
     end)
     scrollButton:SetScript("OnEnter", function(self, motion)
