@@ -562,7 +562,6 @@ local function UpdateTextFont(path)
         if(v.changeFont) then
             local font, size, flags = v:GetFont()
             v:SetFont(path, size, flags)
-            v:GetWidth()
         end
     end
     for _, v in ipairs(mainFrame.textWidthFrames) do
@@ -1070,6 +1069,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     local myFont = CreateFont("Font")
     myFont:SetFont(MplusGainsSettings.Font.path, ApplyScale(12), "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
+    myFont.changeFont = true
     btn:SetNormalFontObject(myFont)
     table.insert(mainFrame.textObjects, myFont)
     return btn
