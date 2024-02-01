@@ -416,7 +416,7 @@ local function SetupDropdownScrollButton(button, isUp)
     button:SetNormalTexture(ScrollButtonTexture(button, 0.7, isUp, 1))
     button:SetPushedTexture(ScrollButtonTexture(button, 0.7, isUp, 0.9))
     button:SetDisabledTexture(ScrollButtonTexture(button, 0.2, isUp, 0.9))
-    button:SetHighlightTexture(ScrollButtonTexture(button, 0.3, isUp, 1))
+    button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
 end
 
 --[[
