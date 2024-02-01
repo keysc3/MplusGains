@@ -782,11 +782,12 @@ local function ShowColorPicker(var, frame)
     local color = MplusGainsSettings.Colors[var]
     colorVar = var
     frameToChange = frame
-    ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = false, a
-    ColorPickerFrame.previousValues = {color.r, color.g, color.b, color.a}
+    ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = false, color.a
+    ColorPickerFrame.previousValues = { color.r, color.g, color.b, color.a }
     ColorPickerFrame.swatchFunc, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = ColorCallback, ColorCallback, ColorCallback
-    ColorPickerFrame:Hide() -- Need to run the OnShow handler.
+    ColorPickerFrame.Content.ColorSwatchOriginal:SetColorTexture(color.r, color.g, color.b)
     ColorPickerFrame.Content.ColorPicker:SetColorRGB(color.r, color.g, color.b)
+    ColorPickerFrame:Hide() -- Need to run the OnShow handler.
     ColorPickerFrame:Show()
 end
 
