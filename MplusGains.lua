@@ -53,6 +53,7 @@ end
     @param font - Path to the font being used.
     @param parentFrame - Frame the text is for.
     @param flags - Flags to use with the font.
+    --TODO: DOC
     @return text - FontString created.
 ]]
 local function CustomFontString(textSize, color, font, parentFrame, flags, changeFont, changeColor)
@@ -242,11 +243,13 @@ end
 --[[
     CreateTooltip - Creates a tooltip for the given frame and with the given text.
     @param parentFrame - The parent frame for the tooltip.
+    @param anchorFrame - The anchor frame for the tooltip.
     @param textString - The string to set the tooltips text to.
     @return tooltip - The created tooltip.
 --]]
-local function CreateTooltip(parentFrame, textString)
+local function CreateTooltip(parentFrame, anchorFrame, textString)
     local tooltip = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    tooltip:SetPoint("BOTTOMLEFT", anchorFrame, "TOPLEFT", -2, -1)
     tooltip.padding = 16
     tooltip:SetSize(1, ApplyScale(30))
     tooltip:SetBackdrop({
@@ -315,13 +318,14 @@ local function CreateToggleButton(parentFrame, affixID)
     local name, description, filedataid = C_ChallengeMode.GetAffixInfo(affixID);
     local button = CreateFrame("Button", nil, parentFrame)
     button.affixID = affixID
-    button:SetSize((parentFrame:GetWidth()/1.5), (parentFrame:GetHeight()/1.5))
+    local size = (parentFrame:GetWidth()/1.5) - 2
+    button:SetSize(size, size)
     button.texture = button:CreateTexture()
     button.texture:SetTexture(filedataid)
     button:SetNormalTexture(button.texture)
     button:ClearAllPoints()
     button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
-    button.tooltip = CreateTooltip(parentFrame, "View " .. string.lower(name) .. " keys")
+    button.tooltip = CreateTooltip(parentFrame, button, "View " .. string.lower(name) .. " keys")
     button:SetScript("OnEnter", function(self, motion)
         self.tooltip:Show()
     end)
@@ -362,35 +366,33 @@ local function CreateToggle(parentFrame)
     parentFrame.toggles[rightToggle.affixID] = rightToggle
 end
 
---[[
-    CreateExitButton - Creates a new button that closes the given frame.
-    @param closeFrame - Frame being closed
-    @param parentFrame - Parent of the button being created.
-    @return exitButton - The created button.
---]]
-local function CreateExitButton(closeFrame, parentFrame)
-    -- Exit button
+local function CreateHeaderButton(parentFrame, point, relativeFrame, relativePoint, OnClick, texturePath)
+    local color = MplusGainsSettings.Colors.main
     local headerHeight = parentFrame:GetHeight()
-    local exitButton = CreateFrame("Button", nil, parentFrame)
-    local r, g, b, a = 207/255, 170/255, 0, 1
-    exitButton:SetPoint("RIGHT", parentFrame, "RIGHT")
-    exitButton:SetSize(headerHeight, headerHeight)
-    exitButton.text = DefaultFontString(16, exitButton, "OUTLINE")
-    exitButton.text:ClearAllPoints()
-    exitButton.text:SetPoint("CENTER")
-    exitButton.text:SetText("x")
-    exitButton.text:SetTextScale(1.4)
-    exitButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, exitButton))
-    exitButton:SetScript("OnMouseUp", function(self, btn)
-        self.text:SetTextScale(1.4)
-    end)
-    exitButton:SetScript("OnMouseDown", function(self, motion)
-        self.text:SetTextScale(1.2)
-    end)
-    exitButton:SetScript("OnClick", function(self, button, down)
-        if(button == "LeftButton") then closeFrame:Hide() end
-    end)
-    return exitButton
+    local button = CreateFrame("Button", nil, parentFrame)
+    button:SetPoint(point, relativeFrame, relativePoint)
+    button:SetSize(headerHeight, headerHeight)
+    button.normalTexture = button:CreateTexture()
+    button.normalTexture:ClearAllPoints()
+    button.normalTexture:SetPoint("CENTER")
+    button.normalTexture:SetTexture(texturePath)
+    button.normalTexture:SetVertexColor(color.r, color.g, color.b, 0.9)
+    button.normalTexture:SetSize(18, 18)
+    button.normalTexture:SetScale(MplusGainsSettings.scale)
+    table.insert(mainFrame.textureObjects, button.normalTexture)
+    button:SetNormalTexture(button.normalTexture)
+    button.pushedTexture = button:CreateTexture()
+    button.pushedTexture:ClearAllPoints()
+    button.pushedTexture:SetPoint("CENTER")
+    button.pushedTexture:SetTexture(texturePath)
+    button.pushedTexture:SetVertexColor(color.r, color.g, color.b, 0.9)
+    button.pushedTexture:SetSize(18, 18)
+    button.pushedTexture:SetScale(ApplyScale(0.9))
+    table.insert(mainFrame.textureObjects, button.pushedTexture)
+    button:SetPushedTexture(button.pushedTexture)
+    button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, button))
+    button:SetScript("OnClick", OnClick)
+    return button
 end
 
 --[[
@@ -873,7 +875,10 @@ local function CreateSettingsWindow(parentFrame)
     header.text:SetPoint("LEFT", 2, 0)
     header.text:SetText("Settings")
     -- Exit button
-    local exitButton = CreateExitButton(frame, header)
+    local function ExitOnClick(self, button, down)
+        if(button == "LeftButton") then frame:Hide() end
+    end
+    local exitButton = CreateHeaderButton(header, "RIGHT", header, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/Exit.PNG")
     -- Font setting
     local fontFrame = CreateFrame("Frame", nil, frame)
     fontFrame:SetSize(frame:GetWidth(), rowHeight)
@@ -926,49 +931,26 @@ local function CreateHeaderFrame(parentFrame)
     frame.text:SetPoint("CENTER")
     frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
-    local exitButton = CreateExitButton(parentFrame, frame)
+    local function ExitOnClick(self, button, down)
+        if(button == "LeftButton") then parentFrame:Hide() end
+    end
+    local exitButton = CreateHeaderButton(frame, "RIGHT", frame, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/Exit.PNG")
     local r, g, b, a = 207/255, 170/255, 0, 1
     -- Settings button
-    local settingsButton = CreateFrame("Button", "SETTINGS_BUTTON", frame)
-    settingsButton:SetPoint("RIGHT", exitButton, "LEFT")
-    settingsButton:SetSize(ApplyScale(100), headerHeight)
-    settingsButton.text = DefaultFontString(12, settingsButton, "OUTLINE")
-    settingsButton.text:ClearAllPoints()
-    settingsButton.text:SetPoint("CENTER")
-    settingsButton.text:SetText("SETTINGS")
-    settingsButton.text:SetTextScale(1.4)
     local settingsFrame = CreateSettingsWindow(parentFrame)
-    settingsButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, settingsButton))
-    settingsButton:SetScript("OnMouseUp", function(self, btn)
-        self.text:SetTextScale(1.4)
-    end)
-    settingsButton:SetScript("OnMouseDown", function(self, motion)
-        self.text:SetTextScale(1.2)
-    end)
-    settingsButton:SetScript("OnClick", function(self, button, down)
-        if(button == "LeftButton") then settingsFrame:Show() end
-    end)
-    local resetButton = CreateFrame("Button", "REFRESH_BUTTON", frame)
-    resetButton:SetPoint("LEFT", frame, "LEFT")
-    resetButton:SetSize(headerHeight, headerHeight)
-    resetButton.texture = resetButton:CreateTexture()
-    resetButton.texture:ClearAllPoints()
-    resetButton.texture:SetPoint("CENTER")
-    resetButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
-    resetButton.texture:SetVertexColor(color.r, color.g, color.b, 0.8)
-    table.insert(mainFrame.textureObjects, resetButton.texture)
-    resetButton.texture:SetScale(MplusGainsSettings.scale)
-    resetButton:SetNormalTexture(resetButton.texture)
-    resetButton.texture1 = resetButton:CreateTexture()
-    resetButton.texture1:ClearAllPoints()
-    resetButton.texture1:SetPoint("CENTER")
-    resetButton.texture1:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
-    resetButton.texture1:SetVertexColor(color.r, color.g, color.b, 0.9)
-    table.insert(mainFrame.textureObjects, resetButton.texture1)
-    resetButton.texture1:SetScale(ApplyScale(0.9))
-    resetButton:SetPushedTexture(resetButton.texture1)
-    resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
-    resetButton:SetScript("OnClick", function(self, btn, down)
+    local function SettingsOnClick(self, button, down)
+        if(button == "LeftButton") then 
+            if(settingsFrame:IsShown()) then
+                settingsFrame:Hide() 
+            else
+                settingsFrame:Show()
+            end
+        end
+    end
+
+    local settingsButton = CreateHeaderButton(frame, "RIGHT", exitButton, "LEFT", SettingsOnClick, "Interface/AddOns/MplusGains/Textures/Settings.PNG")
+    -- Reset button
+    local function ResetOnClick(self, btn, down)
         if(btn == "LeftButton") then
             if(mainFrame.dungeonHolderFrame.rows ~= nil) then
                 for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
@@ -977,9 +959,12 @@ local function CreateHeaderFrame(parentFrame)
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
             end
         end
-    end)
-    resetButton.tooltip = CreateTooltip(frame, "Reset selected keys")
-    resetButton.tooltip:SetPoint("BOTTOMLEFT", resetButton, "TOPLEFT", -2, -1)
+    end
+    local resetButton = CreateHeaderButton(frame, "LEFT", frame, "LEFT", ResetOnClick, "Interface/AddOns/MplusGains/Textures/Reset.PNG")
+    local width = resetButton.normalTexture:GetWidth() + 10
+    resetButton.normalTexture:SetSize(width, width)
+    resetButton.pushedTexture:SetSize(width, width)
+    resetButton.tooltip = CreateTooltip(frame, resetButton, "Reset selected keys")
     resetButton:SetScript("OnEnter", function(self, motion)
         self.tooltip:Show()
     end)
