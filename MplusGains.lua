@@ -580,6 +580,7 @@ end
     @param text - Text to go on the drop down button.
 --]]
 local function CreateDropDown(parentFrame, anchorFrame, text)
+    local color = MplusGainsSettings.Colors.main
     -- Button frame
     local fontDropDownButton = CreateFrameWithBackdrop("Button", parentFrame, nil)
     fontDropDownButton:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
@@ -612,16 +613,16 @@ local function CreateDropDown(parentFrame, anchorFrame, text)
     textureFrame.texture:SetRotation(math.pi/2)
     textureFrame.texture:ClearAllPoints()
     textureFrame.texture:SetPoint("CENTER", 0, -4)
-    textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
+    textureFrame.texture:SetVertexColor(color.r, color.g, color.b, 0.7)
     textureFrame.texture:SetScale(MplusGainsSettings.scale)
     -- Mouse enter and leave
     fontDropDownButton:SetScript("OnEnter", function(self, motion)
         self:SetBackdropBorderColor(0.8, 0.8, 0.8 , 1)
-        textureFrame.texture:SetVertexColor(1, 1, 1, 1)
+        textureFrame.texture:SetVertexColor(color.r, color.g, color.b, 1)
     end)
     fontDropDownButton:SetScript("OnLeave", function(self, motion)
         self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-        textureFrame.texture:SetVertexColor(1, 1, 1, 0.7)
+        textureFrame.texture:SetVertexColor(color.r, color.g, color.b, 0.7)
     end)
     return fontDropDownButton
 end
@@ -741,7 +742,7 @@ end
 local function ShowColorPicker(r, g, b, a, var, frame)
     colorVar = var
     frameToChange = frame
-    ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = true, a
+    ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = false, a
     ColorPickerFrame.previousValues = {r,g,b,a}
     ColorPickerFrame.swatchFunc, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = ColorCallback, ColorCallback, ColorCallback
     ColorPickerFrame:Hide() -- Need to run the OnShow handler.
@@ -841,6 +842,7 @@ end
     @return frame - the created frame
 --]]
 local function CreateHeaderFrame(parentFrame)
+    local color = MplusGainsSettings.Colors.main
     local headerWidthDiff = 8
     local headerHeight = ApplyScale(40)
     local frame = CreateFrameWithBackdrop("Frame", parentFrame, "Header")
@@ -879,14 +881,14 @@ local function CreateHeaderFrame(parentFrame)
     resetButton.texture:ClearAllPoints()
     resetButton.texture:SetPoint("CENTER")
     resetButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
-    resetButton.texture:SetVertexColor(1, 1, 1, 0.8)
+    resetButton.texture:SetVertexColor(color.r, color.g, color.b, 0.8)
     resetButton.texture:SetScale(MplusGainsSettings.scale)
     resetButton:SetNormalTexture(resetButton.texture)
     resetButton.texture1 = resetButton:CreateTexture()
     resetButton.texture1:ClearAllPoints()
     resetButton.texture1:SetPoint("CENTER")
     resetButton.texture1:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
-    resetButton.texture1:SetVertexColor(1, 1, 1, 0.9)
+    resetButton.texture1:SetVertexColor(color.r, color.g, color.b, 0.9)
     resetButton.texture1:SetScale(ApplyScale(0.9))
     resetButton:SetPushedTexture(resetButton.texture1)
     resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
@@ -1308,6 +1310,7 @@ end
 --]]
 local function CreateScrollButton(parentFrame, anchorFrame, direction)
     local defualtAlpha = 0.7
+    local color = MplusGainsSettings.Colors.main
     local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-" .. direction .. "-Default.PNG"
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (direction == "Left") and scrollButtonPadding or -1, 0)
@@ -1317,13 +1320,14 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.textureUp:SetTexture(textureName)
     scrollButton.textureUp:ClearAllPoints()
     scrollButton.textureUp:SetPoint("CENTER")
-    scrollButton.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
+    scrollButton.textureUp:SetVertexColor(color.r, color.g, color.b, defualtAlpha)
     scrollButton.textureUp:SetScale(MplusGainsSettings.scale)
     scrollButton.textureDown = scrollButton:CreateTexture()
     scrollButton.textureDown:SetTexture(textureName)
     scrollButton.textureDown:ClearAllPoints()
     scrollButton.textureDown:SetPoint("CENTER")
     scrollButton.textureDown:SetScale(ApplyScale(0.9))
+    scrollButton.textureDown:SetVertexColor(color.r, color.g, color.b, 1)
     scrollButton:SetNormalTexture(scrollButton.textureUp)
     scrollButton:SetPushedTexture(scrollButton.textureDown)
     scrollButton.disabledTexture = scrollButton:CreateTexture()
@@ -1331,7 +1335,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.disabledTexture:ClearAllPoints()
     scrollButton.disabledTexture:SetPoint("CENTER")
     scrollButton.disabledTexture:SetScale(ApplyScale(0.9))
-    scrollButton.disabledTexture:SetVertexColor(1, 1, 1, 0.2)
+    scrollButton.disabledTexture:SetVertexColor(color.r, color.g, color.b, 0.2)
     scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
     scrollButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then
@@ -1339,10 +1343,10 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
         end
     end)
     scrollButton:SetScript("OnEnter", function(self, motion)
-        self.textureUp:SetVertexColor(1, 1, 1, 1)
+        self.textureUp:SetVertexColor(color.r, color.g, color.b, 1)
     end)
     scrollButton:SetScript("OnLeave", function(self, motion)
-        self.textureUp:SetVertexColor(1, 1, 1, defualtAlpha)
+        self.textureUp:SetVertexColor(color.r, color.g, color.b, defualtAlpha)
     end)
     return scrollButton
 end
