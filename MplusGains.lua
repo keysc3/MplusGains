@@ -124,11 +124,12 @@ end
     @param isSwitch - bool for whether or not the function was called when switching weeks.
 --]]
 local function SelectButtons(parentFrame, keystoneButton, isSwitch)
+    local selectedColor = MplusGainsSettings.Colors["selectedButton"]
     -- If the clicked button is a higher keystone level than the currently selected button.
     if(keystoneButton.level > parentFrame.selectedLevel[selectedAffix]) then 
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
         for i = parentFrame.selectedLevel[selectedAffix] + 1, keystoneButton.level do
-            parentFrame.keystoneButtons[i].button:SetBackdropColor(selected.r, selected.g, selected.b, selected.a)
+            parentFrame.keystoneButtons[i].button:SetBackdropColor(selectedColor.r, selectedColor.g, selectedColor.b, selectedColor.a)
         end
     -- If the clicked button is a lower keystone level than the currently selected button.
     elseif(keystoneButton.level < parentFrame.selectedLevel[selectedAffix]) then
@@ -718,6 +719,16 @@ local function CreateSlider(parentFrame, anchorFrame, minValue, maxValue, settin
     return slider
 end
 
+local function UpdateSelectedButtonColor()
+    for _, v in pairs(mainFrame.dungeonHolderFrame.rows) do
+        local scrollChild = v.scrollHolderFrame.scrollChild
+        for i = scrollChild.baseLevel, scrollChild.selectedLevel[selectedAffix] do
+            scrollChild.keystoneButtons[i].button:SetBackdropColor(MplusGainsSettings.Colors.selectedButton.r, MplusGainsSettings.Colors.selectedButton.g, 
+            MplusGainsSettings.Colors.selectedButton.b, MplusGainsSettings.Colors.selectedButton.a)
+        end
+    end
+end
+
 local function ColorCallback(restore)
     local newR, newG, newB, newA;
     -- If canceled
@@ -729,25 +740,59 @@ local function ColorCallback(restore)
     end
     -- Set color variable
     if(colorVar ~= nil) then
+        print("Change: " .. colorVar)
         MplusGainsSettings.Colors[colorVar].r = newR
         MplusGainsSettings.Colors[colorVar].g = newG
         MplusGainsSettings.Colors[colorVar].b = newB
         MplusGainsSettings.Colors[colorVar].a = newA
+        if(colorVar == "selectedButton") then UpdateSelectedButtonColor() end
     end
     if(frameToChange ~= nil) then
         frameToChange:SetBackdropColor(newR, newG, newB, newA)
     end
 end
 
-local function ShowColorPicker(r, g, b, a, var, frame)
+local function ShowColorPicker(var, frame)
+    local color = MplusGainsSettings.Colors[var]
     colorVar = var
     frameToChange = frame
     ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = false, a
-    ColorPickerFrame.previousValues = {r,g,b,a}
+    ColorPickerFrame.previousValues = {color.r, color.g, color.b, color.a}
     ColorPickerFrame.swatchFunc, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = ColorCallback, ColorCallback, ColorCallback
     ColorPickerFrame:Hide() -- Need to run the OnShow handler.
-    ColorPickerFrame.Content.ColorPicker:SetColorRGB(r, g, b)
+    ColorPickerFrame.Content.ColorPicker:SetColorRGB(color.r, color.g, color.b)
     ColorPickerFrame:Show()
+end
+
+local function CreateColorPickerFrame(parentFrame, anchorFrame, rowHeight, text, colorTableName)
+    -- Main frame
+    local frame = CreateFrame("Frame", nil, parentFrame)
+    frame:SetSize(parentFrame:GetWidth(), rowHeight)
+    frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -2)
+    -- Text
+    local label = CreateFrame("Frame", nil, frame)
+    label:SetSize(frame:GetWidth()/4, frame:GetHeight())
+    label:SetPoint("LEFT", 2, 0)
+    label.text = DefaultFontString(12, label, "OUTLINE")
+    label.text:ClearAllPoints()
+    label.text:SetPoint("LEFT")
+    label.text:SetText(text)
+    -- Color button
+    local button = CreateFrameWithBackdrop("Button", frame, nil)
+    button:SetBackdropColor(MplusGainsSettings.Colors[colorTableName].r, MplusGainsSettings.Colors[colorTableName].g, 
+    MplusGainsSettings.Colors[colorTableName].b, MplusGainsSettings.Colors[colorTableName].a)
+    button:SetPoint("LEFT", label, "RIGHT")
+    button:SetSize(frame:GetHeight(), frame:GetHeight())
+    button:SetScript("OnEnter", function(self, motion)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
+    end)
+    button:SetScript("OnLeave", function(self, motion)
+        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    end)
+    button:SetScript("OnClick", function(self, motion)
+        ShowColorPicker(colorTableName, self)
+    end)
+    return frame
 end
 
 --[[
@@ -806,31 +851,9 @@ local function CreateSettingsWindow(parentFrame)
     -- Scale slider
     local scalingSlider = CreateSlider(scalingFrame, scalingLabel, 0.6, 1.4, "scale")
     -- Main color frame
-    local mainColorFrame = CreateFrame("Frame", nil, frame)
-    mainColorFrame:SetSize(frame:GetWidth(), rowHeight)
-    mainColorFrame:SetPoint("TOP", scalingFrame, "BOTTOM", 0, -2)
-    local mainColorLabel = CreateFrame("Frame", nil, mainColorFrame)
-    mainColorLabel:SetSize(mainColorFrame:GetWidth()/4, mainColorFrame:GetHeight())
-    mainColorLabel:SetPoint("LEFT", 2, 0)
-    mainColorLabel.text = DefaultFontString(12, mainColorLabel, "OUTLINE")
-    mainColorLabel.text:ClearAllPoints()
-    mainColorLabel.text:SetPoint("LEFT")
-    mainColorLabel.text:SetText("Color")
-    -- Main color button
-    local mainColorButton = CreateFrameWithBackdrop("Button", mainColorFrame, nil)
-    mainColorButton:SetBackdropColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
-    mainColorButton:SetPoint("LEFT", mainColorLabel, "RIGHT")
-    mainColorButton:SetSize(mainColorFrame:GetHeight(), mainColorFrame:GetHeight())
-    mainColorButton:SetScript("OnEnter", function(self, motion)
-        self:SetBackdropBorderColor(1, 1, 1, 1)
-    end)
-    mainColorButton:SetScript("OnLeave", function(self, motion)
-            self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    end)
-    mainColorButton:SetScript("OnClick", function(self, motion)
-        local color = MplusGainsSettings.Colors.main
-        ShowColorPicker(color.r, color.g, color.b, color.a, "main", mainColorButton)
-    end)
+    local mainColorFrame = CreateColorPickerFrame(frame, scalingFrame, rowHeight, "Theme", "main")
+    -- Selected button color frame
+    local selectedButtonColorFrame = CreateColorPickerFrame(frame, mainColorFrame, rowHeight, "Button", "selectedButton")
     -- Frame height
     frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
