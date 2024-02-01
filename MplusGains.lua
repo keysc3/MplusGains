@@ -55,11 +55,12 @@ end
     @param flags - Flags to use with the font.
     @return text - FontString created.
 ]]
-local function CustomFontString(textSize, color, font, parentFrame, flags, changeFont)
+local function CustomFontString(textSize, color, font, parentFrame, flags, changeFont, changeColor)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(font, ApplyScale(textSize), flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
     text.changeFont = changeFont
+    text.changeColor = changeColor
     table.insert(mainFrame.textObjects, text)
     return text
 end
@@ -455,7 +456,7 @@ local function CreateScrollFrameButton(scrollHolderFrame, anchorFrame, text, sel
     else
         newFrame.texture:SetVertexColor(0, 0, 0, 0)
     end
-    newFrame.text = CustomFontString(12, MplusGainsSettings.Colors.main, font, newFrame, "", false)
+    newFrame.text = CustomFontString(12, MplusGainsSettings.Colors.main, font, newFrame, "", false, true)
     table.insert(mainFrame.textObjects, newFrame.text)
     newFrame.text:SetPoint("CENTER")
     newFrame.text:SetText(text)
@@ -1472,7 +1473,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text:SetText("+0.0")
     frame:SetSize(ApplyScale(32), parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
-    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil, true)
+    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
     frame.oppText:SetText("")
     return frame
@@ -2034,15 +2035,15 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
     frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
     -- Creator text
-    frame.text = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true)
+    frame.text = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.text:ClearAllPoints()
     frame.text:SetPoint("LEFT", frame, "LEFT", 1, 0)
     frame.text:SetText("Made by ExplodingMuffins")
-    frame.splitter = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true)
+    frame.splitter = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.splitter:ClearAllPoints()
     frame.splitter:SetPoint("LEFT", frame.text, "RIGHT", 4, 0)
     frame.splitter:SetText("|")
-    frame.versionText = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true)
+    frame.versionText = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.versionText:ClearAllPoints()
     frame.versionText:SetPoint("LEFT", frame.splitter, "RIGHT", 4, 0)
     frame.versionText:SetText("v" .. GetAddOnMetadata(addonName, "Version"))
@@ -2050,7 +2051,7 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
     bugButton:SetPoint("RIGHT", frame, "RIGHT")
-    bugButton.text = CustomFontString(10, color, MplusGainsSettings.Font.path, bugButton, nil, true)
+    bugButton.text = CustomFontString(10, color, MplusGainsSettings.Font.path, bugButton, nil, true, false)
     bugButton.text:ClearAllPoints()
     bugButton.text:SetPoint("CENTER", bugButton, "CENTER", 0, 0)
     bugButton.text:SetText("Bug Report")
