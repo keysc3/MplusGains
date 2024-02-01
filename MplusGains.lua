@@ -55,10 +55,12 @@ end
     @param flags - Flags to use with the font.
     @return text - FontString created.
 ]]
-local function CustomFontString(textSize, color, font, parentFrame, flags)
+local function CustomFontString(textSize, color, font, parentFrame, flags, changeFont)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(font, ApplyScale(textSize), flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
+    text.changeFont = changeFont
+    table.insert(mainFrame.textObjects, text)
     return text
 end
 
@@ -73,6 +75,8 @@ local function DefaultFontString(textSize, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(MplusGainsSettings.Font.path, ApplyScale(textSize), flags)
     text:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
+    text.changeFont = true
+    text.changeColor = true
     table.insert(mainFrame.textObjects, text)
     return text
 end
@@ -105,6 +109,7 @@ local function CreateMainFrame()
     local frame = CreateFrameWithBackdrop("Frame", UIParent, "MainMplusGainsFrame")
     frame.textObjects = {}
     frame.textureObjects = {}
+    frame.textWidthFrames = {}
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1, 1)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -241,6 +246,7 @@ end
 --]]
 local function CreateTooltip(parentFrame, textString)
     local tooltip = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    tooltip.padding = 16
     tooltip:SetSize(1, ApplyScale(30))
     tooltip:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -253,7 +259,8 @@ local function CreateTooltip(parentFrame, textString)
     tooltip.text = DefaultFontString(12, tooltip, nil)
     tooltip.text:SetPoint("CENTER", tooltip, "CENTER", 0, 0)
     tooltip.text:SetText(textString)
-    tooltip:SetWidth(math.ceil(tooltip.text:GetStringWidth() + 16))
+    tooltip:SetWidth(math.ceil(tooltip.text:GetStringWidth() + tooltip.padding))
+    table.insert(mainFrame.textWidthFrames, tooltip)
     tooltip:Hide()
     return tooltip
 end
@@ -448,7 +455,7 @@ local function CreateScrollFrameButton(scrollHolderFrame, anchorFrame, text, sel
     else
         newFrame.texture:SetVertexColor(0, 0, 0, 0)
     end
-    newFrame.text = CustomFontString(12, MplusGainsSettings.Colors.main, font, newFrame, "")
+    newFrame.text = CustomFontString(12, MplusGainsSettings.Colors.main, font, newFrame, "", false)
     table.insert(mainFrame.textObjects, newFrame.text)
     newFrame.text:SetPoint("CENTER")
     newFrame.text:SetText(text)
@@ -547,6 +554,19 @@ local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
     return scrollHolderFrame
 end
 
+local function UpdateTextFont(path)
+    for _, v in ipairs(mainFrame.textObjects) do
+        if(v.changeFont) then
+            local font, size, flags = v:GetFont()
+            v:SetFont(path, size, flags)
+            v:GetWidth()
+        end
+    end
+    for _, v in ipairs(mainFrame.textWidthFrames) do
+        v:SetWidth(math.ceil(v.text:GetWidth() + v.padding))
+    end
+end
+
 --[[
     SetupFontChoices - Handles the setup of the font drop down options and their onclicks.
     @param dropDown - The drop down for the fonts.
@@ -572,6 +592,7 @@ local function SetupFontChoices(dropDown)
                     scrollHolderFrame:GetParent().textFrame.text:SetFont(fontName, fontHeight, fontFlags)
                     MplusGainsSettings.Font.path = fontName
                     MplusGainsSettings.Font.name = v
+                    UpdateTextFont(fontName)
                 end
                 scrollHolderFrame:Hide()
             end
@@ -740,8 +761,10 @@ end
 
 local function UpdateTextColor()
     for _, v in ipairs(mainFrame.textObjects) do
-        v:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, 
-        MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
+        if(v.changeColor) then
+            v:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, 
+            MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
+        end
     end
 end
 
@@ -1062,6 +1085,7 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     myFont:SetFont(MplusGainsSettings.Font.path, ApplyScale(12), "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
     btn:SetNormalFontObject(myFont)
+    table.insert(mainFrame.textObjects, myFont)
     return btn
 end
 
@@ -1448,7 +1472,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text:SetText("+0.0")
     frame:SetSize(ApplyScale(32), parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
-    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil)
+    frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil, true)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
     frame.oppText:SetText("")
     return frame
@@ -2010,15 +2034,15 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
     frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
     -- Creator text
-    frame.text = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil)
+    frame.text = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true)
     frame.text:ClearAllPoints()
     frame.text:SetPoint("LEFT", frame, "LEFT", 1, 0)
     frame.text:SetText("Made by ExplodingMuffins")
-    frame.splitter = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil)
+    frame.splitter = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true)
     frame.splitter:ClearAllPoints()
     frame.splitter:SetPoint("LEFT", frame.text, "RIGHT", 4, 0)
     frame.splitter:SetText("|")
-    frame.versionText = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil)
+    frame.versionText = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true)
     frame.versionText:ClearAllPoints()
     frame.versionText:SetPoint("LEFT", frame.splitter, "RIGHT", 4, 0)
     frame.versionText:SetText("v" .. GetAddOnMetadata(addonName, "Version"))
@@ -2026,11 +2050,13 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
     bugButton:SetPoint("RIGHT", frame, "RIGHT")
-    bugButton.text = CustomFontString(10, color, MplusGainsSettings.Font.path, bugButton, nil)
+    bugButton.text = CustomFontString(10, color, MplusGainsSettings.Font.path, bugButton, nil, true)
     bugButton.text:ClearAllPoints()
     bugButton.text:SetPoint("CENTER", bugButton, "CENTER", 0, 0)
     bugButton.text:SetText("Bug Report")
-    bugButton:SetSize(math.ceil(bugButton.text:GetWidth() + 2), frame:GetHeight())
+    bugButton.padding = 2
+    bugButton:SetSize(math.ceil(bugButton.text:GetWidth() + bugButton.padding), frame:GetHeight())
+    table.insert(mainFrame.textWidthFrames, bugButton)
     bugButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, bugButton))
     -- Handle button text color change depending on action.
     bugButton:SetScript("OnClick", function(self, btn, down)
