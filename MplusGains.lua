@@ -63,7 +63,7 @@ local function CustomFontString(textSize, color, font, parentFrame, flags)
 end
 
 --[[
-    CustomFontString - Creates and returns a font string using the addons selected color and font.
+    DefaultFontString - Creates and returns a font string using the addons selected color and font.
     @param textSize - Size of the text.
     @param parentFrame - Frame the text is for.
     @param flags - Flags to use with the font.
@@ -73,6 +73,7 @@ local function DefaultFontString(textSize, parentFrame, flags)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(MplusGainsSettings.Font.path, ApplyScale(textSize), flags)
     text:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
+    table.insert(mainFrame.textObjects, text)
     return text
 end
 
@@ -102,6 +103,8 @@ end
 --]]
 local function CreateMainFrame()
     local frame = CreateFrameWithBackdrop("Frame", UIParent, "MainMplusGainsFrame")
+    frame.textObjects = {}
+    frame.textureObjects = {}
     frame:SetPoint("CENTER", nil, 0, 100)
     frame:SetSize(1, 1)
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.9)
@@ -395,6 +398,7 @@ local function ScrollButtonTexture(frame, alpha, sign, scale)
     newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/Arrow-Left-Default.PNG")
     newTexture:SetPoint("CENTER", 0, 2 * sign)
     newTexture:SetVertexColor(1, 1, 1, alpha)
+    table.insert(mainFrame.textureObjects, newTexture)
     newTexture:SetRotation(math.pi/2 * (-sign))
     newTexture:SetScale(ApplyScale(scale))
     return newTexture
@@ -443,6 +447,7 @@ local function CreateScrollFrameButton(scrollHolderFrame, anchorFrame, text, sel
         newFrame.texture:SetVertexColor(0, 0, 0, 0)
     end
     newFrame.text = CustomFontString(12, textColor, font, newFrame, "")
+    table.insert(mainFrame.textObjects, newFrame.text)
     newFrame.text:SetPoint("CENTER")
     newFrame.text:SetText(text)
     -- Store largest width of button for sizing on scroll holder frame.
@@ -615,6 +620,7 @@ local function CreateDropDown(parentFrame, anchorFrame, text)
     textureFrame.texture:ClearAllPoints()
     textureFrame.texture:SetPoint("CENTER", 0, -4)
     textureFrame.texture:SetVertexColor(color.r, color.g, color.b, 0.7)
+    table.insert(mainFrame.textureObjects, textureFrame.texture)
     textureFrame.texture:SetScale(MplusGainsSettings.scale)
     -- Mouse enter and leave
     fontDropDownButton:SetScript("OnEnter", function(self, motion)
@@ -729,6 +735,20 @@ local function UpdateSelectedButtonColor()
     end
 end
 
+local function UpdateTextColor()
+    for _, v in ipairs(mainFrame.textObjects) do
+        v:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, 
+        MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
+    end
+end
+
+local function UpdateTextureColor()
+    for _, v in ipairs(mainFrame.textureObjects) do
+        v:SetVertexColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, 
+        MplusGainsSettings.Colors.main.b, v:GetAlpha())
+    end
+end
+
 local function ColorCallback(restore)
     local newR, newG, newB, newA;
     -- If canceled
@@ -740,12 +760,15 @@ local function ColorCallback(restore)
     end
     -- Set color variable
     if(colorVar ~= nil) then
-        print("Change: " .. colorVar)
         MplusGainsSettings.Colors[colorVar].r = newR
         MplusGainsSettings.Colors[colorVar].g = newG
         MplusGainsSettings.Colors[colorVar].b = newB
         MplusGainsSettings.Colors[colorVar].a = newA
         if(colorVar == "selectedButton") then UpdateSelectedButtonColor() end
+        if(colorVar == "main") then 
+            UpdateTextColor()
+            UpdateTextureColor()
+         end
     end
     if(frameToChange ~= nil) then
         frameToChange:SetBackdropColor(newR, newG, newB, newA)
@@ -905,6 +928,7 @@ local function CreateHeaderFrame(parentFrame)
     resetButton.texture:SetPoint("CENTER")
     resetButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
     resetButton.texture:SetVertexColor(color.r, color.g, color.b, 0.8)
+    table.insert(mainFrame.textureObjects, resetButton.texture)
     resetButton.texture:SetScale(MplusGainsSettings.scale)
     resetButton:SetNormalTexture(resetButton.texture)
     resetButton.texture1 = resetButton:CreateTexture()
@@ -912,6 +936,7 @@ local function CreateHeaderFrame(parentFrame)
     resetButton.texture1:SetPoint("CENTER")
     resetButton.texture1:SetTexture("Interface/AddOns/MplusGains/Textures/UI-RefreshButton-Default.PNG")
     resetButton.texture1:SetVertexColor(color.r, color.g, color.b, 0.9)
+    table.insert(mainFrame.textureObjects, resetButton.texture1)
     resetButton.texture1:SetScale(ApplyScale(0.9))
     resetButton:SetPushedTexture(resetButton.texture1)
     resetButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, resetButton))
@@ -1344,6 +1369,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.textureUp:ClearAllPoints()
     scrollButton.textureUp:SetPoint("CENTER")
     scrollButton.textureUp:SetVertexColor(color.r, color.g, color.b, defualtAlpha)
+    table.insert(mainFrame.textureObjects, scrollButton.textureUp)
     scrollButton.textureUp:SetScale(MplusGainsSettings.scale)
     scrollButton.textureDown = scrollButton:CreateTexture()
     scrollButton.textureDown:SetTexture(textureName)
@@ -1351,6 +1377,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.textureDown:SetPoint("CENTER")
     scrollButton.textureDown:SetScale(ApplyScale(0.9))
     scrollButton.textureDown:SetVertexColor(color.r, color.g, color.b, 1)
+    table.insert(mainFrame.textureObjects, scrollButton.textureDown)
     scrollButton:SetNormalTexture(scrollButton.textureUp)
     scrollButton:SetPushedTexture(scrollButton.textureDown)
     scrollButton.disabledTexture = scrollButton:CreateTexture()
@@ -1359,6 +1386,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, direction)
     scrollButton.disabledTexture:SetPoint("CENTER")
     scrollButton.disabledTexture:SetScale(ApplyScale(0.9))
     scrollButton.disabledTexture:SetVertexColor(color.r, color.g, color.b, 0.2)
+    table.insert(mainFrame.textureObjects, scrollButton.disabledTexture)
     scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
     scrollButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then
@@ -1965,35 +1993,31 @@ end
 --]]
 local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     -- Button rgb values
-    local _r, _g, _b, _a = 100/255, 100/255, 100/255, 1
+    local color = { r = 100/255, g = 100/255, b = 100/255, 1} 
     -- Holder
     local frame = CreateFrame("Frame", nil, parentFrame)
     frame:SetSize(headerFrame:GetWidth(), parentFrame:GetHeight() - anchorFrame:GetHeight() - headerFrame:GetHeight() + (yPadding*6))
     frame:SetPoint("BOTTOM", parentFrame, "BOTTOM", 0, 4)
     -- Creator text
-    frame.text = DefaultFontString(10, frame, nil)
+    frame.text = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil)
     frame.text:ClearAllPoints()
     frame.text:SetPoint("LEFT", frame, "LEFT", 1, 0)
-    frame.text:SetTextColor(_r, _g, _b, _a)
     frame.text:SetText("Made by ExplodingMuffins")
-    frame.splitter = DefaultFontString(10, frame, nil)
+    frame.splitter = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil)
     frame.splitter:ClearAllPoints()
     frame.splitter:SetPoint("LEFT", frame.text, "RIGHT", 4, 0)
-    frame.splitter:SetTextColor(_r, _g, _b, _a)
     frame.splitter:SetText("|")
-    frame.versionText = DefaultFontString(10, frame, nil)
+    frame.versionText = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil)
     frame.versionText:ClearAllPoints()
     frame.versionText:SetPoint("LEFT", frame.splitter, "RIGHT", 4, 0)
-    frame.versionText:SetTextColor(_r, _g, _b, _a)
     frame.versionText:SetText("v" .. GetAddOnMetadata(addonName, "Version"))
     -- Bug report frame and button
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
     bugButton:SetPoint("RIGHT", frame, "RIGHT")
-    bugButton.text = DefaultFontString(10, bugButton, nil)
+    bugButton.text = CustomFontString(10, color, MplusGainsSettings.Font.path, bugButton, nil)
     bugButton.text:ClearAllPoints()
     bugButton.text:SetPoint("CENTER", bugButton, "CENTER", 0, 0)
-    bugButton.text:SetTextColor(_r, _g, _b, _a)
     bugButton.text:SetText("Bug Report")
     bugButton:SetSize(math.ceil(bugButton.text:GetWidth() + 2), frame:GetHeight())
     bugButton:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a/2, bugButton))
