@@ -896,6 +896,7 @@ end
     @return frame - The newly created frame
 --]]
 local function CreateSettingsWindow(parentFrame)
+    local color = MplusGainsSettings.Colors.main
     local rowHeight = ApplyScale(20)
     local headerHeight = ApplyScale(40)
     local frame = CreateFrameWithBackdrop("Frame", parentFrame, "SETTINGS_FRAME")
@@ -952,6 +953,52 @@ local function CreateSettingsWindow(parentFrame)
     local mainColorFrame = CreateColorPickerFrame(frame, scalingFrame, rowHeight, "Theme", "main")
     -- Selected button color frame
     local selectedButtonColorFrame = CreateColorPickerFrame(frame, mainColorFrame, rowHeight, "Button", "selectedButton")
+    -- Minimap button
+    local minimapButtonFrame = CreateFrame("Frame", nil, frame)
+    minimapButtonFrame:SetSize(frame:GetWidth(), rowHeight)
+    minimapButtonFrame:SetPoint("TOP", selectedButtonColorFrame, "BOTTOM", 0, -2)
+    local minimapButtonLabel = CreateFrame("Frame", nil, minimapButtonFrame)
+    minimapButtonLabel:SetSize(minimapButtonFrame:GetWidth()/4, minimapButtonFrame:GetHeight())
+    minimapButtonLabel:SetPoint("LEFT", 2, 0)
+    minimapButtonLabel.text = DefaultFontString(12, minimapButtonLabel, "OUTLINE")
+    minimapButtonLabel.text:ClearAllPoints()
+    minimapButtonLabel.text:SetPoint("LEFT")
+    minimapButtonLabel.text:SetText("Minimap")
+    local minimapButton = CreateFrameWithBackdrop("CheckButton", minimapButtonFrame, nil)
+    minimapButton:SetSize(rowHeight, rowHeight)
+    minimapButton:SetPoint("LEFT", minimapButtonLabel, "RIGHT")
+    minimapButton:SetBackdropColor(0.16, 0.16, 0.16, 1)
+    minimapButton:SetChecked(not MplusGainsSettings.minimap.hide)
+    minimapButton.texture = minimapButton:CreateTexture()
+    minimapButton.texture:SetTexture()
+    minimapButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/checkmark.PNG")
+    minimapButton.texture:ClearAllPoints()
+    minimapButton.texture:SetPoint("CENTER")
+    minimapButton.texture:SetVertexColor(color.r, color.g, color.b, 1)
+    minimapButton.texture:SetScale(MplusGainsSettings.scale)
+    minimapButton.texture:SetSize(17, 17)
+    minimapButton:SetCheckedTexture(minimapButton.texture)
+    table.insert(mainFrame.textureObjects, minimapButton.texture)
+    minimapButton:SetScript("OnEnter", function(self, motion)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
+    end)
+    minimapButton:SetScript("OnLeave", function(self, motion)
+        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+    end)
+    minimapButton:SetScript("OnClick", function(self, button)
+        if(self:GetChecked()) then
+            if(MplusGainsSettings.minimap.hide) then 
+                MplusGainsSettings.minimap.hide = false
+                icon:Show("MplusGainsDB") 
+            end
+        else
+
+            if(not MplusGainsSettings.minimap.hide) then
+                MplusGainsSettings.minimap.hide = true
+                icon:Hide("MplusGainsDB") 
+            end
+        end
+    end)
     -- Frame height
     frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
