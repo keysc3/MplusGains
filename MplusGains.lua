@@ -600,6 +600,14 @@ local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
     return scrollHolderFrame
 end
 
+local function HighlightBorderOnEnter(self, motion)
+    self:SetBackdropBorderColor(1, 1, 1, 1)
+end
+
+local function HighlightBorderOnExit(self, motion)
+    self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+end
+
 local function UpdateTextFont(path)
     for _, v in ipairs(mainFrame.textObjects) do
         if(v.changeFont) then
@@ -660,12 +668,8 @@ local function CreateDropDown(parentFrame, anchorFrame, text)
     fontDropDownButton:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
     fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
     fontDropDownButton:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
-    fontDropDownButton:SetScript("OnEnter", function(self, motion)
-        self:SetBackdropBorderColor(1, 1, 1, 1)
-    end)
-    fontDropDownButton:SetScript("OnLeave", function(self, motion)
-        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    end)
+    fontDropDownButton:SetScript("OnEnter", HighlightBorderOnEnter)
+    fontDropDownButton:SetScript("OnLeave", HighlightBorderOnExit)
     -- Text frame
     local textFrame = CreateFrame("Frame", nil, fontDropDownButton)
     fontDropDownButton.textFrame = textFrame
@@ -859,35 +863,56 @@ local function ShowColorPicker(var, frame)
     ColorPickerFrame:Show()
 end
 
-local function CreateColorPickerFrame(parentFrame, anchorFrame, rowHeight, text, colorTableName)
-    -- Main frame
+local function CreateColorPickerFrame(parentFrame, anchorFrame, colorTableName)
+    -- Color button
+    local button = CreateFrameWithBackdrop("Button", parentFrame, nil)
+    button:SetBackdropColor(MplusGainsSettings.Colors[colorTableName].r, MplusGainsSettings.Colors[colorTableName].g, 
+    MplusGainsSettings.Colors[colorTableName].b, MplusGainsSettings.Colors[colorTableName].a)
+    button:SetPoint("LEFT", anchorFrame, "RIGHT")
+    button:SetSize(parentFrame:GetHeight(), parentFrame:GetHeight())
+    button:SetScript("OnEnter", HighlightBorderOnEnter)
+    button:SetScript("OnLeave", HighlightBorderOnExit)
+    button:SetScript("OnClick", function(self, motion)
+        ShowColorPicker(colorTableName, self)
+    end)
+end
+
+local function SettingsRowBase(parentFrame, anchorFrame, text)
+    local rowHeight = ApplyScale(20)
     local frame = CreateFrame("Frame", nil, parentFrame)
     frame:SetSize(parentFrame:GetWidth(), rowHeight)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -2)
-    -- Text
     local label = CreateFrame("Frame", nil, frame)
-    label:SetSize(frame:GetWidth()/4, frame:GetHeight())
+    label:SetSize(frame:GetWidth()/4, rowHeight)
     label:SetPoint("LEFT", 2, 0)
     label.text = DefaultFontString(12, label, "OUTLINE")
     label.text:ClearAllPoints()
     label.text:SetPoint("LEFT")
     label.text:SetText(text)
-    -- Color button
-    local button = CreateFrameWithBackdrop("Button", frame, nil)
-    button:SetBackdropColor(MplusGainsSettings.Colors[colorTableName].r, MplusGainsSettings.Colors[colorTableName].g, 
-    MplusGainsSettings.Colors[colorTableName].b, MplusGainsSettings.Colors[colorTableName].a)
-    button:SetPoint("LEFT", label, "RIGHT")
-    button:SetSize(frame:GetHeight(), frame:GetHeight())
-    button:SetScript("OnEnter", function(self, motion)
-        self:SetBackdropBorderColor(1, 1, 1, 1)
-    end)
-    button:SetScript("OnLeave", function(self, motion)
-        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    end)
-    button:SetScript("OnClick", function(self, motion)
-        ShowColorPicker(colorTableName, self)
-    end)
+    frame.label = label
     return frame
+end
+
+local function CreateCheckButton(parentFrame, anchorFrame, isChecked, OnClick)
+    local color = MplusGainsSettings.Colors.main
+    local button = CreateFrameWithBackdrop("CheckButton", parentFrame, nil)
+    button:SetSize(parentFrame:GetHeight(), parentFrame:GetHeight())
+    button:SetPoint("LEFT", parentFrame.label, "RIGHT")
+    button:SetBackdropColor(0.16, 0.16, 0.16, 1)
+    button:SetChecked(isChecked)
+    button.texture = button:CreateTexture()
+    button.texture:SetTexture()
+    button.texture:SetTexture("Interface/AddOns/MplusGains/Textures/checkmark.PNG")
+    button.texture:ClearAllPoints()
+    button.texture:SetPoint("CENTER")
+    button.texture:SetVertexColor(color.r, color.g, color.b, 1)
+    button.texture:SetScale(MplusGainsSettings.scale)
+    button.texture:SetSize(17, 17)
+    button:SetCheckedTexture(button.texture)
+    table.insert(mainFrame.textureObjects, button.texture)
+    button:SetScript("OnEnter", HighlightBorderOnEnter)
+    button:SetScript("OnLeave", HighlightBorderOnExit)
+    button:SetScript("OnClick", OnClick)
 end
 
 --[[
@@ -896,7 +921,6 @@ end
     @return frame - The newly created frame
 --]]
 local function CreateSettingsWindow(parentFrame)
-    local color = MplusGainsSettings.Colors.main
     local rowHeight = ApplyScale(20)
     local headerHeight = ApplyScale(40)
     local frame = CreateFrameWithBackdrop("Frame", parentFrame, "SETTINGS_FRAME")
@@ -923,69 +947,23 @@ local function CreateSettingsWindow(parentFrame)
     end
     local exitButton = CreateHeaderButton(header, "RIGHT", header, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
     -- Font setting
-    local fontFrame = CreateFrame("Frame", nil, frame)
-    fontFrame:SetSize(frame:GetWidth(), rowHeight)
-    fontFrame:SetPoint("TOP", header, "BOTTOM")
-    local fontLabel = CreateFrame("Frame", nil, fontFrame)
-    fontLabel:SetSize(fontFrame:GetWidth()/4, fontFrame:GetHeight())
-    fontLabel:SetPoint("LEFT", 2, 0)
-    fontLabel.text = DefaultFontString(12, fontLabel, "OUTLINE")
-    fontLabel.text:ClearAllPoints()
-    fontLabel.text:SetPoint("LEFT")
-    fontLabel.text:SetText("Font")
+    local fontFrame = SettingsRowBase(frame, header, "Font")
     -- Font dropdown
-    local fontDropDown = CreateDropDown(fontFrame, fontLabel, MplusGainsSettings.Font.name)
+    local fontDropDown = CreateDropDown(fontFrame, fontFrame.label, MplusGainsSettings.Font.name)
     SetupFontChoices(fontDropDown)
     -- Scaling frame
-    local scalingFrame = CreateFrame("Frame", nil, frame)
-    scalingFrame:SetSize(frame:GetWidth(), rowHeight)
-    scalingFrame:SetPoint("TOP", fontFrame, "BOTTOM", 0, -2)
-    local scalingLabel = CreateFrame("Frame", nil, scalingFrame)
-    scalingLabel:SetSize(scalingFrame:GetWidth()/4, scalingFrame:GetHeight())
-    scalingLabel:SetPoint("LEFT", 2, 0)
-    scalingLabel.text = DefaultFontString(12, scalingLabel, "OUTLINE")
-    scalingLabel.text:ClearAllPoints()
-    scalingLabel.text:SetPoint("LEFT")
-    scalingLabel.text:SetText("Scale")
+    local scalingFrame = SettingsRowBase(frame, fontFrame, "Scale")
     -- Scale slider
-    local scalingSlider = CreateSlider(scalingFrame, scalingLabel, 0.6, 1.4, "scale")
+    local scalingSlider = CreateSlider(scalingFrame, scalingFrame.label, 0.6, 1.4, "scale")
     -- Main color frame
-    local mainColorFrame = CreateColorPickerFrame(frame, scalingFrame, rowHeight, "Theme", "main")
+    local mainColorFrame = SettingsRowBase(frame, scalingFrame, "Theme")
+    CreateColorPickerFrame(mainColorFrame, mainColorFrame.label, "main")
     -- Selected button color frame
-    local selectedButtonColorFrame = CreateColorPickerFrame(frame, mainColorFrame, rowHeight, "Button", "selectedButton")
+    local selectedButtonColorFrame = SettingsRowBase(frame, mainColorFrame, "Button")
+    CreateColorPickerFrame(selectedButtonColorFrame, selectedButtonColorFrame.label, "selectedButton")
     -- Minimap button
-    local minimapButtonFrame = CreateFrame("Frame", nil, frame)
-    minimapButtonFrame:SetSize(frame:GetWidth(), rowHeight)
-    minimapButtonFrame:SetPoint("TOP", selectedButtonColorFrame, "BOTTOM", 0, -2)
-    local minimapButtonLabel = CreateFrame("Frame", nil, minimapButtonFrame)
-    minimapButtonLabel:SetSize(minimapButtonFrame:GetWidth()/4, minimapButtonFrame:GetHeight())
-    minimapButtonLabel:SetPoint("LEFT", 2, 0)
-    minimapButtonLabel.text = DefaultFontString(12, minimapButtonLabel, "OUTLINE")
-    minimapButtonLabel.text:ClearAllPoints()
-    minimapButtonLabel.text:SetPoint("LEFT")
-    minimapButtonLabel.text:SetText("Minimap")
-    local minimapButton = CreateFrameWithBackdrop("CheckButton", minimapButtonFrame, nil)
-    minimapButton:SetSize(rowHeight, rowHeight)
-    minimapButton:SetPoint("LEFT", minimapButtonLabel, "RIGHT")
-    minimapButton:SetBackdropColor(0.16, 0.16, 0.16, 1)
-    minimapButton:SetChecked(not MplusGainsSettings.minimap.hide)
-    minimapButton.texture = minimapButton:CreateTexture()
-    minimapButton.texture:SetTexture()
-    minimapButton.texture:SetTexture("Interface/AddOns/MplusGains/Textures/checkmark.PNG")
-    minimapButton.texture:ClearAllPoints()
-    minimapButton.texture:SetPoint("CENTER")
-    minimapButton.texture:SetVertexColor(color.r, color.g, color.b, 1)
-    minimapButton.texture:SetScale(MplusGainsSettings.scale)
-    minimapButton.texture:SetSize(17, 17)
-    minimapButton:SetCheckedTexture(minimapButton.texture)
-    table.insert(mainFrame.textureObjects, minimapButton.texture)
-    minimapButton:SetScript("OnEnter", function(self, motion)
-        self:SetBackdropBorderColor(1, 1, 1, 1)
-    end)
-    minimapButton:SetScript("OnLeave", function(self, motion)
-        self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
-    end)
-    minimapButton:SetScript("OnClick", function(self, button)
+    local minimapButtonFrame = SettingsRowBase(frame, selectedButtonColorFrame, "Minimap")
+    local function MinimapCheckButtonOnClick(self, button)
         if(self:GetChecked()) then
             if(MplusGainsSettings.minimap.hide) then 
                 MplusGainsSettings.minimap.hide = false
@@ -998,7 +976,9 @@ local function CreateSettingsWindow(parentFrame)
                 icon:Hide("MplusGainsDB") 
             end
         end
-    end)
+    end
+    local minimapCheckButton = CreateCheckButton(minimapButtonFrame, minimapButtonFrame.label, (not MplusGainsSettings.minimap.hide), MinimapCheckButtonOnClick)
+    mainFrame.minimapCheckButton = minimapCheckButton
     -- Frame height
     frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
     return frame
