@@ -45,6 +45,7 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
             end
         elseif(button == "MiddleButton") then
             MplusGainsSettings.minimap.hide = true
+            mainFrame.minimapCheckButton:SetChecked(false)
             icon:Hide("MplusGainsDB")
         end
     end,
@@ -913,6 +914,7 @@ local function CreateCheckButton(parentFrame, anchorFrame, isChecked, OnClick)
     button:SetScript("OnEnter", HighlightBorderOnEnter)
     button:SetScript("OnLeave", HighlightBorderOnExit)
     button:SetScript("OnClick", OnClick)
+    return button
 end
 
 --[[
