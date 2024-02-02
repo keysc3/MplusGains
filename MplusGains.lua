@@ -22,8 +22,51 @@ local selectedAffix = addon.tyrannicalID
 local colorVar = nil
 local frameToChange = nil
 
+local icon = LibStub("LibDBIcon-1.0")
+
+local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
+local dataObject = ldb:NewDataObject("MplusGainsDB", { 
+    type = "data source", 
+    icon = "Interface\\Addons\\MplusGains\\Textures\\icon.PNG",
+    OnClick = function(clickedframe, button)
+        if(button == "LeftButton") then
+            if(mainFrame ~= nil) then
+                if(mainFrame:IsShown()) then
+                    mainFrame:Hide()
+                else
+                    mainFrame:Show()
+                end
+            end
+        elseif(button == "RightButton") then
+            if(MplusGainsSettings.minimap.lock) then
+                icon:Unlock("MplusGainsDB")
+            else
+                icon:Lock("MplusGainsDB")
+            end
+        elseif(button == "MiddleButton") then
+            MplusGainsSettings.minimap.hide = true
+            icon:Hide("MplusGainsDB")
+        end
+    end,
+})
+
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
+
+function dataObject:OnTooltipShow()
+    self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
+	self:AddLine("Left click: Toggle main window")
+    self:AddLine("Right click: Lock minimap button")
+    self:AddLine("Middle click: Disable minimap button")
+end
+
+local function OnEnter(self)
+	GameTooltip:SetOwner(self, "ANCHOR_NONE")
+	GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
+	GameTooltip:ClearLines()
+	dataObject.OnTooltipShow(GameTooltip)
+	GameTooltip:Show()
+end
 
 local function ApplyScale(value)
     return addon:RoundToOneDecimal(value * MplusGainsSettings.scale)
@@ -407,7 +450,7 @@ local function ScrollButtonTexture(frame, alpha, isUp, scale)
     local rotation = (isUp) and math.pi or 0
     local color = MplusGainsSettings.Colors.main
     local newTexture = frame:CreateTexture()
-    newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/Arrow-Down.PNG")
+    newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/arrow-down.PNG")
     newTexture:SetPoint("CENTER", 0, 0)
     newTexture:SetVertexColor(color.r, color.g, color.b, alpha)
     table.insert(mainFrame.textureObjects, newTexture)
@@ -640,7 +683,7 @@ local function CreateDropDown(parentFrame, anchorFrame, text)
     textureFrame:SetSize(fontDropDownButton:GetHeight(), fontDropDownButton:GetHeight())
     textureFrame:SetPoint("RIGHT")
     textureFrame.texture = textureFrame:CreateTexture()
-    textureFrame.texture:SetTexture("Interface/AddOns/MplusGains/Textures/Arrow-Down.PNG")
+    textureFrame.texture:SetTexture("Interface/AddOns/MplusGains/Textures/arrow-down.PNG")
     --textureFrame.texture:SetRotation(-(math.pi/2))
     textureFrame.texture:ClearAllPoints()
     textureFrame.texture:SetPoint("CENTER", 0, 0)
@@ -877,7 +920,7 @@ local function CreateSettingsWindow(parentFrame)
     local function ExitOnClick(self, button, down)
         if(button == "LeftButton") then frame:Hide() end
     end
-    local exitButton = CreateHeaderButton(header, "RIGHT", header, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/Exit.PNG")
+    local exitButton = CreateHeaderButton(header, "RIGHT", header, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
     -- Font setting
     local fontFrame = CreateFrame("Frame", nil, frame)
     fontFrame:SetSize(frame:GetWidth(), rowHeight)
@@ -933,7 +976,7 @@ local function CreateHeaderFrame(parentFrame)
     local function ExitOnClick(self, button, down)
         if(button == "LeftButton") then parentFrame:Hide() end
     end
-    local exitButton = CreateHeaderButton(frame, "RIGHT", frame, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/Exit.PNG")
+    local exitButton = CreateHeaderButton(frame, "RIGHT", frame, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
     local r, g, b, a = 207/255, 170/255, 0, 1
     -- Settings button
     local settingsFrame = CreateSettingsWindow(parentFrame)
@@ -947,7 +990,7 @@ local function CreateHeaderFrame(parentFrame)
         end
     end
 
-    local settingsButton = CreateHeaderButton(frame, "RIGHT", exitButton, "LEFT", SettingsOnClick, "Interface/AddOns/MplusGains/Textures/Settings.PNG")
+    local settingsButton = CreateHeaderButton(frame, "RIGHT", exitButton, "LEFT", SettingsOnClick, "Interface/AddOns/MplusGains/Textures/settings.PNG")
     -- Reset button
     local function ResetOnClick(self, btn, down)
         if(btn == "LeftButton") then
@@ -959,7 +1002,7 @@ local function CreateHeaderFrame(parentFrame)
             end
         end
     end
-    local resetButton = CreateHeaderButton(frame, "LEFT", frame, "LEFT", ResetOnClick, "Interface/AddOns/MplusGains/Textures/Reset.PNG")
+    local resetButton = CreateHeaderButton(frame, "LEFT", frame, "LEFT", ResetOnClick, "Interface/AddOns/MplusGains/Textures/reset.PNG")
     local width = resetButton.normalTexture:GetWidth() + 10
     resetButton.normalTexture:SetSize(width, width)
     resetButton.pushedTexture:SetSize(width, width)
@@ -1374,7 +1417,7 @@ local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     local defualtAlpha = 0.7
     local rotation = (isLeft) and -(math.pi/2) or math.pi/2
     local color = MplusGainsSettings.Colors.main
-    local textureName = "Interface/AddOns/MplusGains/Textures/Arrow-Down.PNG"
+    local textureName = "Interface/AddOns/MplusGains/Textures/arrow-down.PNG"
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (isLeft) and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
@@ -2130,16 +2173,21 @@ local function StartUp()
                         Count = 1, 
                         Font = { 
                             path = "Fonts\\FRIZQT__.TTF", 
-                            name = "Friz Quadrata TT" 
+                            name = "Friz Quadrata TT", 
                         }, 
                         scale = 1.0, 
                         Colors = { 
                             main = { r = 1, g = 0.82, b = 0, a = 1}, 
-                            selectedButton = { r = 212/255, g = 99/255, b = 0, a = 1 } 
-                        } 
+                            selectedButton = { r = 212/255, g = 99/255, b = 0, a = 1 },
+                        },
+                        minimap = { 
+                            hide = false,
+                            minimapPos = nil,
+                            lock = false,
+                         },
                     }
                 else
-                    -- Used saved variable font
+                    -- Use saved variable font
                     MplusGainsSettings.Count = MplusGainsSettings.Count + 1
                     local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name)
                     if(fontCheck == nil) then 
@@ -2147,6 +2195,9 @@ local function StartUp()
                         MplusGainsSettings.Font.name = "Friz Quadrata TT"
                     end
                 end
+                -- Register minimap icon.
+                icon:Register("MplusGainsDB", dataObject, MplusGainsSettings.minimap)
+                -- Setup static frames.
                 buttonWidth = math.floor(ApplyScale(buttonWidth))
                 dungeonRowHeight = ApplyScale(dungeonRowHeight)
                 mainFrame:SetSize(ApplyScale(1000), ApplyScale(600))
