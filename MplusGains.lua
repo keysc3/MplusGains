@@ -459,33 +459,33 @@ end
     ScrollButtonTexture - Creates a new texture for a drop downs scroll button.
     @param frame - Frame the texture is for
     @param alpha - Alpha of the texture
-    @param isUp - The direction of the button
+    @param rotation - The rotation in radians.
     @param scale - Scale of the texture.
     @return newTexture - Texture that was created.
 --]]
-local function ScrollButtonTexture(frame, alpha, isUp, scale)
-    local rotation = (isUp) and math.pi or 0
+local function ScrollButtonTexture(frame, alpha, rotation, scale)
+    --local rotation = (isUp) and math.pi or 0
     local color = MplusGainsSettings.Colors.main
     local newTexture = frame:CreateTexture()
     newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/arrow-down.PNG")
     newTexture:SetPoint("CENTER", 0, 0)
     newTexture:SetVertexColor(color.r, color.g, color.b, alpha)
-    table.insert(mainFrame.textureObjects, newTexture)
     newTexture:SetRotation(rotation)
     newTexture:SetScale(ApplyScale(scale))
     newTexture:SetSize(12, 12)
+    table.insert(mainFrame.textureObjects, newTexture)
     return newTexture
 end
 
 --[[
     SetupDropdownScrollButton - Sets up the textures for a dropdowns scroll button.
     @param button - The button being setup.
-    @param isUp - Boolean for whether it is the up button.
+    @param rotation - Rotation in radians.
 --]]
-local function SetupDropdownScrollButton(button, isUp)
-    button:SetNormalTexture(ScrollButtonTexture(button, 0.7, isUp, 1))
-    button:SetPushedTexture(ScrollButtonTexture(button, 0.7, isUp, 0.9))
-    button:SetDisabledTexture(ScrollButtonTexture(button, 0.2, isUp, 0.9))
+local function SetupDropdownScrollButton(button, rotation)
+    button:SetNormalTexture(ScrollButtonTexture(button, 0.7, rotation, 1))
+    button:SetPushedTexture(ScrollButtonTexture(button, 0.7, rotation, 0.9))
+    button:SetDisabledTexture(ScrollButtonTexture(button, 0.2, rotation, 0.9))
     button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
 end
 
@@ -601,8 +601,8 @@ local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
     scrollBar:SetPoint("TOPRIGHT", scrollUpButton, "BOTTOMRIGHT")
     scrollBar:SetPoint("BOTTOMLEFT", scrollDownButton, "TOPLEFT")
     -- Setup scroll button textures.
-    SetupDropdownScrollButton(scrollUpButton, true)
-    SetupDropdownScrollButton(scrollDownButton, false)
+    SetupDropdownScrollButton(scrollUpButton, math.pi)
+    SetupDropdownScrollButton(scrollDownButton, 0)
     scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetSize(1, scrollHolderFrame:GetHeight())
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
@@ -1520,41 +1520,14 @@ local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     local defualtAlpha = 0.7
     local rotation = (isLeft) and -(math.pi/2) or math.pi/2
     local color = MplusGainsSettings.Colors.main
-    local textureName = "Interface/AddOns/MplusGains/Textures/arrow-down.PNG"
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (isLeft) and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
-    -- Set texture up and texture down.
-    scrollButton.textureUp = scrollButton:CreateTexture()
-    scrollButton.textureUp:SetTexture(textureName)
-    scrollButton.textureUp:ClearAllPoints()
-    scrollButton.textureUp:SetPoint("CENTER")
-    scrollButton.textureUp:SetVertexColor(color.r, color.g, color.b, defualtAlpha)
-    scrollButton.textureUp:SetSize(14, 14)
-    scrollButton.textureUp:SetRotation(rotation)
-    table.insert(mainFrame.textureObjects, scrollButton.textureUp)
-    scrollButton.textureUp:SetScale(MplusGainsSettings.scale)
-    scrollButton.textureDown = scrollButton:CreateTexture()
-    scrollButton.textureDown:SetTexture(textureName)
-    scrollButton.textureDown:ClearAllPoints()
-    scrollButton.textureDown:SetPoint("CENTER")
-    scrollButton.textureDown:SetScale(MplusGainsSettings.scale - 0.2)
-    scrollButton.textureDown:SetVertexColor(color.r, color.g, color.b, 1)
-    scrollButton.textureDown:SetSize(14, 14)
-    scrollButton.textureDown:SetRotation(rotation)
-    table.insert(mainFrame.textureObjects, scrollButton.textureDown)
+    -- Setup textures.
+    scrollButton.textureUp = ScrollButtonTexture(scrollButton, defualtAlpha, rotation, MplusGainsSettings.scale)
     scrollButton:SetNormalTexture(scrollButton.textureUp)
-    scrollButton:SetPushedTexture(scrollButton.textureDown)
-    scrollButton.disabledTexture = scrollButton:CreateTexture()
-    scrollButton.disabledTexture:SetTexture(textureName)
-    scrollButton.disabledTexture:ClearAllPoints()
-    scrollButton.disabledTexture:SetPoint("CENTER")
-    scrollButton.disabledTexture:SetScale(MplusGainsSettings.scale - 0.2)
-    scrollButton.disabledTexture:SetVertexColor(color.r, color.g, color.b, 0.2)
-    scrollButton.disabledTexture:SetSize(14, 14)
-    scrollButton.disabledTexture:SetRotation(rotation)
-    table.insert(mainFrame.textureObjects, scrollButton.disabledTexture)
-    scrollButton:SetDisabledTexture(scrollButton.disabledTexture)
+    scrollButton:SetPushedTexture(ScrollButtonTexture(scrollButton, 1, rotation, MplusGainsSettings.scale - 0.1))
+    scrollButton:SetDisabledTexture(ScrollButtonTexture(scrollButton, 0.2, rotation, MplusGainsSettings.scale - 0.1))
     scrollButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then
             ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (isLeft) and 1 or -1)
