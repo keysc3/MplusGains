@@ -22,8 +22,8 @@ local selectedAffix = addon.tyrannicalID
 local colorVar = nil
 local frameToChange = nil
 
+-- Setup libraries and data broker.
 local icon = LibStub("LibDBIcon-1.0")
-
 local ldb = LibStub:GetLibrary("LibDataBroker-1.1")
 local dataObject = ldb:NewDataObject("MplusGainsDB", { 
     type = "data source", 
@@ -54,6 +54,7 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
 
+-- Data object on tooltip show function
 function dataObject:OnTooltipShow()
     self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
 	self:AddLine("Left click: Toggle main window")
@@ -61,14 +62,20 @@ function dataObject:OnTooltipShow()
     self:AddLine("Middle click: Disable minimap button")
 end
 
-local function OnEnter(self)
+
+--[[local function OnEnter(self)
 	GameTooltip:SetOwner(self, "ANCHOR_NONE")
 	GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
 	GameTooltip:ClearLines()
 	dataObject.OnTooltipShow(GameTooltip)
 	GameTooltip:Show()
-end
+end--]]
 
+--[[
+    ApplyScale - Applies the addons scale factor to the given value.
+    @param value - The value to scale.
+    @return - The scaled value rounded to one decimal.
+--]]
 local function ApplyScale(value)
     return addon:RoundToOneDecimal(value * MplusGainsSettings.scale)
 end
@@ -410,6 +417,15 @@ local function CreateToggle(parentFrame)
     parentFrame.toggles[rightToggle.affixID] = rightToggle
 end
 
+--[[
+    CreateHeaderButton - Creates a button for the header of a window.
+    @param parentFrame - The header the button is for.
+    @param point - The anchor point for the created button.
+    @param relativeFrame - The frame the button is being anchored to.
+    @param relativePoint - The point on the relative frame to anchor to.
+    @param OnClick - The OnClick for the button.
+    @param texturePath - Path to the texture for the button.
+--]]
 local function CreateHeaderButton(parentFrame, point, relativeFrame, relativePoint, OnClick, texturePath)
     local color = MplusGainsSettings.Colors.main
     local headerHeight = parentFrame:GetHeight()
@@ -536,6 +552,14 @@ local function SetScrollFrameWidths(scrollHolderFrame)
     end
 end
 
+-- TODO: CHANGE SETTINGS WINDOW DIMENSIONS
+--[[
+    CreateSettingsScrollFrame - Creates a vertical scroll frame.
+    @param parentFrame - The parent of the scroll frame.
+    @param settingType - String for the name of the scroll frame.
+    @param itemAmount - The amount of items in the scroll frame.
+    @return - The created scroll frame.
+--]]
 local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
     local buttonSize = ApplyScale(20)
     local displayLength = 6
@@ -601,14 +625,24 @@ local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
     return scrollHolderFrame
 end
 
+--[[
+    HighlightBorderOnEnter - Highlights a frames border by changing the backdrop border color.
+--]]
 local function HighlightBorderOnEnter(self, motion)
     self:SetBackdropBorderColor(1, 1, 1, 1)
 end
 
+--[[
+    HighlightBorderOnExit - Unhighlights a frames border by changing the backdrop border color.
+--]]
 local function HighlightBorderOnExit(self, motion)
     self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
 end
 
+--[[
+    UpdateTextFont - Updates the fonts of all necessary text objects.
+    @param path - Path for the font to use. 
+--]]
 local function UpdateTextFont(path)
     for _, v in ipairs(mainFrame.textObjects) do
         if(v.changeFont) then
@@ -616,6 +650,7 @@ local function UpdateTextFont(path)
             v:SetFont(path, size, flags)
         end
     end
+    -- Change any frame sizes that are based on text width.
     for _, v in ipairs(mainFrame.textWidthFrames) do
         v:SetWidth(math.ceil(v.text:GetWidth() + v.padding))
     end
@@ -799,6 +834,9 @@ local function CreateSlider(parentFrame, anchorFrame, minValue, maxValue, settin
     return slider
 end
 
+--[[
+    UpdateSelectedButtonColor - Updates any selected buttons colors.
+--]]
 local function UpdateSelectedButtonColor()
     for _, v in pairs(mainFrame.dungeonHolderFrame.rows) do
         local scrollChild = v.scrollHolderFrame.scrollChild
@@ -809,6 +847,9 @@ local function UpdateSelectedButtonColor()
     end
 end
 
+--[[
+    UpdateTextColor - Updates color of all necessary text objects.
+--]]
 local function UpdateTextColor()
     for _, v in ipairs(mainFrame.textObjects) do
         if(v.changeColor) then
@@ -818,6 +859,9 @@ local function UpdateTextColor()
     end
 end
 
+--[[
+    UpdateTextureColor - Updates color of all necessary texture objects.
+--]]
 local function UpdateTextureColor()
     for _, v in ipairs(mainFrame.textureObjects) do
         v:SetVertexColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, 
@@ -825,6 +869,11 @@ local function UpdateTextureColor()
     end
 end
 
+-- TODO: SWITCH?
+--[[
+    ColorCallback - Handles the callbacks sent from the ColorPickerFrame functions.
+    @param restore - nil or the previous colors from the color picker frame.
+--]]
 local function ColorCallback(restore)
     local newR, newG, newB, newA;
     -- If canceled
@@ -851,6 +900,11 @@ local function ColorCallback(restore)
     end
 end
 
+--[[
+    ShowColorPicker - Handles the setup and showing of the ColorPickerFrame.
+    @param var - The color variable the color picker is being shown for.
+    @param frame - The frame the color picker is changing.
+--]]
 local function ShowColorPicker(var, frame)
     local color = MplusGainsSettings.Colors[var]
     colorVar = var
@@ -864,6 +918,12 @@ local function ShowColorPicker(var, frame)
     ColorPickerFrame:Show()
 end
 
+--[[
+    CreateColorPickerFrame - Creates a colored button for used for selecting a color.
+    @param parentFrame - The parent frame of the button.
+    @param anchorFrame - The anchor frame of the button.
+    @param colorTableName - The table the button is for.
+--]]
 local function CreateColorPickerFrame(parentFrame, anchorFrame, colorTableName)
     -- Color button
     local button = CreateFrameWithBackdrop("Button", parentFrame, nil)
@@ -878,6 +938,13 @@ local function CreateColorPickerFrame(parentFrame, anchorFrame, colorTableName)
     end)
 end
 
+--[[
+    SettingsRowBase - Creates a row in the settings window.
+    @param parentFrame - The parent frame of the row.
+    @param anchroFrame - The anchor frame of the row.
+    @param text - String for the rows label.
+    @return - The created frame.
+--]]
 local function SettingsRowBase(parentFrame, anchorFrame, text)
     local rowHeight = ApplyScale(20)
     local frame = CreateFrame("Frame", nil, parentFrame)
@@ -894,6 +961,14 @@ local function SettingsRowBase(parentFrame, anchorFrame, text)
     return frame
 end
 
+--[[
+    CreateCheckButton - Creates a check button for a frame.
+    @param parentFrame - The frame the button is for.
+    @param anchorFrame - The frame the button is anchored to.
+    @param isChecked - The initial checked bool for the button.
+    @param OnClick - The OnClick function for the button.
+    @return - The created check button.
+--]]
 local function CreateCheckButton(parentFrame, anchorFrame, isChecked, OnClick)
     local color = MplusGainsSettings.Colors.main
     local button = CreateFrameWithBackdrop("CheckButton", parentFrame, nil)
@@ -1006,7 +1081,6 @@ local function CreateHeaderFrame(parentFrame)
         if(button == "LeftButton") then parentFrame:Hide() end
     end
     local exitButton = CreateHeaderButton(frame, "RIGHT", frame, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
-    local r, g, b, a = 207/255, 170/255, 0, 1
     -- Settings button
     local settingsFrame = CreateSettingsWindow(parentFrame)
     local function SettingsOnClick(self, button, down)
@@ -2194,6 +2268,7 @@ local function StartUp()
     mainFrame:RegisterEvent("ADDON_LOADED")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         if(event == "ADDON_LOADED") then
+            --TODO: Remove count, change minimap to Minimap
             local addonLoaded = ...
             if(addonLoaded == "MplusGains") then
                 if(MplusGainsSettings == nil) then
