@@ -58,18 +58,9 @@ LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\Tit
 function dataObject:OnTooltipShow()
     self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
 	self:AddLine("Left click: Toggle main window")
-    self:AddLine("Right click: Lock minimap button")
+    self:AddLine("Right click: Lock or unlock minimap button")
     self:AddLine("Middle click: Disable minimap button")
 end
-
-
---[[local function OnEnter(self)
-	GameTooltip:SetOwner(self, "ANCHOR_NONE")
-	GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
-	GameTooltip:ClearLines()
-	dataObject.OnTooltipShow(GameTooltip)
-	GameTooltip:Show()
-end--]]
 
 --[[
     ApplyScale - Applies the addons scale factor to the given value.
