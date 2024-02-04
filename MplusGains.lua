@@ -1523,10 +1523,11 @@ local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (isLeft) and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
     -- Setup textures.
-    scrollButton.textureUp = ScrollButtonTexture(scrollButton, defualtAlpha, rotation, MplusGainsSettings.scale)
+    --TODO: Fix buttons?
+    scrollButton.textureUp = ScrollButtonTexture(scrollButton, defualtAlpha, rotation, 1)
     scrollButton:SetNormalTexture(scrollButton.textureUp)
-    scrollButton:SetPushedTexture(ScrollButtonTexture(scrollButton, 1, rotation, MplusGainsSettings.scale - 0.1))
-    scrollButton:SetDisabledTexture(ScrollButtonTexture(scrollButton, 0.2, rotation, MplusGainsSettings.scale - 0.1))
+    scrollButton:SetPushedTexture(ScrollButtonTexture(scrollButton, 1, rotation, 0.9))
+    scrollButton:SetDisabledTexture(ScrollButtonTexture(scrollButton, 0.2, rotation, 0.9))
     scrollButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then
             ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (isLeft) and 1 or -1)
