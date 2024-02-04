@@ -53,7 +53,7 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
 
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
-
+--TODO: Exit settings window and any other open windows on addon close.
 -- Data object on tooltip show function
 function dataObject:OnTooltipShow()
     self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
@@ -95,7 +95,6 @@ end
     @param font - Path to the font being used.
     @param parentFrame - Frame the text is for.
     @param flags - Flags to use with the font.
-    --TODO: DOC
     @return text - FontString created.
 ]]
 local function CustomFontString(textSize, color, font, parentFrame, flags, changeFont, changeColor)
@@ -387,7 +386,7 @@ local function CalculateHeight(frame)
     local totalHeight = 0
     local children = { frame:GetChildren() }
     for _, child in ipairs(children) do
-        totalHeight = totalHeight + child:GetHeight()
+        totalHeight = totalHeight + child:GetHeight() + 2
     end
     return totalHeight
 end
@@ -617,6 +616,16 @@ local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
 end
 
 --[[
+    ExitOnClick - OnClick for exit buttons.
+    @param self - Button frame that was clicked
+    @param button - Mouse button used for the click
+    @param down - State of the button.
+--]]
+local function ExitOnClick(self, button, down)
+    if(button == "LeftButton") then self.closeFrame:Hide() end
+end
+
+--[[
     HighlightBorderOnEnter - Highlights a frames border by changing the backdrop border color.
 --]]
 local function HighlightBorderOnEnter(self, motion)
@@ -685,16 +694,15 @@ end
 --[[
     CreateDropDown - Creates a drop down button frame.
     @param parentFrame - Parent frame of the new button.
-    @param anchorFrame - Frame to anchor the button to.
     @param text - Text to go on the drop down button.
 --]]
-local function CreateDropDown(parentFrame, anchorFrame, text)
+local function CreateDropDown(parentFrame, text)
     local color = MplusGainsSettings.Colors.main
     -- Button frame
     local fontDropDownButton = CreateFrameWithBackdrop("Button", parentFrame, nil)
     fontDropDownButton:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
-    fontDropDownButton:SetPoint("LEFT", anchorFrame, "RIGHT")
-    fontDropDownButton:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
+    fontDropDownButton:SetPoint("LEFT", parentFrame, "LEFT")
+    fontDropDownButton:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight())
     fontDropDownButton:SetScript("OnEnter", HighlightBorderOnEnter)
     fontDropDownButton:SetScript("OnLeave", HighlightBorderOnExit)
     -- Text frame
@@ -748,21 +756,20 @@ end
 --[[
     CreateSlider - Creates a settings frame slider.
     @param parentFrame - The new frames parent.
-    @param anchorFrame - The new frames anchor frame.
     @param minValue - Sliders minimum value.
     @param maxValue - Sliders maximum value.
     @param setting - Setting that the slider is changing.
     @return slider - The newly created slider.
 --]]
-local function CreateSlider(parentFrame, anchorFrame, minValue, maxValue, setting)
+local function CreateSlider(parentFrame, minValue, maxValue, setting)
     local c1 = 40/255
     local c2 = 20/255
     -- SLider values
     local slider = CreateFrameWithBackdrop("Slider", parentFrame, nil)
     slider:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
-    slider:SetSize(parentFrame:GetWidth()/1.8, parentFrame:GetHeight())
+    slider:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight())
     slider:SetOrientation("HORIZONTAL")
-    slider:SetPoint("LEFT", anchorFrame, "RIGHT")
+    slider:SetPoint("LEFT", parentFrame, "LEFT")
     slider:SetMinMaxValues(minValue, maxValue)
     slider:SetValue(MplusGainsSettings[setting])
     slider:Enable()
@@ -905,6 +912,8 @@ local function ShowColorPicker(var, frame)
     ColorPickerFrame.swatchFunc, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = ColorCallback, ColorCallback, ColorCallback
     ColorPickerFrame.Content.ColorSwatchOriginal:SetColorTexture(color.r, color.g, color.b)
     ColorPickerFrame.Content.ColorPicker:SetColorRGB(color.r, color.g, color.b)
+    ColorPickerFrame:ClearAllPoints()
+    ColorPickerFrame:SetPoint("BOTTOMLEFT", frame, "TOPRIGHT", 2, -2)
     ColorPickerFrame:Hide() -- Need to run the OnShow handler.
     ColorPickerFrame:Show()
 end
@@ -912,15 +921,14 @@ end
 --[[
     CreateColorPickerFrame - Creates a colored button for used for selecting a color.
     @param parentFrame - The parent frame of the button.
-    @param anchorFrame - The anchor frame of the button.
     @param colorTableName - The table the button is for.
 --]]
-local function CreateColorPickerFrame(parentFrame, anchorFrame, colorTableName)
+local function CreateColorPickerFrame(parentFrame, colorTableName)
     -- Color button
     local button = CreateFrameWithBackdrop("Button", parentFrame, nil)
     button:SetBackdropColor(MplusGainsSettings.Colors[colorTableName].r, MplusGainsSettings.Colors[colorTableName].g, 
     MplusGainsSettings.Colors[colorTableName].b, MplusGainsSettings.Colors[colorTableName].a)
-    button:SetPoint("LEFT", anchorFrame, "RIGHT")
+    button:SetPoint("LEFT", parentFrame, "LEFT")
     button:SetSize(parentFrame:GetHeight(), parentFrame:GetHeight())
     button:SetScript("OnEnter", HighlightBorderOnEnter)
     button:SetScript("OnLeave", HighlightBorderOnExit)
@@ -942,29 +950,31 @@ local function SettingsRowBase(parentFrame, anchorFrame, text)
     frame:SetSize(parentFrame:GetWidth(), rowHeight)
     frame:SetPoint("TOP", anchorFrame, "BOTTOM", 0, -2)
     local label = CreateFrame("Frame", nil, frame)
-    label:SetSize(frame:GetWidth()/4, rowHeight)
-    label:SetPoint("LEFT", 2, 0)
+    label:SetSize(frame:GetWidth()/2.4, rowHeight)
+    label:SetPoint("LEFT", 4, 0)
     label.text = DefaultFontString(12, label, "OUTLINE")
     label.text:ClearAllPoints()
     label.text:SetPoint("LEFT")
     label.text:SetText(text)
-    frame.label = label
+    local contentFrame = CreateFrame("Frame", nil, frame)
+    contentFrame:SetSize(frame:GetWidth() - label:GetWidth() - 6 - ApplyScale(12), rowHeight)
+    contentFrame:SetPoint("LEFT", label, "RIGHT", 0, 0)
+    frame.contentFrame = contentFrame
     return frame
 end
 
 --[[
     CreateCheckButton - Creates a check button for a frame.
     @param parentFrame - The frame the button is for.
-    @param anchorFrame - The frame the button is anchored to.
     @param isChecked - The initial checked bool for the button.
     @param OnClick - The OnClick function for the button.
     @return - The created check button.
 --]]
-local function CreateCheckButton(parentFrame, anchorFrame, isChecked, OnClick)
+local function CreateCheckButton(parentFrame, isChecked, OnClick)
     local color = MplusGainsSettings.Colors.main
     local button = CreateFrameWithBackdrop("CheckButton", parentFrame, nil)
     button:SetSize(parentFrame:GetHeight(), parentFrame:GetHeight())
-    button:SetPoint("LEFT", parentFrame.label, "RIGHT")
+    button:SetPoint("LEFT", parentFrame, "LEFT")
     button:SetBackdropColor(0.16, 0.16, 0.16, 1)
     button:SetChecked(isChecked)
     button.texture = button:CreateTexture()
@@ -990,47 +1000,48 @@ end
 --]]
 local function CreateSettingsWindow(parentFrame)
     local rowHeight = ApplyScale(20)
-    local headerHeight = ApplyScale(40)
+    local headerHeight = ApplyScale(30)
     local frame = CreateFrameWithBackdrop("Frame", parentFrame, "SETTINGS_FRAME")
-    frame:SetSize(ApplyScale(240), ApplyScale(200))
-    frame:SetPoint("CENTER")
+    frame:SetSize(ApplyScale(260), ApplyScale(200))
+    frame:SetPoint("CENTER", mainFrame, "CENTER")
     frame:SetBackdropColor(26/255, 26/255, 27/255, 0.95)
-    frame:SetMovable(true)
+    --frame:SetMovable(true)
     frame:EnableMouse(true)
     frame:Hide()
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    --frame:RegisterForDrag("LeftButton")
+    --frame:SetScript("OnDragStart", frame.StartMoving)
+    --frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     frame:SetFrameStrata("DIALOG")
     local header = CreateFrame("Frame", nil, frame)
     header:SetPoint("TOP")
     header:SetSize(frame:GetWidth(), headerHeight)
     header.text = DefaultFontString(14, header, "OUTLINE")
     header.text:ClearAllPoints()
-    header.text:SetPoint("LEFT", 2, 0)
+    header.text:SetPoint("LEFT", 4, 0)
     header.text:SetText("Settings")
     -- Exit button
-    local function ExitOnClick(self, button, down)
-        if(button == "LeftButton") then frame:Hide() end
-    end
     local exitButton = CreateHeaderButton(header, "RIGHT", header, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
+    exitButton.closeFrame = frame
+    -- Spacer
+    local spacerFrame = SettingsRowBase(frame, header, "")
+    spacerFrame:SetHeight(spacerFrame:GetHeight()/2)
     -- Font setting
-    local fontFrame = SettingsRowBase(frame, header, "Font")
+    local fontFrame = SettingsRowBase(frame, spacerFrame, "Font")
     -- Font dropdown
-    local fontDropDown = CreateDropDown(fontFrame, fontFrame.label, MplusGainsSettings.Font.name)
+    local fontDropDown = CreateDropDown(fontFrame.contentFrame, MplusGainsSettings.Font.name)
     SetupFontChoices(fontDropDown)
     -- Scaling frame
     local scalingFrame = SettingsRowBase(frame, fontFrame, "Scale")
     -- Scale slider
-    local scalingSlider = CreateSlider(scalingFrame, scalingFrame.label, 0.6, 1.4, "scale")
+    local scalingSlider = CreateSlider(scalingFrame.contentFrame, 0.6, 1.4, "scale")
     -- Main color frame
     local mainColorFrame = SettingsRowBase(frame, scalingFrame, "Theme")
-    CreateColorPickerFrame(mainColorFrame, mainColorFrame.label, "main")
+    CreateColorPickerFrame(mainColorFrame.contentFrame, "main")
     -- Selected button color frame
     local selectedButtonColorFrame = SettingsRowBase(frame, mainColorFrame, "Button")
-    CreateColorPickerFrame(selectedButtonColorFrame, selectedButtonColorFrame.label, "selectedButton")
+    CreateColorPickerFrame(selectedButtonColorFrame.contentFrame, "selectedButton")
     -- Minimap button
-    local minimapButtonFrame = SettingsRowBase(frame, selectedButtonColorFrame, "Minimap")
+    local minimapButtonFrame = SettingsRowBase(frame, selectedButtonColorFrame, "Minimap Button")
     local function MinimapCheckButtonOnClick(self, button)
         if(self:GetChecked()) then
             if(MplusGainsSettings.minimap.hide) then 
@@ -1045,10 +1056,10 @@ local function CreateSettingsWindow(parentFrame)
             end
         end
     end
-    local minimapCheckButton = CreateCheckButton(minimapButtonFrame, minimapButtonFrame.label, (not MplusGainsSettings.minimap.hide), MinimapCheckButtonOnClick)
+    local minimapCheckButton = CreateCheckButton(minimapButtonFrame.contentFrame, (not MplusGainsSettings.minimap.hide), MinimapCheckButtonOnClick)
     mainFrame.minimapCheckButton = minimapCheckButton
     -- Frame height
-    frame:SetHeight((header:GetHeight() - header.text:GetStringHeight())/2 + CalculateHeight(frame) + 0.1)
+    frame:SetHeight(CalculateHeight(frame) + ApplyScale(6) + 0.1)
     return frame
 end
 
@@ -1068,10 +1079,8 @@ local function CreateHeaderFrame(parentFrame)
     frame.text:SetPoint("CENTER")
     frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
     -- Exit button
-    local function ExitOnClick(self, button, down)
-        if(button == "LeftButton") then parentFrame:Hide() end
-    end
     local exitButton = CreateHeaderButton(frame, "RIGHT", frame, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
+    exitButton.closeFrame = mainFrame
     -- Settings button
     local settingsFrame = CreateSettingsWindow(parentFrame)
     local function SettingsOnClick(self, button, down)
