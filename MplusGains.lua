@@ -1,19 +1,15 @@
 local addonName, addon = ...
 
-local myButtons = {}
 local selected = { r = 212/255, g = 99/255, b = 0/255, a = 1 }
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
-local textColor = { r = 1, g = 0.82, b = 0, a = 1}
-local mainColor = { r = 26/255, g = 26/255, b = 27/255, a = 0.9 }
 local maxLevel = 30
 local weeklyAffix
 local buttonWidth = 48
 local xColPadding = 20
 local xPadding = 2
 local yPadding = -2
-local rowEdgePadding = 4
 local dungeonRowHeight = 64
 local scrollButtonPadding = 4
 local totalGained = 0
@@ -21,6 +17,7 @@ local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
 local colorVar = nil
 local frameToChange = nil
+local defaultFont = { path = "Fonts\\FRIZQT__.TTF", name = "Friz Quadrata TT" }
 
 -- Setup libraries and data broker.
 local icon = LibStub("LibDBIcon-1.0")
@@ -666,6 +663,17 @@ local function UpdateTextFont(path)
 end
 
 --[[
+    FontCheck - Checks if a font exists, returns default font if it doesn't
+    @param name - name of the font.
+    @return - Font to use
+--]]
+local function FontCheck(name)
+    local fontCheck = LSM:Fetch("font", name)
+    if(fontCheck == nil) then fontCheck = defaultFont.path end
+    return fontCheck
+end
+
+--[[
     SetupFontChoices - Handles the setup of the font drop down options and their onclicks.
     @param dropDown - The drop down for the fonts.
 --]]
@@ -675,8 +683,7 @@ local function SetupFontChoices(dropDown)
     table.insert(dropDown:GetParent():GetParent():GetParent().closeFrames, scrollHolderFrame)
     local anchorFrame = scrollHolderFrame.scrollChild
     for _, v in pairs(fontsList) do
-        --TODO: nil check fonts
-        local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name, LSM:Fetch("font", v))
+        local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name, FontCheck(v))
         newFrame:SetScript("OnClick", function(self, btn, down)
             if(btn == "LeftButton") then
                 if(newFrame ~= scrollHolderFrame.selected) then
@@ -689,6 +696,7 @@ local function SetupFontChoices(dropDown)
                     self.highlightTexture:SetVertexColor(0, 0, 0, 0)
                     scrollHolderFrame:GetParent().textFrame.text:SetText(self.text:GetText())
                     local fontName, fontHeight, fontFlags = self.text:GetFont()
+                    fontName = FontCheck(v)
                     scrollHolderFrame:GetParent().textFrame.text:SetFont(fontName, fontHeight, fontFlags)
                     MplusGainsSettings.Font.path = fontName
                     MplusGainsSettings.Font.name = v
@@ -1177,7 +1185,7 @@ end
 --]]
 local function CreateDungeonNameFrame(parentRow)
     local frame = CreateFrame("Frame", nil, parentRow)
-    frame:SetPoint("LEFT", rowEdgePadding, 0)
+    frame:SetPoint("LEFT", 4, 0)
     frame:SetSize(ApplyScale(150), parentRow:GetHeight())
     frame.text = DefaultFontString(12, frame, nil)
     frame.text:SetText("Default Dungeon")
@@ -2258,8 +2266,8 @@ local function StartUp()
                     -- Set default settings
                     MplusGainsSettings = {
                         Font = { 
-                            path = "Fonts\\FRIZQT__.TTF", 
-                            name = "Friz Quadrata TT", 
+                            path = defaultFont.path, 
+                            name = defaultFont.name, 
                         }, 
                         scale = 1.0, 
                         Colors = { 
@@ -2276,8 +2284,8 @@ local function StartUp()
                     -- Check if font still exists
                     local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name)
                     if(fontCheck == nil) then 
-                        MplusGainsSettings.Font.path = "Fonts\\FRIZQT__.TTF"
-                        MplusGainsSettings.Font.name = "Friz Quadrata TT"
+                        MplusGainsSettings.Font.path = defaultFont.path
+                        MplusGainsSettings.Font.name = defaultFont.name
                     end
                 end
                 -- Register minimap icon.
@@ -2292,7 +2300,6 @@ local function StartUp()
                 mainFrame.summaryFrame = summaryFrame
                 mainFrame.dungeonHolderFrame = dungeonHolderFrame
                 CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
-                print(MplusGainsSettings.Count)
             end
         end
         -- Player entering world
