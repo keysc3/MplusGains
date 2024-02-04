@@ -53,7 +53,6 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
 
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
---TODO: Exit settings window and any other open windows on addon close.
 -- Data object on tooltip show function
 function dataObject:OnTooltipShow()
     self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
@@ -143,6 +142,15 @@ local function CreateFrameWithBackdrop(frameType, parentFrame, name)
     return frame
 end
 
+--[[
+    OnHideCloseFrames -- Closes frames on frame hide
+    @param self - frame being hidden.
+--]]
+local function OnHideCloseFrames(self)
+    for _,v in ipairs(self.closeFrames) do
+        v:Hide()
+    end
+end
 
 --[[
     CreateMainFrame - Creates the main frame for the addon.
@@ -165,6 +173,8 @@ local function CreateMainFrame()
     _G["MainMplusGainsFrame"] = frame
     tinsert(UISpecialFrames, frame:GetName())
     frame:SetFrameStrata("HIGH")
+    frame.closeFrames = {}
+    frame:SetScript("OnHide", OnHideCloseFrames)
     return frame
 end
 
@@ -662,6 +672,7 @@ end
 local function SetupFontChoices(dropDown)
     local fontsList = LSM:List("font")
     local scrollHolderFrame = CreateSettingsScrollFrame(dropDown, "Font", #fontsList)
+    table.insert(dropDown:GetParent():GetParent():GetParent().closeFrames, scrollHolderFrame)
     local anchorFrame = scrollHolderFrame.scrollChild
     for _, v in pairs(fontsList) do
         local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name, LSM:Fetch("font", v))
@@ -1007,6 +1018,7 @@ local function CreateSettingsWindow(parentFrame)
     --frame:SetMovable(true)
     frame:EnableMouse(true)
     frame:Hide()
+    frame.closeFrames = {}
     --frame:RegisterForDrag("LeftButton")
     --frame:SetScript("OnDragStart", frame.StartMoving)
     --frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
@@ -1057,6 +1069,8 @@ local function CreateSettingsWindow(parentFrame)
     end
     local minimapCheckButton = CreateCheckButton(minimapButtonFrame.contentFrame, (not MplusGainsSettings.minimap.hide), MinimapCheckButtonOnClick)
     mainFrame.minimapCheckButton = minimapCheckButton
+    frame:SetScript("OnHide", OnHideCloseFrames)
+    table.insert(mainFrame.closeFrames, frame)
     -- Frame height
     frame:SetHeight(CalculateHeight(frame) + (2 * (#{ frame:GetChildren() })) + ApplyScale(6) + 0.1)
     return frame
@@ -1608,17 +1622,6 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     local newLevel = GetStartingLevel(dungeonID, weeklyAffix)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
     scrollHolderFrame.scrollChild.startingLevel[weeklyAffix] = newLevel
-    -- Need new buttons if the newLevel is lower than the base level.
-    --TODO: NEEDED?? FIX?
-    --[[if(newLevel < oldBase) then
-        -- Setup new values and new buttons
-        scrollHolderFrame.scrollChild.baseLevel = newLevel
-        CalculateScrollHolderUIValues(scrollHolderFrame)
-        CreateAllButtons(scrollHolderFrame, oldBase - 1)
-        -- Set new anchor point for old level
-        scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:ClearAllPoints()
-        scrollHolderFrame.scrollChild.keystoneButtons[oldBase].button:SetPoint("LEFT", scrollHolderFrame.scrollChild.keystoneButtons[oldBase - 1].button, "RIGHT", -1, 0)
-    else--]]
     -- Setup new scroll range and pos values
     scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
@@ -2129,6 +2132,7 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     footer.text:SetText("Press Ctrl+C to copy the URL")
     frame:Hide()
     frame:SetHeight(CalculateHeight(frame) + ApplyScale(4))
+    table.insert(mainFrame.closeFrames, frame)
     return frame
 end
 
