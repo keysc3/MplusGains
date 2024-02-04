@@ -386,7 +386,7 @@ local function CalculateHeight(frame)
     local totalHeight = 0
     local children = { frame:GetChildren() }
     for _, child in ipairs(children) do
-        totalHeight = totalHeight + child:GetHeight() + 2
+        totalHeight = totalHeight + child:GetHeight()
     end
     return totalHeight
 end
@@ -542,7 +542,6 @@ local function SetScrollFrameWidths(scrollHolderFrame)
     end
 end
 
--- TODO: CHANGE SETTINGS WINDOW DIMENSIONS
 --[[
     CreateSettingsScrollFrame - Creates a vertical scroll frame.
     @param parentFrame - The parent of the scroll frame.
@@ -1059,7 +1058,7 @@ local function CreateSettingsWindow(parentFrame)
     local minimapCheckButton = CreateCheckButton(minimapButtonFrame.contentFrame, (not MplusGainsSettings.minimap.hide), MinimapCheckButtonOnClick)
     mainFrame.minimapCheckButton = minimapCheckButton
     -- Frame height
-    frame:SetHeight(CalculateHeight(frame) + ApplyScale(6) + 0.1)
+    frame:SetHeight(CalculateHeight(frame) + (2 * (#{ frame:GetChildren() })) + ApplyScale(6) + 0.1)
     return frame
 end
 
@@ -2098,30 +2097,36 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     frame:SetBackdropColor(0, 0, 0, 0.9)
     frame:SetFrameLevel(20)
     -- Header
-    frame.headerText = DefaultFontString(16, frame, nil)
-    frame.headerText:ClearAllPoints()
-    frame.headerText:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -8)
-    frame.headerText:SetText("Report a Bug")
+    local header = CreateFrame("Frame", nil, frame)
+    header:SetSize(frame:GetWidth(), ApplyScale(26))
+    header:SetPoint("TOPLEFT")
+    header.text = DefaultFontString(16, header, nil)
+    header.text:ClearAllPoints()
+    header.text:SetPoint("LEFT", header, "LEFT", 8, 0)
+    header.text:SetText("Report a Bug")
     -- Edit box
-    frame.editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    frame.editBox:SetSize(frame:GetWidth() - 40, ApplyScale(20))
-    -- TODO: TEXT SIZE
-    frame.editBox:SetPoint("TOPLEFT", frame.headerText, "BOTTOMLEFT", 4, -8)
-    frame.editBox:SetText(url)
-    frame.editBox:SetScript("OnTextChanged", function(self, userInput)
+    local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+    editBox:SetSize(frame:GetWidth() - 40, 20)
+    editBox:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 14, 0)
+    editBox:SetText(url)
+    editBox:SetScript("OnTextChanged", function(self, userInput)
         -- Don't want text being changed, reset it on change attempt.
         self:SetText(url)
         self:HighlightText()
     end)
-    frame.editBox:SetScript("OnEscapePressed", function(self)
+    editBox:SetScript("OnEscapePressed", function(self)
         frame:Hide()
     end)
     -- Copy url text
-    frame.copyText = DefaultFontString(12, frame, nil)
-    frame.copyText:ClearAllPoints()
-    frame.copyText:SetPoint("TOPLEFT", frame.editBox, "BOTTOMLEFT", -4, -4)
-    frame.copyText:SetText("Press Ctrl+C to copy the URL")
+    local footer = CreateFrame("Frame", nil, frame)
+    footer:SetSize(frame:GetWidth(), ApplyScale(20))
+    footer:SetPoint("TOPLEFT", editBox, "BOTTOMLEFT")
+    footer.text = DefaultFontString(12, footer, nil)
+    footer.text:ClearAllPoints()
+    footer.text:SetPoint("LEFT", footer, "LEFT", -6, 0)
+    footer.text:SetText("Press Ctrl+C to copy the URL")
     frame:Hide()
+    frame:SetHeight(CalculateHeight(frame) + ApplyScale(4))
     return frame
 end
 
