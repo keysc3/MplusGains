@@ -457,18 +457,18 @@ end
     @param frame - Frame the texture is for
     @param alpha - Alpha of the texture
     @param rotation - The rotation in radians.
-    @param scale - Scale of the texture.
+    @param offsetX - X offset of the texture.
+    @param offsetY - Y offset of the texture.
     @return newTexture - Texture that was created.
 --]]
-local function ScrollButtonTexture(frame, alpha, rotation, scale)
-    --local rotation = (isUp) and math.pi or 0
+local function ScrollButtonTexture(frame, alpha, rotation, offsetX, offsetY)
     local color = MplusGainsSettings.Colors.main
     local newTexture = frame:CreateTexture()
     newTexture:SetTexture("Interface/AddOns/MplusGains/Textures/arrow-down.PNG")
-    newTexture:SetPoint("CENTER", 0, 0)
+    newTexture:SetPoint("CENTER", offsetX, offsetY)
     newTexture:SetVertexColor(color.r, color.g, color.b, alpha)
     newTexture:SetRotation(rotation)
-    newTexture:SetScale(ApplyScale(scale))
+    newTexture:SetScale(MplusGainsSettings.scale)
     newTexture:SetSize(12, 12)
     table.insert(mainFrame.textureObjects, newTexture)
     return newTexture
@@ -478,11 +478,12 @@ end
     SetupDropdownScrollButton - Sets up the textures for a dropdowns scroll button.
     @param button - The button being setup.
     @param rotation - Rotation in radians.
+    @param sign - Sign for direction of button.
 --]]
-local function SetupDropdownScrollButton(button, rotation)
-    button:SetNormalTexture(ScrollButtonTexture(button, 0.7, rotation, 1))
-    button:SetPushedTexture(ScrollButtonTexture(button, 0.7, rotation, 0.9))
-    button:SetDisabledTexture(ScrollButtonTexture(button, 0.2, rotation, 0.9))
+local function SetupDropdownScrollButton(button, rotation, sign)
+    button:SetNormalTexture(ScrollButtonTexture(button, 0.7, rotation, 0, 0))
+    button:SetPushedTexture(ScrollButtonTexture(button, 0.7, rotation, 0, sign * 0.8))
+    button:SetDisabledTexture(ScrollButtonTexture(button, 0.2, rotation, 0, 0))
     button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
 end
 
@@ -597,8 +598,8 @@ local function CreateSettingsScrollFrame(parentFrame, settingType, itemAmount)
     scrollBar:SetPoint("TOPRIGHT", scrollUpButton, "BOTTOMRIGHT")
     scrollBar:SetPoint("BOTTOMLEFT", scrollDownButton, "TOPLEFT")
     -- Setup scroll button textures.
-    SetupDropdownScrollButton(scrollUpButton, math.pi)
-    SetupDropdownScrollButton(scrollDownButton, 0)
+    SetupDropdownScrollButton(scrollUpButton, math.pi, 1)
+    SetupDropdownScrollButton(scrollDownButton, 0, 1)
     scrollHolderFrame.scrollFrame:SetAllPoints(scrollHolderFrame)
     scrollHolderFrame.scrollFrame:SetSize(1, scrollHolderFrame:GetHeight())
     scrollHolderFrame.scrollChild = CreateFrame("Frame", nil)
@@ -1539,17 +1540,17 @@ end
 --]]
 local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     local defualtAlpha = 0.7
+    local sign = (isLeft) and -1 or 1
     local rotation = (isLeft) and -(math.pi/2) or math.pi/2
     local color = MplusGainsSettings.Colors.main
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (isLeft) and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
     -- Setup textures.
-    --TODO: Fix buttons?
-    scrollButton.textureUp = ScrollButtonTexture(scrollButton, defualtAlpha, rotation, 1)
+    scrollButton.textureUp = ScrollButtonTexture(scrollButton, defualtAlpha, rotation, 0, 0)
     scrollButton:SetNormalTexture(scrollButton.textureUp)
-    scrollButton:SetPushedTexture(ScrollButtonTexture(scrollButton, 1, rotation, 0.9))
-    scrollButton:SetDisabledTexture(ScrollButtonTexture(scrollButton, 0.2, rotation, 0.9))
+    scrollButton:SetPushedTexture(ScrollButtonTexture(scrollButton, 1, rotation, sign * 1, -1))
+    scrollButton:SetDisabledTexture(ScrollButtonTexture(scrollButton, 0.1, rotation, 0, 0))
     scrollButton:SetScript("OnClick", function(self, button, down)
         if(button == "LeftButton") then
             ScrollButtonRow(parentFrame.scrollHolderFrame.scrollFrame, (isLeft) and 1 or -1)
