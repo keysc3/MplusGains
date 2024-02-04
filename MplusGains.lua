@@ -38,13 +38,13 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
                 end
             end
         elseif(button == "RightButton") then
-            if(MplusGainsSettings.minimap.lock) then
+            if(MplusGainsSettings.Minimap.lock) then
                 icon:Unlock("MplusGainsDB")
             else
                 icon:Lock("MplusGainsDB")
             end
         elseif(button == "MiddleButton") then
-            MplusGainsSettings.minimap.hide = true
+            MplusGainsSettings.Minimap.hide = true
             mainFrame.minimapCheckButton:SetChecked(false)
             icon:Hide("MplusGainsDB")
         end
@@ -52,7 +52,7 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
 })
 
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
-LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\Fonts\\TitilliumWeb-Regular.ttf")
+
 -- Data object on tooltip show function
 function dataObject:OnTooltipShow()
     self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
@@ -675,6 +675,7 @@ local function SetupFontChoices(dropDown)
     table.insert(dropDown:GetParent():GetParent():GetParent().closeFrames, scrollHolderFrame)
     local anchorFrame = scrollHolderFrame.scrollChild
     for _, v in pairs(fontsList) do
+        --TODO: nil check fonts
         local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name, LSM:Fetch("font", v))
         newFrame:SetScript("OnClick", function(self, btn, down)
             if(btn == "LeftButton") then
@@ -877,7 +878,6 @@ local function UpdateTextureColor()
     end
 end
 
--- TODO: SWITCH?
 --[[
     ColorCallback - Handles the callbacks sent from the ColorPickerFrame functions.
     @param restore - nil or the previous colors from the color picker frame.
@@ -1055,19 +1055,19 @@ local function CreateSettingsWindow(parentFrame)
     local minimapButtonFrame = SettingsRowBase(frame, selectedButtonColorFrame, "Minimap Button")
     local function MinimapCheckButtonOnClick(self, button)
         if(self:GetChecked()) then
-            if(MplusGainsSettings.minimap.hide) then 
-                MplusGainsSettings.minimap.hide = false
+            if(MplusGainsSettings.Minimap.hide) then 
+                MplusGainsSettings.Minimap.hide = false
                 icon:Show("MplusGainsDB") 
             end
         else
 
-            if(not MplusGainsSettings.minimap.hide) then
-                MplusGainsSettings.minimap.hide = true
+            if(not MplusGainsSettings.Minimap.hide) then
+                MplusGainsSettings.Minimap.hide = true
                 icon:Hide("MplusGainsDB") 
             end
         end
     end
-    local minimapCheckButton = CreateCheckButton(minimapButtonFrame.contentFrame, (not MplusGainsSettings.minimap.hide), MinimapCheckButtonOnClick)
+    local minimapCheckButton = CreateCheckButton(minimapButtonFrame.contentFrame, (not MplusGainsSettings.Minimap.hide), MinimapCheckButtonOnClick)
     mainFrame.minimapCheckButton = minimapCheckButton
     frame:SetScript("OnHide", OnHideCloseFrames)
     table.insert(mainFrame.closeFrames, frame)
@@ -2252,13 +2252,11 @@ local function StartUp()
     mainFrame:RegisterEvent("ADDON_LOADED")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
         if(event == "ADDON_LOADED") then
-            --TODO: Remove count, change minimap to Minimap
             local addonLoaded = ...
             if(addonLoaded == "MplusGains") then
                 if(MplusGainsSettings == nil) then
-                    -- Set initial font
+                    -- Set default settings
                     MplusGainsSettings = {
-                        Count = 1, 
                         Font = { 
                             path = "Fonts\\FRIZQT__.TTF", 
                             name = "Friz Quadrata TT", 
@@ -2268,15 +2266,14 @@ local function StartUp()
                             main = { r = 1, g = 0.82, b = 0, a = 1}, 
                             selectedButton = { r = 212/255, g = 99/255, b = 0, a = 1 },
                         },
-                        minimap = { 
+                        Minimap = { 
                             hide = false,
                             minimapPos = nil,
                             lock = false,
                          },
                     }
                 else
-                    -- Use saved variable font
-                    MplusGainsSettings.Count = MplusGainsSettings.Count + 1
+                    -- Check if font still exists
                     local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name)
                     if(fontCheck == nil) then 
                         MplusGainsSettings.Font.path = "Fonts\\FRIZQT__.TTF"
@@ -2284,7 +2281,7 @@ local function StartUp()
                     end
                 end
                 -- Register minimap icon.
-                icon:Register("MplusGainsDB", dataObject, MplusGainsSettings.minimap)
+                icon:Register("MplusGainsDB", dataObject, MplusGainsSettings.Minimap)
                 -- Setup static frames.
                 buttonWidth = math.floor(ApplyScale(buttonWidth))
                 dungeonRowHeight = ApplyScale(dungeonRowHeight)
