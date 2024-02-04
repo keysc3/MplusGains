@@ -2086,7 +2086,7 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     local url = "https://github.com/keysc3/MplusGains/issues/new/choose"
     -- Holder
     local frame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-    frame:SetSize(ApplyScale(300), ApplyScale(80))
+    frame:SetSize(ApplyScale(300), 1)
     frame:SetPoint("BOTTOMRIGHT", anchorFrame, "TOPRIGHT")
     frame:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -2098,7 +2098,7 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     frame:SetFrameLevel(20)
     -- Header
     local header = CreateFrame("Frame", nil, frame)
-    header:SetSize(frame:GetWidth(), ApplyScale(26))
+    header:SetSize(frame:GetWidth(), ApplyScale(30))
     header:SetPoint("TOPLEFT")
     header.text = DefaultFontString(16, header, nil)
     header.text:ClearAllPoints()
@@ -2107,7 +2107,7 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     -- Edit box
     local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     editBox:SetSize(frame:GetWidth() - 40, 20)
-    editBox:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 14, 0)
+    editBox:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 12, 0)
     editBox:SetText(url)
     editBox:SetScript("OnTextChanged", function(self, userInput)
         -- Don't want text being changed, reset it on change attempt.
@@ -2120,10 +2120,11 @@ local function CreateBugReportFrame(anchorFrame, parentFrame)
     -- Copy url text
     local footer = CreateFrame("Frame", nil, frame)
     footer:SetSize(frame:GetWidth(), ApplyScale(20))
-    footer:SetPoint("TOPLEFT", editBox, "BOTTOMLEFT")
+    footer:SetPoint("TOP", editBox, "BOTTOM")
+    footer:SetPoint("LEFT", header, "LEFT")
     footer.text = DefaultFontString(12, footer, nil)
     footer.text:ClearAllPoints()
-    footer.text:SetPoint("LEFT", footer, "LEFT", -6, 0)
+    footer.text:SetPoint("LEFT", footer, "LEFT", 8, 0)
     footer.text:SetText("Press Ctrl+C to copy the URL")
     frame:Hide()
     frame:SetHeight(CalculateHeight(frame) + ApplyScale(4))
