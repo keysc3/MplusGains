@@ -711,10 +711,10 @@ local function FontSelectOnClick(self, btn, down)
             self.highlightTexture:SetVertexColor(0, 0, 0, 0)
             self.scrollHolderFrame:GetParent().textFrame.text:SetText(self.text:GetText())
             local fontName, fontHeight, fontFlags = self.text:GetFont()
-            fontName = FontCheck(self.text:GetText())
-            self.scrollHolderFrame:GetParent().textFrame.text:SetFont(fontName, fontHeight, fontFlags)
+            local fontCheckPath = FontCheck(self.text:GetText())
+            self.scrollHolderFrame:GetParent().textFrame.text:SetFont(((fontCheckPath == fontName) and fontName or defaultFont.path), fontHeight, fontFlags)
             MplusGainsSettings.Font.path = fontName
-            MplusGainsSettings.Font.name = self.text:GetText()
+            MplusGainsSettings.Font.name = (fontCheckPath == fontName) and self.text:GetText() or defaultFont.name
             UpdateTextFont(fontName)
         end
         self.scrollHolderFrame:Hide()
