@@ -1,8 +1,8 @@
-## Interface: 100200
+## Interface: 100205
 ## Title: Mplus Gains
 ## Notes: Provides M+ rating gain information. /mplusgains or /mpg
 ## Author: Colin Keys
-## Version: 1.4.0
+## Version: 1.5.0
 ## SavedVariables: MplusGainsSettings
 
 Libs/LibStub.lua
