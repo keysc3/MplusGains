@@ -67,6 +67,25 @@ local function ApplyScale(value)
     return addon:RoundToOneDecimal(value * MplusGainsSettings.scale)
 end
 
+local function SetDefaultSettings()
+    MplusGainsSettings = {
+        Font = { 
+            path = defaultFont.path, 
+            name = defaultFont.name, 
+        }, 
+        scale = 1.0, 
+        Colors = { 
+            main = { r = 1, g = 0.82, b = 0, a = 1}, 
+            selectedButton = { r = 212/255, g = 99/255, b = 0, a = 1 },
+        },
+        Minimap = { 
+            hide = false,
+            minimapPos = nil,
+            lock = false,
+         },
+    }
+end
+
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
     @param red - red value
@@ -675,6 +694,34 @@ local function FontCheck(name)
 end
 
 --[[
+    FontSelectOnClick - Handles OnClick for font select slider
+    @param self - The selected frame.
+    @param btn - The button used for the click
+    @param down - Bool for whether or not the button is down.
+--]]
+local function FontSelectOnClick(self, btn, down)
+    if(btn == "LeftButton") then
+        if(self ~= self.scrollHolderFrame.selected) then
+            -- Set unselected texture colors.
+            self.scrollHolderFrame.selected.texture:SetVertexColor(0, 0, 0, 0)
+            self.scrollHolderFrame.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
+            -- Set up new selected.
+            self.scrollHolderFrame.selected = self
+            self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
+            self.highlightTexture:SetVertexColor(0, 0, 0, 0)
+            self.scrollHolderFrame:GetParent().textFrame.text:SetText(self.text:GetText())
+            local fontName, fontHeight, fontFlags = self.text:GetFont()
+            fontName = FontCheck(self.text:GetText())
+            self.scrollHolderFrame:GetParent().textFrame.text:SetFont(fontName, fontHeight, fontFlags)
+            MplusGainsSettings.Font.path = fontName
+            MplusGainsSettings.Font.name = self.text:GetText()
+            UpdateTextFont(fontName)
+        end
+        self.scrollHolderFrame:Hide()
+    end
+end
+
+--[[
     SetupFontChoices - Handles the setup of the font drop down options and their onclicks.
     @param dropDown - The drop down for the fonts.
 --]]
@@ -685,30 +732,13 @@ local function SetupFontChoices(dropDown)
     local anchorFrame = scrollHolderFrame.scrollChild
     for _, v in pairs(fontsList) do
         local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name, FontCheck(v))
-        newFrame:SetScript("OnClick", function(self, btn, down)
-            if(btn == "LeftButton") then
-                if(newFrame ~= scrollHolderFrame.selected) then
-                    -- Set unselected texture colors.
-                    scrollHolderFrame.selected.texture:SetVertexColor(0, 0, 0, 0)
-                    scrollHolderFrame.selected.highlightTexture:SetVertexColor(hover.r, hover.g, hover.b, hover.a)
-                    -- Set up new selected.
-                    scrollHolderFrame.selected = self
-                    self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
-                    self.highlightTexture:SetVertexColor(0, 0, 0, 0)
-                    scrollHolderFrame:GetParent().textFrame.text:SetText(self.text:GetText())
-                    local fontName, fontHeight, fontFlags = self.text:GetFont()
-                    fontName = FontCheck(v)
-                    scrollHolderFrame:GetParent().textFrame.text:SetFont(fontName, fontHeight, fontFlags)
-                    MplusGainsSettings.Font.path = fontName
-                    MplusGainsSettings.Font.name = v
-                    UpdateTextFont(fontName)
-                end
-                scrollHolderFrame:Hide()
-            end
-        end)
+        if(v == defaultFont.name) then scrollHolderFrame.defaultFrame = newFrame end
+        newFrame.scrollHolderFrame = scrollHolderFrame
+        newFrame:SetScript("OnClick", FontSelectOnClick)
         anchorFrame = newFrame
     end
     SetScrollFrameWidths(scrollHolderFrame)
+    return scrollHolderFrame
 end
 
 --[[
@@ -729,7 +759,7 @@ local function CreateDropDown(parentFrame, text)
     local textFrame = CreateFrame("Frame", nil, fontDropDownButton)
     fontDropDownButton.textFrame = textFrame
     textFrame:SetSize(fontDropDownButton:GetWidth() - fontDropDownButton:GetHeight(), fontDropDownButton:GetHeight())
-    textFrame:SetPoint("LEFT")
+    textFrame:SetPoint("LEFT", 1, 0)
     textFrame.text = DefaultFontString(12, textFrame, "")
     textFrame.text:ClearAllPoints()
     textFrame.text:SetPoint("TOPLEFT", 2, 0)
@@ -753,10 +783,12 @@ local function CreateDropDown(parentFrame, text)
     -- Mouse enter and leave
     fontDropDownButton:SetScript("OnEnter", function(self, motion)
         self:SetBackdropBorderColor(0.8, 0.8, 0.8 , 1)
+        local color = MplusGainsSettings.Colors.main
         textureFrame.texture:SetVertexColor(color.r, color.g, color.b, 1)
     end)
     fontDropDownButton:SetScript("OnLeave", function(self, motion)
         self:SetBackdropBorderColor(outline.r, outline.g, outline.b, outline.a)
+        local color = MplusGainsSettings.Colors.main
         textureFrame.texture:SetVertexColor(color.r, color.g, color.b, 0.7)
     end)
     return fontDropDownButton
@@ -774,6 +806,22 @@ local function lerp(a, b, t)
 end
 
 --[[
+    SliderOnValueChanged - Handles the OnValueChange event for a slider
+    @param self - The slider being altered.
+    @param value - The new value.
+--]]
+local function SliderOnValueChanged(self, value)
+    local rMin, rMax = self:GetMinMaxValues()
+    offset = lerp(self.halfThumb, self.width - self.halfThumb, (value - rMin)/(rMax - rMin))
+    self.text:SetPoint("CENTER", self, "LEFT", offset, 0)
+    local newValue = addon:RoundToOneDecimal(value)
+    if(newValue ~= MplusGainsSettings[setting]) then
+        self.text:SetText(addon:FormatDecimal(newValue))
+        MplusGainsSettings[self.setting] = newValue
+    end
+end
+
+--[[
     CreateSlider - Creates a settings frame slider.
     @param parentFrame - The new frames parent.
     @param minValue - Sliders minimum value.
@@ -786,6 +834,7 @@ local function CreateSlider(parentFrame, minValue, maxValue, setting)
     local c2 = 20/255
     -- SLider values
     local slider = CreateFrameWithBackdrop("Slider", parentFrame, nil)
+    slider.setting = setting
     slider:SetBackdropColor(unselected.r, unselected.g, unselected.b, 1)
     slider:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight())
     slider:SetOrientation("HORIZONTAL")
@@ -812,16 +861,7 @@ local function CreateSlider(parentFrame, minValue, maxValue, setting)
     -- Better way to do this than a lerp?
     local offset = lerp(halfThumb, slider.width - halfThumb, (slider:GetValue() - minValue)/(maxValue - minValue))
     slider.text:SetPoint("CENTER", slider, "LEFT", offset, 0)
-    slider:SetScript("OnValueChanged", function(self, value)
-        local rMin, rMax = self:GetMinMaxValues()
-        offset = lerp(self.halfThumb, self.width - self.halfThumb, (slider:GetValue() - rMin)/(rMax - rMin))
-        self.text:SetPoint("CENTER", self, "LEFT", offset, 0)
-        local newValue = addon:RoundToOneDecimal(value)
-        if(newValue ~= MplusGainsSettings[setting]) then
-            self.text:SetText(addon:FormatDecimal(newValue))
-            MplusGainsSettings[setting] = newValue
-        end
-    end)
+    slider:SetScript("OnValueChanged", SliderOnValueChanged)
     -- Slider animations
     slider:SetScript("OnEnter", function(self, motion)
         self.entered = true
@@ -954,6 +994,7 @@ local function CreateColorPickerFrame(parentFrame, colorTableName)
     button:SetScript("OnClick", function(self, motion)
         ShowColorPicker(colorTableName, self)
     end)
+    parentFrame.colorButton = button
 end
 
 --[[
@@ -971,15 +1012,27 @@ local function SettingsRowBase(parentFrame, anchorFrame, text)
     local label = CreateFrame("Frame", nil, frame)
     label:SetSize(frame:GetWidth()/2.4, rowHeight)
     label:SetPoint("LEFT", 4, 0)
-    label.text = DefaultFontString(12, label, "OUTLINE")
+    label.text = DefaultFontString(11, label, "OUTLINE")
     label.text:ClearAllPoints()
     label.text:SetPoint("LEFT")
     label.text:SetText(text)
+    frame.label = label
     local contentFrame = CreateFrame("Frame", nil, frame)
     contentFrame:SetSize(frame:GetWidth() - label:GetWidth() - 6 - ApplyScale(12), rowHeight)
     contentFrame:SetPoint("LEFT", label, "RIGHT", 0, 0)
     frame.contentFrame = contentFrame
     return frame
+end
+
+--[[
+    ResizeHeaderButton - Resizes a header buttons textures given a value to resize with
+    @param button - Texture to resize
+    @param inc - Value to increase by.
+--]]
+local function ResizeHeaderButton(button, inc)
+    local width = button.normalTexture:GetWidth() + inc
+    button.normalTexture:SetSize(width, width)
+    button.pushedTexture:SetSize(width, width)
 end
 
 --[[
@@ -1043,22 +1096,24 @@ local function CreateSettingsWindow(parentFrame)
     local exitButton = CreateHeaderButton(header, "RIGHT", header, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
     exitButton.closeFrame = frame
     -- Spacer
-    local spacerFrame = SettingsRowBase(frame, header, "")
+    local spacerFrame = SettingsRowBase(frame, header, "(*) Requires reload")
+    local fontName, fontHeight, fontFlags = spacerFrame.label.text:GetFont()
+    spacerFrame.label.text:SetFont(fontName, ApplyScale(10), "")
     spacerFrame:SetHeight(spacerFrame:GetHeight()/2)
     -- Font setting
     local fontFrame = SettingsRowBase(frame, spacerFrame, "Font")
     -- Font dropdown
     local fontDropDown = CreateDropDown(fontFrame.contentFrame, MplusGainsSettings.Font.name)
-    SetupFontChoices(fontDropDown)
+    local fontDropDownSHF = SetupFontChoices(fontDropDown)
     -- Scaling frame
-    local scalingFrame = SettingsRowBase(frame, fontFrame, "Scale")
+    local scalingFrame = SettingsRowBase(frame, fontFrame, "Scale*")
     -- Scale slider
     local scalingSlider = CreateSlider(scalingFrame.contentFrame, 0.6, 1.4, "scale")
     -- Main color frame
-    local mainColorFrame = SettingsRowBase(frame, scalingFrame, "Theme")
+    local mainColorFrame = SettingsRowBase(frame, scalingFrame, "Main Color")
     CreateColorPickerFrame(mainColorFrame.contentFrame, "main")
     -- Selected button color frame
-    local selectedButtonColorFrame = SettingsRowBase(frame, mainColorFrame, "Button")
+    local selectedButtonColorFrame = SettingsRowBase(frame, mainColorFrame, "Button Color")
     CreateColorPickerFrame(selectedButtonColorFrame.contentFrame, "selectedButton")
     -- Minimap button
     local minimapButtonFrame = SettingsRowBase(frame, selectedButtonColorFrame, "Minimap Button")
@@ -1069,7 +1124,6 @@ local function CreateSettingsWindow(parentFrame)
                 icon:Show("MplusGainsDB") 
             end
         else
-
             if(not MplusGainsSettings.Minimap.hide) then
                 MplusGainsSettings.Minimap.hide = true
                 icon:Hide("MplusGainsDB") 
@@ -1080,6 +1134,26 @@ local function CreateSettingsWindow(parentFrame)
     mainFrame.minimapCheckButton = minimapCheckButton
     frame:SetScript("OnHide", OnHideCloseFrames)
     table.insert(mainFrame.closeFrames, frame)
+    -- Reset button
+    local function ResetOnClick(self, button, down)
+        SetDefaultSettings()
+        UpdateTextColor()
+        UpdateTextureColor()
+        local mainColor = MplusGainsSettings.Colors.main
+        mainColorFrame.contentFrame.colorButton:SetBackdropColor(mainColor.r, mainColor.g, mainColor.b, mainColor.a)
+        UpdateSelectedButtonColor()
+        local selectedColor = MplusGainsSettings.Colors.selectedButton
+        selectedButtonColorFrame.contentFrame.colorButton:SetBackdropColor(selectedColor.r, selectedColor.g, selectedColor.b, selectedColor.a)
+        FontSelectOnClick(fontDropDownSHF.defaultFrame, "LeftButton", false)
+        scalingSlider:SetValue(MplusGainsSettings.scale)
+        SliderOnValueChanged(scalingSlider, MplusGainsSettings.scale)
+        MplusGainsSettings.Minimap.hide = false
+        mainFrame.minimapCheckButton:SetChecked(true)
+        icon:Show("MplusGainsDB")
+    end
+    local resetButton = CreateHeaderButton(header, "RIGHT", exitButton, "LEFT", ResetOnClick, "Interface/AddOns/MplusGains/Textures/reset.PNG")
+    ResizeHeaderButton(resetButton, 10)
+    resetButton.closeFrame = frame
     -- Frame height
     frame:SetHeight(CalculateHeight(frame) + (2 * (#{ frame:GetChildren() })) + ApplyScale(6) + 0.1)
     return frame
@@ -1128,9 +1202,7 @@ local function CreateHeaderFrame(parentFrame)
         end
     end
     local resetButton = CreateHeaderButton(frame, "LEFT", frame, "LEFT", ResetOnClick, "Interface/AddOns/MplusGains/Textures/reset.PNG")
-    local width = resetButton.normalTexture:GetWidth() + 10
-    resetButton.normalTexture:SetSize(width, width)
-    resetButton.pushedTexture:SetSize(width, width)
+    ResizeHeaderButton(resetButton, 10)
     resetButton.tooltip = CreateTooltip(frame, resetButton, "Reset selected keys")
     resetButton:SetScript("OnEnter", function(self, motion)
         self.tooltip:Show()
@@ -1542,7 +1614,6 @@ local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
     local defualtAlpha = 0.7
     local sign = (isLeft) and -1 or 1
     local rotation = (isLeft) and -(math.pi/2) or math.pi/2
-    local color = MplusGainsSettings.Colors.main
     local scrollButton = CreateFrame("Button", nil, parentFrame)
     scrollButton:SetPoint("LEFT", anchorFrame, "RIGHT", (isLeft) and scrollButtonPadding or -1, 0)
     scrollButton:SetSize(ApplyScale(20),  parentFrame:GetHeight())
@@ -1557,9 +1628,11 @@ local function CreateScrollButton(parentFrame, anchorFrame, isLeft)
         end
     end)
     scrollButton:SetScript("OnEnter", function(self, motion)
+        local color = MplusGainsSettings.Colors.main
         self.textureUp:SetVertexColor(color.r, color.g, color.b, 1)
     end)
     scrollButton:SetScript("OnLeave", function(self, motion)
+        local color = MplusGainsSettings.Colors.main
         self.textureUp:SetVertexColor(color.r, color.g, color.b, defualtAlpha)
     end)
     return scrollButton
@@ -1598,7 +1671,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text = DefaultFontString(12, frame, nil)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
-    frame:SetSize(ApplyScale(32), parentRow:GetHeight())
+    frame:SetSize(ApplyScale(38), parentRow:GetHeight())
     frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
     frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
@@ -2265,22 +2338,7 @@ local function StartUp()
             if(addonLoaded == "MplusGains") then
                 if(MplusGainsSettings == nil) then
                     -- Set default settings
-                    MplusGainsSettings = {
-                        Font = { 
-                            path = defaultFont.path, 
-                            name = defaultFont.name, 
-                        }, 
-                        scale = 1.0, 
-                        Colors = { 
-                            main = { r = 1, g = 0.82, b = 0, a = 1}, 
-                            selectedButton = { r = 212/255, g = 99/255, b = 0, a = 1 },
-                        },
-                        Minimap = { 
-                            hide = false,
-                            minimapPos = nil,
-                            lock = false,
-                         },
-                    }
+                    SetDefaultSettings()
                 else
                     -- Check if font still exists
                     local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name)
