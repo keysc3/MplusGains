@@ -1104,6 +1104,7 @@ local function CreateSettingsWindow(parentFrame)
     -- Font dropdown
     local fontDropDown = CreateDropDown(fontFrame.contentFrame, MplusGainsSettings.Font.name)
     local fontDropDownSHF = SetupFontChoices(fontDropDown)
+    parentFrame.fontDropDownSHF = fontDropDownSHF
     -- Scaling frame
     local scalingFrame = SettingsRowBase(frame, fontFrame, "Scale*")
     -- Scale slider
@@ -2342,7 +2343,6 @@ local function StartUp()
                 end
                 -- Register minimap icon.
                 icon:Register("MplusGainsDB", dataObject, MplusGainsSettings.Minimap)
-                LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\TitilliumWeb-Regular.ttf")
             end
         end
         -- Player Login
@@ -2371,8 +2371,7 @@ local function StartUp()
                 mainFrame:SetScript("OnShow", function(self)
                     local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
                     if(fontName == nil) then
-                        SetDefaultFont()
-                        UpdateTextFont(defaultFont.path)
+                        FontSelectOnClick(self.fontDropDownSHF.defaultFrame, "LeftButton", false)
                     end
                     self:SetScript("OnShow", nil)
                 end)
