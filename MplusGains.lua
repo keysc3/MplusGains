@@ -66,6 +66,11 @@ local function ApplyScale(value)
     return addon:RoundToOneDecimal(value * MplusGainsSettings.scale)
 end
 
+local function SetDefaultFont()
+    MplusGainsSettings.Font.path = defaultFont.path
+    MplusGainsSettings.Font.name = defaultFont.name
+end
+
 local function SetDefaultSettings()
     MplusGainsSettings = {
         Font = { 
@@ -84,6 +89,7 @@ local function SetDefaultSettings()
          },
     }
 end
+
 
 --[[
     CreateNewTexture - Creates a new rgb texture for the given frame.
@@ -112,11 +118,13 @@ end
     @return text - FontString created.
 ]]
 local function CustomFontString(textSize, color, font, parentFrame, flags, changeFont, changeColor)
+    textSize = ApplyScale(textSize)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(font, ApplyScale(textSize), flags)
     text:SetTextColor(color.r, color.g, color.b, 1)
     text.changeFont = changeFont
     text.changeColor = changeColor
+    text.textSize = textSize
     table.insert(mainFrame.textObjects, text)
     return text
 end
@@ -129,11 +137,13 @@ end
     @return text - FontString created.
 ]]
 local function DefaultFontString(textSize, parentFrame, flags)
+    textSize = ApplyScale(textSize)
     local text = parentFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(MplusGainsSettings.Font.path, ApplyScale(textSize), flags)
     text:SetTextColor(MplusGainsSettings.Colors.main.r, MplusGainsSettings.Colors.main.g, MplusGainsSettings.Colors.main.b, MplusGainsSettings.Colors.main.a)
     text.changeFont = true
     text.changeColor = true
+    text.textSize = textSize
     table.insert(mainFrame.textObjects, text)
     return text
 end
@@ -190,6 +200,7 @@ local function CreateMainFrame()
     frame:SetFrameStrata("HIGH")
     frame.closeFrames = {}
     frame:SetScript("OnHide", OnHideCloseFrames)
+    frame:Hide()
     return frame
 end
 
@@ -671,25 +682,14 @@ end
 local function UpdateTextFont(path)
     for _, v in ipairs(mainFrame.textObjects) do
         if(v.changeFont) then
-            local font, size, flags = v:GetFont()
-            v:SetFont(path, size, flags)
+            local fontName, fontHeight, fontFlags = v:GetFont()
+            v:SetFont(path, v.textSize, fontFlags)
         end
     end
     -- Change any frame sizes that are based on text width.
     for _, v in ipairs(mainFrame.textWidthFrames) do
         v:SetWidth(math.ceil(v.text:GetWidth() + v.padding))
     end
-end
-
---[[
-    FontCheck - Checks if a font exists, returns default font if it doesn't
-    @param name - name of the font.
-    @return - Font to use
---]]
-local function FontCheck(name)
-    local fontCheck = LSM:Fetch("font", name)
-    if(fontCheck == nil) then fontCheck = defaultFont.path end
-    return fontCheck
 end
 
 --[[
@@ -700,6 +700,8 @@ end
 --]]
 local function FontSelectOnClick(self, btn, down)
     if(btn == "LeftButton") then
+        local fontPath, fontHeight, fontFlags = self.text:GetFont()
+        if(fontPath == nil) then return end
         if(self ~= self.scrollHolderFrame.selected) then
             -- Set unselected texture colors.
             self.scrollHolderFrame.selected.texture:SetVertexColor(0, 0, 0, 0)
@@ -708,13 +710,12 @@ local function FontSelectOnClick(self, btn, down)
             self.scrollHolderFrame.selected = self
             self.texture:SetVertexColor(hover.r, hover.g, hover.b, hover.a/2)
             self.highlightTexture:SetVertexColor(0, 0, 0, 0)
-            self.scrollHolderFrame:GetParent().textFrame.text:SetText(self.text:GetText())
-            local fontName, fontHeight, fontFlags = self.text:GetFont()
-            local fontCheckPath = FontCheck(self.text:GetText())
-            self.scrollHolderFrame:GetParent().textFrame.text:SetFont(((fontCheckPath == fontName) and fontName or defaultFont.path), fontHeight, fontFlags)
-            MplusGainsSettings.Font.path = fontName
-            MplusGainsSettings.Font.name = (fontCheckPath == fontName) and self.text:GetText() or defaultFont.name
-            UpdateTextFont(fontName)
+            local text = self.text:GetText()
+            self.scrollHolderFrame:GetParent().textFrame.text:SetText(text)
+            self.scrollHolderFrame:GetParent().textFrame.text:SetFont(fontPath, self.text.textSize, fontFlags)
+            MplusGainsSettings.Font.path = fontPath
+            MplusGainsSettings.Font.name = text
+            UpdateTextFont(fontPath)
         end
         self.scrollHolderFrame:Hide()
     end
@@ -730,7 +731,7 @@ local function SetupFontChoices(dropDown)
     table.insert(dropDown:GetParent():GetParent():GetParent().closeFrames, scrollHolderFrame)
     local anchorFrame = scrollHolderFrame.scrollChild
     for _, v in pairs(fontsList) do
-        local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name, FontCheck(v))
+        local newFrame = CreateScrollFrameButton(scrollHolderFrame, anchorFrame, v, MplusGainsSettings.Font.name,  LSM:Fetch("font", v))
         if(v == defaultFont.name) then scrollHolderFrame.defaultFrame = newFrame end
         newFrame.scrollHolderFrame = scrollHolderFrame
         newFrame:SetScript("OnClick", FontSelectOnClick)
@@ -1097,7 +1098,6 @@ local function CreateSettingsWindow(parentFrame)
     -- Spacer
     local spacerFrame = SettingsRowBase(frame, header, "(*) Requires reload")
     local fontName, fontHeight, fontFlags = spacerFrame.label.text:GetFont()
-    spacerFrame.label.text:SetFont(fontName, ApplyScale(10), "")
     spacerFrame:SetHeight(spacerFrame:GetHeight()/2)
     -- Font setting
     local fontFrame = SettingsRowBase(frame, spacerFrame, "Font")
@@ -1306,9 +1306,10 @@ local function CreateButton(keyLevel, anchorButton, parentFrame)
     btn:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, btn))
     -- Create keystone button font
     local myFont = CreateFont("Font")
-    myFont:SetFont(MplusGainsSettings.Font.path, ApplyScale(12), "OUTLINE, MONOCHROME")
     myFont:SetTextColor(1, 1, 1, 1)
     myFont.changeFont = true
+    myFont.textSize = ApplyScale(12)
+    myFont:SetFont(MplusGainsSettings.Font.path, ApplyScale(12), "OUTLINE, MONOCHROME")
     btn:SetNormalFontObject(myFont)
     table.insert(mainFrame.textObjects, myFont)
     return btn
@@ -2323,12 +2324,12 @@ end
 local function StartUp()
     -- UI setup
     mainFrame = CreateMainFrame()
-    mainFrame:Hide()
     local headerFrame
     local dungeonHolderFrame
     local summaryFrame
     -- Data setup.
     mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    mainFrame:RegisterEvent("PLAYER_LOGIN")
     mainFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     mainFrame:RegisterEvent("ADDON_LOADED")
     mainFrame:SetScript("OnEvent", function(self, event, ...)
@@ -2338,32 +2339,44 @@ local function StartUp()
                 if(MplusGainsSettings == nil) then
                     -- Set default settings
                     SetDefaultSettings()
-                else
-                    -- Check if font still exists
-                    local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name)
-                    if(fontCheck == nil) then 
-                        MplusGainsSettings.Font.path = defaultFont.path
-                        MplusGainsSettings.Font.name = defaultFont.name
-                    end
                 end
                 -- Register minimap icon.
                 icon:Register("MplusGainsDB", dataObject, MplusGainsSettings.Minimap)
-                -- Setup static frames.
-                buttonWidth = math.floor(ApplyScale(buttonWidth))
-                dungeonRowHeight = ApplyScale(dungeonRowHeight)
-                mainFrame:SetSize(ApplyScale(1000), ApplyScale(600))
-                headerFrame = CreateHeaderFrame(mainFrame)
-                dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
-                summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
-                mainFrame.summaryFrame = summaryFrame
-                mainFrame.dungeonHolderFrame = dungeonHolderFrame
-                CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
+                LSM:Register("font", "Titillium Web", "Interface\\Addons\\MplusGains\\TitilliumWeb-Regular.ttf")
             end
+        end
+        -- Player Login
+        if(event == "PLAYER_LOGIN") then
+            -- Check if font still exists
+            local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name, true)
+            if(fontCheck == nil) then 
+                SetDefaultFont()
+            end
+            -- Setup static frames.
+            buttonWidth = math.floor(ApplyScale(buttonWidth))
+            dungeonRowHeight = ApplyScale(dungeonRowHeight)
+            mainFrame:SetSize(ApplyScale(1000), ApplyScale(600))
+            headerFrame = CreateHeaderFrame(mainFrame)
+            dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
+            summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+            mainFrame.summaryFrame = summaryFrame
+            mainFrame.dungeonHolderFrame = dungeonHolderFrame
+            CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
         end
         -- Player entering world
         if(event == "PLAYER_ENTERING_WORLD") then
             local isInitialLogin, isReloadingUI = ...
             if(isInitialLogin) then
+                -- Check if the font used exists, update if it doesn't
+                mainFrame:SetScript("OnShow", function(self)
+                    local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
+                    if(fontName == nil) then
+                        SetDefaultFont()
+                        UpdateTextFont(defaultFont.path)
+                    end
+                    self:SetScript("OnShow", nil)
+                end)
+                -- Register for event needed to get data.
                 self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
             else
                 if(isReloadingUI) then
@@ -2398,7 +2411,6 @@ local function StartUp()
 end
 
 StartUp()
-
 SLASH_MPLUSGAINS1 = "/mplusgains"
 SLASH_MPLUSGAINS2 = "/mpg"
 SlashCmdList["MPLUSGAINS"] = function()
