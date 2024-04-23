@@ -5,13 +5,13 @@ local tyrannicalID = 9
 local fortifiedID = 10
 local weeklyAffix = nil
 
-local scorePerLevel  = {0, 40, 45, 50, 55, 60, 75, 80, 85, 90, 97, 104, 111, 128, 135, 
-142, 149, 156, 163, 170, 177, 184, 191, 198, 205, 212, 219, 226, 233, 240}
+local scorePerLevel = {0, 94, 101, 108, 125, 132, 139, 146, 153, 170, 177, 184, 191, 198, 205, 212, 
+219, 226, 233, 240, 247, 254, 261, 268, 275, 282, 289, 296, 303, 310}
 
 local affixLevels = {
     [2] = {10, 9},
-    [7] = {135, 136, 3, 134, 124},
-    [14] = {123, 6, 7, 11, 8}
+    [5] = {135, 136, 3, 134, 124},
+    [10] = {123, 6, 7, 11, 8}
 }
 
 addon.scorePerLevel = scorePerLevel
@@ -175,6 +175,7 @@ end
     @param level - the level of the dungeon
     @return rating - the score from the run
 --]]
+--TODO: CLAMP
 function addon:CalculateRating(runTime, dungeonID, level)
     -- ((totaltime - runTime)/(totaltime * maxModifier)) * 5 = bonusScore
     -- Subtract 5 if overtime
@@ -187,7 +188,8 @@ function addon:CalculateRating(runTime, dungeonID, level)
     local numerator = dungeonTimeLimit - runTime
     local denominator = dungeonTimeLimit * maxModifier
     local quotient = numerator/denominator
-    
+    -- local qotient = math.clamp(numerator/denominator, -1, 1)
+    -- bonuseRating = math.clamp(quotient * 5, -5, 5)
     if(quotient >= 1) then bonusRating = 5
     elseif(quotient <= -1) then bonusRating = -5
     else bonusRating = quotient * 5 end
