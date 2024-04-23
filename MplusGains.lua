@@ -3,7 +3,7 @@ local addonName, addon = ...
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
-local maxLevel = 30
+local maxLevel = 20
 local weeklyAffix
 local buttonWidth = 48
 local xColPadding = 20
