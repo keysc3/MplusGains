@@ -140,7 +140,7 @@ function addon:GetWeeklyAffixInfo()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
     if(affixIDs ~= nil) then
         for i, value in ipairs(affixIDs) do
-            name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
+            local name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
             affixInfo[value.id] = {
                 ["description"] = description,
                 ["name"] = name,
