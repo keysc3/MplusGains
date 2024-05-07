@@ -1,4 +1,4 @@
-## Interface: 100206
+## Interface: 100207
 ## Title: Mplus Gains
 ## Notes: Provides M+ rating gain information. /mplusgains or /mpg
 ## Author: Colin Keys
@@ -10,7 +10,6 @@ Libs/LibSharedMedia-3.0.lua
 Libs/CallbackHandler-1.0.lua
 Libs/LibDataBroker-1.1.lua
 Libs/LibDBIcon-1.0.lua
-Libs/LibSharedMedia-3.0.lua
 
 FormatHelpers.lua
 KeystoneButton.lua
