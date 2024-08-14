@@ -51,7 +51,7 @@ local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
 
 -- Data object on tooltip show function
 function dataObject:OnTooltipShow()
-    self:AddLine(GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
+    self:AddLine(C_AddOns.GetAddOnMetadata(addonName, "Title"), 1, 1, 1)
 	self:AddLine("Left click: Toggle main window")
     self:AddLine("Right click: Lock or unlock minimap button")
     self:AddLine("Middle click: Disable minimap button")
@@ -1173,7 +1173,7 @@ local function CreateHeaderFrame(parentFrame)
     frame:SetSize(parentFrame:GetWidth() - headerWidthDiff, headerHeight)
     frame.text = DefaultFontString(24, frame, "OUTLINE")
     frame.text:SetPoint("CENTER")
-    frame.text:SetText(GetAddOnMetadata(addonName, "Title"))
+    frame.text:SetText(C_AddOns.GetAddOnMetadata(addonName, "Title"))
     -- Exit button
     local exitButton = CreateHeaderButton(frame, "RIGHT", frame, "RIGHT", ExitOnClick, "Interface/AddOns/MplusGains/Textures/exit.PNG")
     exitButton.closeFrame = mainFrame
@@ -2244,7 +2244,7 @@ local function CreateFooter(anchorFrame, parentFrame, headerFrame)
     frame.versionText = CustomFontString(10, color, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.versionText:ClearAllPoints()
     frame.versionText:SetPoint("LEFT", frame.splitter, "RIGHT", 4, 0)
-    frame.versionText:SetText("v" .. GetAddOnMetadata(addonName, "Version"))
+    frame.versionText:SetText("v" .. C_AddOns.GetAddOnMetadata(addonName, "Version"))
     -- Bug report frame and button
     local bugReportFrame = CreateBugReportFrame(frame, parentFrame)
     local bugButton = CreateFrame("Button", nil, frame)
