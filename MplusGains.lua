@@ -16,7 +16,6 @@ local mainFrame = nil
 local selectedAffix = addon.tyrannicalID
 local colorVar = nil
 local frameToChange = nil
-local defaultFont = { path = "Fonts\\FRIZQT__.TTF", name = "Friz Quadrata TT" }
 local addonTitle = C_AddOns.GetAddOnMetadata(addonName, "Title")
 
 -- Setup libraries and data broker.
@@ -49,6 +48,7 @@ local dataObject = ldb:NewDataObject("MplusGainsDB", {
 })
 
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
+local defaultFont = { path = LSM:Fetch("font", LSM:GetDefault("font")), name = LSM:GetDefault("font") }
 
 -- Data object on tooltip show function
 function dataObject:OnTooltipShow()
