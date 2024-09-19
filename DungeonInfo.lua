@@ -1,54 +1,26 @@
 local _, addon = ...
 
 local maxModifier = 0.4
-local tyrannicalID = 9
-local fortifiedID = 10
-local weeklyAffix = nil
+--local tyrannicalID = 9
+--local fortifiedID = 10
+--local weeklyAffix = nil
 
 local scorePerLevel = {0, 94, 101, 108, 125, 132, 139, 146, 153, 170, 177, 184, 191, 198, 205, 212, 
 219, 226, 233, 240, 247, 254, 261, 268, 275, 282, 289, 296, 303, 310}
 
 local affixLevels = {
-    [2] = {10, 9},
-    [5] = {135, 136, 3, 134, 124},
-    [10] = {123, 6, 7, 11, 8}
+    [2] = {148},
+    [4] = {10, 9},
+    [7] = {152},
+    [10] = { 10, 9},
+    [12] = {147}
+    --[5] = {135, 136, 3, 134, 124},
+    --[10] = {123, 6, 7, 11, 8}
 }
 
 addon.scorePerLevel = scorePerLevel
-addon.tyrannicalID = tyrannicalID
-addon.fortifiedID = fortifiedID
-
---[[
-    CalculateDungeonTotal - Calculates a dungeons overall score contributing to a players rating.
-    @param seasonAffixScore1 - best score for dungeon for a weekly affix
-    @param seasonAffixScore2 - best score for dungeon for a weekly affix
-    @return - the total rating for the dungeons scores
---]]
-function addon:CalculateDungeonTotal(seasonAffixScore1, seasonAffixScore2)
-    local total
-    if(seasonAffixScore1 > seasonAffixScore2) then
-        total = addon:RoundToOneDecimal(seasonAffixScore1 * 1.5) + addon:RoundToOneDecimal(seasonAffixScore2 * 0.5)
-    else
-        total = addon:RoundToOneDecimal(seasonAffixScore1 * 0.5) + addon:RoundToOneDecimal(seasonAffixScore2 * 1.5)
-    end
-    return addon:RoundToOneDecimal(total)
-end
-
---[[
-    CalculateDungeonRatings - Calculates and stores the total rating a dungeon is giving the player.
---]]
-function addon:CalculateDungeonRatings()
-    local playerDungeonRatings = {}
-    for key, value in pairs(addon.playerBests[tyrannicalID]) do
-        local bestTyran = value.rating
-        local bestFort = addon.playerBests[fortifiedID][key].rating
-        playerDungeonRatings[key] = {
-            ["mapScore"] = addon:CalculateDungeonTotal(bestTyran, bestFort)
-        }
-    end
-    addon.playerDungeonRatings = playerDungeonRatings
-    CalculateTotalRating()
-end
+--addon.tyrannicalID = tyrannicalID
+--addon.fortifiedID = fortifiedID
 
 --[[
     GetGeneralDungeonInfo - Gets and stores the current mythic+ dungeons and their time limits.
@@ -70,10 +42,7 @@ end
     GetGeneralDungeonInfo - Gets and stores the current characters best dungeon run per affix per dungeon.
 --]]
 function addon:GetPlayerDungeonBests()
-    local playerBests = {
-        [tyrannicalID] = {},
-        [fortifiedID] = {}
-    }
+    local playerBests = {}
     for key, value in pairs(addon.dungeonInfo) do
         local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
         if(affixScores ~= nil) then
@@ -84,36 +53,26 @@ function addon:GetPlayerDungeonBests()
                     ["time"] = affix.durationSec,
                     ["overTime"]  = affix.overTime
                 }
-                local oppositeAffix = addon:GetOppositeAffix(weeklyAffix)
-                -- If the affix this iteration is the weekly affix.
-                if(string.lower(addon.affixInfo[weeklyAffix].name) == string.lower(affix.name)) then
-                    -- Insert new entry with weekly affix key and check if empty affix should be added.
-                    playerBests[weeklyAffix][key] = dungeonBest
-                    if(#affixScores == 1) then playerBests[oppositeAffix][key] = CreateNoRunsEntry() end
-                else
-                    -- Insert new afffix with opposite affix and check if empty of weekly should be added.
-                    playerBests[oppositeAffix][key] = dungeonBest
-                    if(#affixScores == 1) then playerBests[weeklyAffix][key] = CreateNoRunsEntry() end
-                end
             end
+            playerBests[key] = dungeonBest
         else
-            playerBests[tyrannicalID][key] = CreateNoRunsEntry()
-            playerBests[fortifiedID][key] = CreateNoRunsEntry()
+            playerBests[key] = CreateNoRunsEntry()
         end
     end
     addon.playerBests = playerBests
+    CalculateTotalRating()
 end
 
 --[[
     GetOppositeAffix - Gets the alternating affix that isn't active this given.
-]]
-function addon:GetOppositeAffix(givenAffix)
+--]]
+--[[function addon:GetOppositeAffix(givenAffix)
     if(givenAffix == tyrannicalID) then 
         return fortifiedID
     else 
         return tyrannicalID
     end
-end
+end--]]
 
 --[[
     CreateNoRunsEntry - Creates a default table for use when a dungeon doens't have a run for an associated week.
@@ -134,7 +93,6 @@ end
     @return - retuns the alternating weekly affix
 --]]
 function addon:GetWeeklyAffixInfo()
-    --local weeklyAffix = nil
     local affixInfo = {}
     C_MythicPlus.RequestCurrentAffixes()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
@@ -147,14 +105,11 @@ function addon:GetWeeklyAffixInfo()
                 ["filedataid"] = filedataid,
                 ["level"] = GetAffixLevel(value.id)
             }
-            if(value.id == tyrannicalID or value.id == fortifiedID) then
-                weeklyAffix = value.id
-            end
-                
+            print(affixInfo[value.id].name)   
         end 
         addon.affixInfo = affixInfo
     end
-    return weeklyAffix
+    return #affixIDs
 end
 
 --[[
@@ -162,8 +117,8 @@ end
 --]]
 function CalculateTotalRating()
     local total = 0
-    for key, value in pairs(addon.playerDungeonRatings) do
-        total = total + value.mapScore
+    for key, value in pairs(addon.playerBests) do
+        total = total + value.rating
     end
     addon.totalRating = total
 end
@@ -230,19 +185,18 @@ function addon:SortDungeonsByScore()
     end
     -- Sort the mapIDs by their mapScores
     table.sort(array, function(id1, id2)
-        return addon.playerDungeonRatings[id1].mapScore > addon.playerDungeonRatings[id2].mapScore
+        return addon.playerBests[id1].rating > addon.playerBests[id2].rating
         end)
 
     return array
 end
 
 --[[
-    SortDungeonByLevl - Sorts the dungeons by their best completed levels
-    @param weeklyAffix - the weekly affix for the runs being sorted.
+    SortDungeonByLevel - Sorts the dungeons by their best completed levels
     return - an array of dungeonIDs indexed by ascending completed level.
     Note: Ties are sorted by score.
 --]]
-function addon:SortDungeonsByLevel(weeklyAffix)
+function addon:SortDungeonsByLevel()
     -- Put mapIDs into an array
     local array = {}
     for k, v in pairs(addon.dungeonInfo) do
@@ -250,15 +204,15 @@ function addon:SortDungeonsByLevel(weeklyAffix)
     end
     -- Sort the mapIDs by their levels, ratings if ties, overall map rating if no run for both the dungeons
     table.sort(array, function(id1, id2)
-        id1_level = addon.playerBests[weeklyAffix][id1].level
-        id2_level = addon.playerBests[weeklyAffix][id2].level
+        id1_level = addon.playerBests[id1].level
+        id2_level = addon.playerBests[id2].level
         if(id1_level ~= 1 and id2_level ~= 1) then
             if(id1_level ~= id2_level) then
                 return id1_level < id2_level
             end
-            return addon.playerBests[weeklyAffix][id1].rating < addon.playerBests[weeklyAffix][id2].rating
+            return addon.playerBests[id1].rating < addon.playerBests[id2].rating
         end
-        return addon.playerDungeonRatings[id1].mapScore < addon.playerDungeonRatings[id2].mapScore
+        return addon.playerBests[id1].rating < addon.playerBests[id2].rating
     end)
     return array
 end
@@ -300,11 +254,10 @@ end
     @param dungeonID - the dungeons ID
     @param level - the completed level
     @param time - the time completed in
-    @param weeklyAffix - the weekly affix
     @param onTime - bool for if the key was completed on time
 --]]
-function addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
-    local entry = addon.playerBests[weeklyAffix][dungeonID]
+function addon:SetNewBest(dungeonID, level, time, onTime)
+    local entry = addon.playerBests[dungeonID]
     entry.level = level
     entry.time = time/1000
     entry.rating = addon:CalculateRating(time/1000, dungeonID, level)

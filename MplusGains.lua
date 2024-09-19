@@ -4,7 +4,6 @@ local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
 local maxLevel = 20
-local weeklyAffix
 local buttonWidth = 48
 local xColPadding = 20
 local xPadding = 2
@@ -13,7 +12,6 @@ local dungeonRowHeight = 64
 local scrollButtonPadding = 4
 local totalGained = 0
 local mainFrame = nil
-local selectedAffix = addon.tyrannicalID
 local colorVar = nil
 local frameToChange = nil
 local addonTitle = C_AddOns.GetAddOnMetadata(addonName, "Title")
@@ -214,40 +212,39 @@ end
 local function SelectButtons(parentFrame, keystoneButton, isSwitch)
     local selectedColor = MplusGainsSettings.Colors["selectedButton"]
     -- If the clicked button is a higher keystone level than the currently selected button.
-    if(keystoneButton.level > parentFrame.selectedLevel[selectedAffix]) then 
+    if(keystoneButton.level > parentFrame.selectedLevel) then 
         -- Set buttons from the currently selected to the new selected (inclusive) to the selected color.
-        for i = parentFrame.selectedLevel[selectedAffix] + 1, keystoneButton.level do
+        for i = parentFrame.selectedLevel + 1, keystoneButton.level do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(selectedColor.r, selectedColor.g, selectedColor.b, selectedColor.a)
         end
     -- If the clicked button is a lower keystone level than the currently selected button.
-    elseif(keystoneButton.level < parentFrame.selectedLevel[selectedAffix]) then
+    elseif(keystoneButton.level < parentFrame.selectedLevel) then
         -- Set buttons from the currently selected to the new selected (exclusive) to the unselected color.
-        for i = parentFrame.selectedLevel[selectedAffix], keystoneButton.level + 1, -1 do
+        for i = parentFrame.selectedLevel, keystoneButton.level + 1, -1 do
             parentFrame.keystoneButtons[i].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
         end
     else
-        if(keystoneButton.level == parentFrame.startingLevel[selectedAffix] and not isSwitch) then
+        if(keystoneButton.level == parentFrame.startingLevel and not isSwitch) then
             parentFrame.keystoneButtons[keystoneButton.level].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-            parentFrame.selectedLevel[selectedAffix] = keystoneButton.level - 1
+            parentFrame.selectedLevel = keystoneButton.level - 1
             return
         end
     end
     if(not isSwitch) then 
-        parentFrame.selectedLevel[selectedAffix] = keystoneButton.level
+        parentFrame.selectedLevel = keystoneButton.level
     end
 end
 
 --[[
     CheckForScrollButtonEnable - Checks to see if either scroll buttons needs to be enabled or disabled and does so if necessary.
     @param scrollHolderFrame - the frame the scroll buttons are a part of.
-    @param affixID - The affixID of the affix to use for the scroll range check.
 --]]
-local function CheckForScrollButtonEnable(scrollHolderFrame, affixID)
+local function CheckForScrollButtonEnable(scrollHolderFrame)
     local scrollFrame = scrollHolderFrame.scrollFrame
     local scroll = addon:RoundToOneDecimal(scrollFrame:GetHorizontalScroll())
     local leftEnabled = scrollHolderFrame.leftScrollButton:IsEnabled()
     local rightEnabled = scrollHolderFrame.rightScrollButton:IsEnabled()
-    if(addon:RoundToOneDecimal(scrollFrame.minScrollRange[affixID]) >= scroll) then
+    if(addon:RoundToOneDecimal(scrollFrame.minScrollRange) >= scroll) then
         if(leftEnabled) then
             scrollHolderFrame.leftScrollButton:Disable()
         end
@@ -256,7 +253,7 @@ local function CheckForScrollButtonEnable(scrollHolderFrame, affixID)
             scrollHolderFrame.leftScrollButton:Enable()
         end
     end
-    if(addon:RoundToOneDecimal(scrollFrame.maxScrollRange[affixID]) <= scroll) then
+    if(addon:RoundToOneDecimal(scrollFrame.maxScrollRange) <= scroll) then
         if(rightEnabled) then
             scrollHolderFrame.rightScrollButton:Disable()
         end
@@ -285,14 +282,13 @@ end
 
 --[[
     ResetScrollFrameValues - Resets the values of a dungeons scroll frame.
-    @param affixID - the ID of the week being reset
     @param scrollChild - the scrollChild from for the row
     @param gainedScoreFrame - the gainedScoreFrame of the row
 --]]
-local function ResetScrollFrameValues(affixID, scrollChild, gainedScoreFrame)
-    scrollChild.selectedLevel[affixID] = scrollChild.startingLevel[affixID] - 1
-    totalGained = totalGained - gainedScoreFrame.gainedScore[affixID]
-    gainedScoreFrame.gainedScore[affixID] = 0
+local function ResetScrollFrameValues(scrollChild, gainedScoreFrame)
+    scrollChild.selectedLevel = scrollChild.startingLevel - 1
+    totalGained = totalGained - gainedScoreFrame.gainedScore
+    gainedScoreFrame.gainedScore = 0
 end
 
 --[[
@@ -303,19 +299,15 @@ local function ResetBothToStartingLevel(rowFrame)
     local scrollChild = rowFrame.scrollHolderFrame.scrollChild
     local scrollFrame = rowFrame.scrollHolderFrame.scrollFrame
     local gainedScoreFrame = rowFrame.gainedScoreFrame
-    local opp = addon:GetOppositeAffix(selectedAffix)
-    local startingLevel = (scrollChild.startingLevel[selectedAffix] < scrollChild.startingLevel[opp]) and scrollChild.startingLevel[selectedAffix] or scrollChild.startingLevel[opp]
+    local startingLevel = scrollChild.startingLevel
     -- Reset button selection UI colors and scroll values/position.
     SelectButtons(scrollChild, scrollChild.keystoneButtons[startingLevel], false)
     scrollChild.keystoneButtons[startingLevel].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-    scrollFrame.previousScroll = scrollFrame.minScrollRange[opp]
-    scrollFrame:SetHorizontalScroll(scrollFrame.minScrollRange[selectedAffix])
-    CheckForScrollButtonEnable(rowFrame.scrollHolderFrame, selectedAffix)
+    scrollFrame:SetHorizontalScroll(scrollFrame.minScrollRange)
+    CheckForScrollButtonEnable(rowFrame.scrollHolderFrame)
     -- Reset the scroll frame values and set the text.
-    ResetScrollFrameValues(selectedAffix, scrollChild, gainedScoreFrame)
-    ResetScrollFrameValues(addon:GetOppositeAffix(selectedAffix), scrollChild, gainedScoreFrame)
+    ResetScrollFrameValues(scrollChild, gainedScoreFrame)
     gainedScoreFrame.text:SetText("+0.0")
-    gainedScoreFrame.oppText:SetText("")
 end
 
 --[[
@@ -348,73 +340,6 @@ local function CreateTooltip(parentFrame, anchorFrame, textString)
 end
 
 --[[
-    SwitchAffixWeeks - Handles switching between affix weeks on button click.
-    @param self - the button clicked
-    @param motion - the button used for the click
-    @param down - bool for if the button is held down
---]]
-local function SwitchAffixWeeks(self, button, down)
-    if(button ~= "LeftButton") then return end
-    if(selectedAffix ~= self.affixID) then
-        SetDesaturation(self.texture, false)
-        local otherButton = (self.affixID == addon.tyrannicalID) and self:GetParent().toggles[addon.fortifiedID] or self:GetParent().toggles[addon.tyrannicalID]
-        SetDesaturation(otherButton.texture, true)
-        if(mainFrame.dungeonHolderFrame.rows ~= nil) then
-            for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
-                local scrollChild = value.scrollHolderFrame.scrollChild
-                -- If no level is selected then deselect every button including the starting level, otherwise deslect to the selected level.
-                if(scrollChild.selectedLevel[self.affixID] < scrollChild.startingLevel[self.affixID]) then
-                    SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]], true)
-                    scrollChild.keystoneButtons[scrollChild.startingLevel[self.affixID]].button:SetBackdropColor(unselected.r, unselected.g, unselected.b, unselected.a)
-                else
-                    SelectButtons(scrollChild, scrollChild.keystoneButtons[scrollChild.selectedLevel[self.affixID]], true)
-                end
-                -- Handle scroll values and button enabling.
-                local oldScroll = value.scrollHolderFrame.scrollFrame:GetHorizontalScroll()
-                value.scrollHolderFrame.scrollFrame:SetHorizontalScroll(value.scrollHolderFrame.scrollFrame.previousScroll)
-                value.scrollHolderFrame.scrollFrame.previousScroll = oldScroll
-                CheckForScrollButtonEnable(value.scrollHolderFrame, self.affixID)
-                -- Set text values for gains.
-                value.gainedScoreFrame.text:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[self.affixID]))
-                if(value.gainedScoreFrame.gainedScore[selectedAffix] > 0) then
-                    value.gainedScoreFrame.oppText:SetText("+" .. addon:FormatDecimal(value.gainedScoreFrame.gainedScore[selectedAffix]))
-                else
-                    value.gainedScoreFrame.oppText:SetText("")
-                end
-            end
-        end
-        selectedAffix = self.affixID
-    end
-end
---[[
-    CreateToggleButton - Creates a toggle button for switching between weeks when choosing keys.
-    @param parentFrame - The parent frame for the button.
-    @param affixID - The affix the button is for.
-    @return button - The created button.
---]]
-local function CreateToggleButton(parentFrame, affixID)
-    local name, description, filedataid = C_ChallengeMode.GetAffixInfo(affixID);
-    local button = CreateFrame("Button", nil, parentFrame)
-    button.affixID = affixID
-    local size = (parentFrame:GetWidth()/1.5) - 2
-    button:SetSize(size, size)
-    button.texture = button:CreateTexture()
-    button.texture:SetTexture(filedataid)
-    button:SetNormalTexture(button.texture)
-    button:ClearAllPoints()
-    button:SetHighlightTexture(CreateNewTexture(hover.r, hover.g, hover.b, hover.a, button))
-    button.tooltip = CreateTooltip(parentFrame, button, "View " .. string.lower(name) .. " keys")
-    button:SetScript("OnEnter", function(self, motion)
-        self.tooltip:Show()
-    end)
-    button:SetScript("OnLeave", function(self, motion)
-        self.tooltip:Hide()
-    end)
-    button:SetScript("OnClick", SwitchAffixWeeks)
-    return button
-end
-
---[[
     CalculateHeight - Calculates the height for a frame.
     @param frame - the frame to caclculate for
     @return totalWidth - the total height needed for the frame
@@ -426,22 +351,6 @@ local function CalculateHeight(frame)
         totalHeight = totalHeight + child:GetHeight()
     end
     return totalHeight
-end
---[[
-    CreateToggle - Creates a scroll button with an arrow texture.
-    @param parentFrame - the parent frome of the button.
---]]
-local function CreateToggle(parentFrame)
-    parentFrame.toggles = {}
-    local leftToggle = CreateToggleButton(parentFrame, addon.fortifiedID)
-    leftToggle:SetPoint("LEFT", parentFrame, "LEFT")
-    leftToggle.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", -2, -1)
-    local pad = 4
-    local rightToggle = CreateToggleButton(parentFrame, addon.tyrannicalID)
-    rightToggle:SetPoint("LEFT", leftToggle, "RIGHT", pad, 0)
-    rightToggle.tooltip:SetPoint("BOTTOMLEFT", parentFrame, "TOPLEFT", leftToggle:GetWidth() + pad - 2, -1)
-    parentFrame.toggles[leftToggle.affixID] = leftToggle
-    parentFrame.toggles[rightToggle.affixID] = rightToggle
 end
 
 --[[
@@ -899,7 +808,7 @@ end
 local function UpdateSelectedButtonColor()
     for _, v in pairs(mainFrame.dungeonHolderFrame.rows) do
         local scrollChild = v.scrollHolderFrame.scrollChild
-        for i = scrollChild.baseLevel, scrollChild.selectedLevel[selectedAffix] do
+        for i = scrollChild.baseLevel, scrollChild.selectedLevel do
             scrollChild.keystoneButtons[i].button:SetBackdropColor(MplusGainsSettings.Colors.selectedButton.r, MplusGainsSettings.Colors.selectedButton.g, 
             MplusGainsSettings.Colors.selectedButton.b, MplusGainsSettings.Colors.selectedButton.a)
         end
@@ -1211,12 +1120,6 @@ local function CreateHeaderFrame(parentFrame)
     resetButton:SetScript("OnLeave", function(self, motion)
         self.tooltip:Hide()
     end)
-    -- Create the weekly affix toggles
-    local toggle = CreateFrame("Frame", nil, frame)
-    toggle:SetSize(headerHeight, headerHeight)
-    toggle:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
-    CreateToggle(toggle)
-    frame.toggle = toggle
     return frame
 end
 
@@ -1321,14 +1224,11 @@ end
     CalculateGainedRating - Calculates the rating gained given a keystone level and a dungeon.
     @param keystoneLevel - the level of the keystone completed
     @param dungeonID - the dungeon ID for the dungeon being completed.
-    @param affixID - the affix ID for the affix of the key.
     @return - the amount of score gained from the completed keystone
 --]]
-local function CalculateGainedRating(keystoneLevel, dungeonID, affixID)
-    local oppositeAffix = (affixID == addon.tyrannicalID) and addon.fortifiedID or addon.tyrannicalID
-    local oppositeBest = addon.playerBests[oppositeAffix][dungeonID].rating
-    local newScore = addon.scorePerLevel[keystoneLevel]
-    local gainedScore = addon:CalculateDungeonTotal(newScore, oppositeBest) - addon.playerDungeonRatings[dungeonID].mapScore
+local function CalculateGainedRating(keystoneLevel, dungeonID)
+    --local newScore = addon.scorePerLevel[keystoneLevel]
+    local gainedScore = addon.scorePerLevel[keystoneLevel] - addon.playerBests[dungeonID].rating
     return (gainedScore > 0) and gainedScore or 0
 end
 
@@ -1340,41 +1240,22 @@ end
 --]]
 local function CalculateGainedRatingBothSelected(newSelectedLevel, parentFrame)
     local dungeonID = parentFrame.dungeonID
-    local opp = addon:GetOppositeAffix(weeklyAffix)
-    local weeklySelected
-    local oppSelected
-    -- Set the weekly affixes selected level.
-    if(weeklyAffix == selectedAffix) then
-        weeklySelected = newSelectedLevel
-        oppSelected = parentFrame.selectedLevel[opp]
-    else
-        weeklySelected = parentFrame.selectedLevel[weeklyAffix]
-        oppSelected = newSelectedLevel
-    end
-    -- Calculate the rating gained from doing the current weeks key first. Then calculate the other weeks key gained given the current weeks selected is completed.
-    local weeklyGained = CalculateGainedRating(weeklySelected, dungeonID, weeklyAffix)
-    local newScore = addon:CalculateDungeonTotal(addon.scorePerLevel[weeklySelected], addon.playerBests[opp][dungeonID].rating)
-    local otherScore = addon:CalculateDungeonTotal(addon.scorePerLevel[oppSelected], addon.scorePerLevel[weeklySelected])
-    local newGain = math.abs(newScore - addon.playerDungeonRatings[dungeonID].mapScore)
-    local otherGain = math.abs(otherScore - newScore)
-    local gainTable = { [weeklyAffix] = addon:RoundToOneDecimal(newGain), [opp] = addon:RoundToOneDecimal(otherGain) }
-    return gainTable
+    -- Calculate the rating gained.
+    local weeklyGained = CalculateGainedRating(newSelectedLevel, dungeonID)
+    local newScore = addon:CalculateDungeonTotal(addon.scorePerLevel[newSelectedLevel], addon.playerBests[dungeonID].rating)
+    local newGain = math.abs(newScore - addon.playerBests[dungeonID].rating)
+    return newGain
 end
 
 --[[
     UpdateGained - Update the total gained rating and set the necessary text.
     @param newGain - the new gained amount
     @param frame - the gained score frame of the dungeon to alter.
-    @param affix - the affix the gain is from.
 --]]
-local function UpdateGained(newGain, frame, affix)
-    totalGained = totalGained + (newGain - frame.gainedScore[affix])
-    if(affix == selectedAffix) then
-        frame.text:SetText("+" .. addon:FormatDecimal(newGain))
-    else
-        frame.oppText:SetText((newGain > 0) and ("+" .. addon:FormatDecimal(newGain)) or "")
-    end
-    frame.gainedScore[affix] = newGain
+local function UpdateGained(newGain, frame)
+    totalGained = totalGained + (newGain - frame.gainedScore)
+    frame.text:SetText("+" .. addon:FormatDecimal(newGain))
+    frame.gainedScore = newGain
 end
 
 --[[
@@ -1390,31 +1271,14 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
     keystoneButton.button:SetScript("OnClick", function(self, btn, down)
         if(btn == "LeftButton") then
             -- If the clicked button is not the currently selected button then select necessary buttons.
-            if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix] or (keystoneButton.level == parentFrame.startingLevel[selectedAffix] and keystoneButton.level == parentFrame.selectedLevel[selectedAffix])) then
+            if(keystoneButton.level ~= parentFrame.selectedLevel or (keystoneButton.level == parentFrame.startingLevel and keystoneButton.level == parentFrame.selectedLevel)) then
                 -- Set gained from selected key completion
                 local gained = 0
-                local opp = addon:GetOppositeAffix(selectedAffix)
-                if(keystoneButton.level ~= parentFrame.selectedLevel[selectedAffix]) then
-                    -- No selected affix for the opposite level.
-                    if(parentFrame.selectedLevel[opp] < parentFrame.startingLevel[opp]) then
-                        gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID, selectedAffix))
-                        UpdateGained(gained, rowGainedScoreFrame, selectedAffix)
-                    -- Both affixes have a key selected for the dungeon.
-                    else
-                        local gainedTable = CalculateGainedRatingBothSelected(keystoneButton.level, parentFrame)
-                        UpdateGained(gainedTable[selectedAffix], rowGainedScoreFrame, selectedAffix)
-                        UpdateGained(gainedTable[opp], rowGainedScoreFrame, opp)
-                    end
-                else
-                    -- Starting key == selected key and was pressed, no gain for the row.
-                    UpdateGained(gained, rowGainedScoreFrame, selectedAffix)
-                    -- If a key in the other week is selected then recalculate the gain.
-                    if(parentFrame.selectedLevel[opp] >= parentFrame.startingLevel[opp]) then
-                        gained = addon:RoundToOneDecimal(CalculateGainedRating(parentFrame.selectedLevel[opp], parentFrame.dungeonID, opp))
-                        UpdateGained(gained, rowGainedScoreFrame, opp)
-                    end
+                if(keystoneButton.level ~= parentFrame.selectedLevel) then
+                    gained = addon:RoundToOneDecimal(CalculateGainedRating(keystoneButton.level, parentFrame.dungeonID))
                 end
                 -- Update total gained and update UI buttons.
+                UpdateGained(gained, rowGainedScoreFrame)
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
                 SelectButtons(parentFrame, keystoneButton, false)
             end
@@ -1440,15 +1304,15 @@ local function SetKeystoneButtonScripts(keystoneButton, parentFrame, parentScrol
             -- Get the difference between the last frames mouse position and the current frames, multiply it by a scrolling speed coefficient.
             local diff = math.abs(lastX - currX) * 1.36
             -- If attempting to scroll left and haven't reached the minimum scroll range yet set the value.
-            if(lastX < currX and parentScroll:GetHorizontalScroll() > parentScroll.minScrollRange[selectedAffix]) then
+            if(lastX < currX and parentScroll:GetHorizontalScroll() > parentScroll.minScrollRange) then
                 local newPos = parentScroll:GetHorizontalScroll() - diff
-                parentScroll:SetHorizontalScroll((newPos < parentScroll.minScrollRange[selectedAffix]) and parentScroll.minScrollRange[selectedAffix] or newPos)
+                parentScroll:SetHorizontalScroll((newPos < parentScroll.minScrollRange) and parentScroll.minScrollRange or newPos)
             -- If attempting to scroll right and haven't reached the moximum scroll range yet set the value.
-            elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentScroll.maxScrollRange[selectedAffix]) then
+            elseif(lastX > currX and parentScroll:GetHorizontalScroll() < parentScroll.maxScrollRange) then
                 local newPos = parentScroll:GetHorizontalScroll() + diff
-                parentScroll:SetHorizontalScroll((newPos > parentScroll.maxScrollRange[selectedAffix]) and parentScroll.maxScrollRange[selectedAffix] or newPos)
+                parentScroll:SetHorizontalScroll((newPos > parentScroll.maxScrollRange) and parentScroll.maxScrollRange or newPos)
             end
-            CheckForScrollButtonEnable(parentScroll:GetParent(), selectedAffix)
+            CheckForScrollButtonEnable(parentScroll:GetParent())
             lastX = currX
         end
     end)
@@ -1478,11 +1342,8 @@ local function CalculateScrollHolderUIValues(scrollHolderFrame)
     -- (Number of buttons * button width) - (number of buttons - 1) to account for button anchor offset.
     local totalRowWidth = (((maxLevel + 1) - baseLevel) * buttonWidth) - (maxLevel - baseLevel)
     local diff = totalRowWidth - scrollHolderFrame:GetWidth()
-    scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID] = CalculateScrollMinRange(baseLevel, scrollHolderFrame.scrollChild.startingLevel[addon.tyrannicalID])
-    scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID] = CalculateScrollMinRange(baseLevel, scrollHolderFrame.scrollChild.startingLevel[addon.fortifiedID])
-    scrollHolderFrame.scrollFrame.maxScrollRange[addon.tyrannicalID] = (diff > scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID]) and diff or scrollHolderFrame.scrollFrame.minScrollRange[addon.tyrannicalID]
-    scrollHolderFrame.scrollFrame.maxScrollRange[addon.fortifiedID] = (diff > scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID]) and diff or scrollHolderFrame.scrollFrame.minScrollRange[addon.fortifiedID]
-    scrollHolderFrame.scrollFrame.previousScroll = scrollHolderFrame.scrollFrame.minScrollRange[addon:GetOppositeAffix(selectedAffix)]
+    scrollHolderFrame.scrollFrame.minScrollRange = CalculateScrollMinRange(baseLevel, scrollHolderFrame.scrollChild.startingLevel)
+    scrollHolderFrame.scrollFrame.maxScrollRange = (diff > scrollHolderFrame.scrollFrame.minScrollRange) and diff or scrollHolderFrame.scrollFrame.minScrollRange
     scrollHolderFrame.scrollChild:SetWidth(totalRowWidth)
 end
 
@@ -1506,11 +1367,10 @@ end
 --[[
     GetStartingLevel - Gets the lowest dungeon level it is possible to get rating from and returns it.
     @param dungeonID - the ID of the dungeon to be checked.
-    @param affixID - the ID of the affix to get the starting level for.
     @return - the lowest key level the player can get rating from for the dungeon.
 --]]
-local function GetStartingLevel(dungeonID, affixID)
-    local best = addon.playerBests[affixID][dungeonID]
+local function GetStartingLevel(dungeonID)
+    local best = addon.playerBests[dungeonID]
     if(best.overTime) then
         local baseLevel = best.level
         for i = best.level - 1, 2, -1 do
@@ -1533,17 +1393,16 @@ end
     @param dungeonID - the dungeonID the row is for.
 --]]
 local function CreateButtonRow(scrollHolderFrame, dungeonID)
-    local startingTyranLevel = GetStartingLevel(dungeonID, addon.tyrannicalID)
-    local startingFortLevel = GetStartingLevel(dungeonID, addon.fortifiedID)
+    local startingKeyLevel = GetStartingLevel(dungeonID)
     -- Setup base values
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
-    scrollHolderFrame.scrollChild.baseLevel = (startingTyranLevel < startingFortLevel) and startingTyranLevel or startingFortLevel
-    scrollHolderFrame.scrollChild.startingLevel = { [addon.tyrannicalID] = startingTyranLevel, [addon.fortifiedID] = startingFortLevel }
-    scrollHolderFrame.scrollChild.selectedLevel = { [addon.tyrannicalID] = startingTyranLevel - 1, [addon.fortifiedID] = startingFortLevel - 1 } 
+    scrollHolderFrame.scrollChild.baseLevel = startingKeyLevel
+    scrollHolderFrame.scrollChild.startingLevel = startingKeyLevel
+    scrollHolderFrame.scrollChild.selectedLevel = startingKeyLevel - 1 
     scrollHolderFrame.scrollChild.keystoneButtons = {}
     -- Setup UI values
     CalculateScrollHolderUIValues(scrollHolderFrame)
-    scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange[selectedAffix])
+    scrollHolderFrame.scrollFrame:SetHorizontalScroll(scrollHolderFrame.scrollFrame.minScrollRange)
     -- Create the buttons and add them to the parent frames buttons table
     CreateAllButtons(scrollHolderFrame, maxLevel)
 end
@@ -1556,8 +1415,8 @@ end
 local function ScrollButtonRow(self, delta)
     if(IsMouseButtonDown("RightButton")) then return end
     -- Find the number of buttons before the new to be set scroll position
-    local numButtonsPrior = math.floor(addon:RoundToOneDecimal((self:GetHorizontalScroll()-self.minScrollRange[selectedAffix]))/(buttonWidth - 1))
-    local remainder = math.floor(addon:RoundToOneDecimal((self:GetHorizontalScroll()-self.minScrollRange[selectedAffix]))%(buttonWidth - 1))
+    local numButtonsPrior = math.floor(addon:RoundToOneDecimal((self:GetHorizontalScroll()-self.minScrollRange))/(buttonWidth - 1))
+    local remainder = math.floor(addon:RoundToOneDecimal((self:GetHorizontalScroll()-self.minScrollRange))%(buttonWidth - 1))
     if(delta == -1) then 
         numButtonsPrior = numButtonsPrior + 1  
     else 
@@ -1566,14 +1425,14 @@ local function ScrollButtonRow(self, delta)
         end
     end
     -- New scroll pos
-    local newPos = self.minScrollRange[selectedAffix] + (numButtonsPrior * (buttonWidth - 1))
-    if(newPos > self.maxScrollRange[selectedAffix]) then 
-        newPos = self.maxScrollRange[selectedAffix] 
-    elseif(newPos < self.minScrollRange[selectedAffix]) then 
-        newPos = self.minScrollRange[selectedAffix] 
+    local newPos = self.minScrollRange + (numButtonsPrior * (buttonWidth - 1))
+    if(newPos > self.maxScrollRange) then 
+        newPos = self.maxScrollRange 
+    elseif(newPos < self.minScrollRange) then 
+        newPos = self.minScrollRange 
     end
     self:SetHorizontalScroll(newPos)
-    CheckForScrollButtonEnable(self:GetParent(), selectedAffix)
+    CheckForScrollButtonEnable(self:GetParent())
 end
 
 --[[
@@ -1583,9 +1442,9 @@ end
 --]]
 local function CreateScrollFrame(scrollHolderFrame)
     local scrollFrame = CreateFrame("ScrollFrame", "SCROLLHOLDER_SCROLLFRAME", scrollHolderFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame.minScrollRange = { [addon.tyrannicalID] = 1, [addon.fortifiedID] = 1 }
-    scrollFrame.maxScrollRange = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
-    scrollFrame.previousScroll = 1
+    scrollFrame.minScrollRange = 1
+    scrollFrame.maxScrollRange = 0
+    --scrollFrame.previousScroll = 1
     scrollFrame.ScrollBar:Hide()
     scrollFrame.ScrollBar:Disable()
     -- up left, down right
@@ -1674,7 +1533,7 @@ local function CreateGainedScoreFrame(parentRow)
     frame.text:SetPoint("LEFT")
     frame.text:SetText("+0.0")
     frame:SetSize(ApplyScale(38), parentRow:GetHeight())
-    frame.gainedScore = { [addon.tyrannicalID] = 0, [addon.fortifiedID] = 0 }
+    frame.gainedScore = 0
     frame.oppText = CustomFontString(9, {r = 0.8, g = 0.8, b = 0.8, a = 1}, MplusGainsSettings.Font.path, frame, nil, true, false)
     frame.oppText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 8)
     frame.oppText:SetText("")
@@ -1703,13 +1562,13 @@ end
 --]]
 local function UpdateDungeonButtons(scrollHolderFrame)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
-    local newLevel = GetStartingLevel(dungeonID, weeklyAffix)
+    local newLevel = GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
-    scrollHolderFrame.scrollChild.startingLevel[weeklyAffix] = newLevel
+    scrollHolderFrame.scrollChild.startingLevel = newLevel
     -- Setup new scroll range and pos values
-    scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] = CalculateScrollMinRange(oldBase, newLevel)
+    scrollHolderFrame.scrollFrame.minScrollRange = CalculateScrollMinRange(oldBase, newLevel)
     if((maxLevel - newLevel) < scrollHolderFrame.widthMulti) then
-        scrollHolderFrame.scrollFrame.maxScrollRange[weeklyAffix] = scrollHolderFrame.scrollFrame.minScrollRange[weeklyAffix] 
+        scrollHolderFrame.scrollFrame.maxScrollRange = scrollHolderFrame.scrollFrame.minScrollRange 
     end
     --end
     -- Reset scroll frame to no key selected state.
@@ -1723,13 +1582,18 @@ end
 local function PopulateAllAffixRows(parentFrame)
     local sortedAffixes = addon:SortAffixesByLevel()
     local rows = { parentFrame:GetChildren() }
+    local counter = 0
     for i, key in ipairs(sortedAffixes) do
-        local affixTable = addon.affixInfo[key]
-        rows[i].titleFrame.nameText:SetText(affixTable.name)
-        rows[i].titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
-        rows[i].titleFrame.texture:SetTexture(affixTable.filedataid)
-        rows[i].descFrame.descText:SetText(affixTable.description)
+        if(counter < 3) then
+            local affixTable = addon.affixInfo[key]
+            rows[i].titleFrame.nameText:SetText(affixTable.name)
+            rows[i].titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
+            rows[i].titleFrame.texture:SetTexture(affixTable.filedataid)
+            rows[i].descFrame.descText:SetText(affixTable.description)
+        end
+        counter = counter + 1
     end
+    print("WOW")
 end
 
 --[[
@@ -1737,7 +1601,7 @@ end
     @param parentFrame - the parent frame
 --]]
 local function PopulateAllDungeonRows(parentFrame)
-    local sortedLevels = addon:SortDungeonsByLevel(weeklyAffix)
+    local sortedLevels = addon:SortDungeonsByLevel()
     local rows = { parentFrame:GetChildren() }
     parentFrame.rows = {}
     for i, key in ipairs(sortedLevels) do
@@ -1746,7 +1610,7 @@ local function PopulateAllDungeonRows(parentFrame)
         rows[i].dungeonTimerFrame.text:SetText(addon:FormatTimer(value.timeLimit))
         CreateButtonRow(rows[i].scrollHolderFrame, key)
         parentFrame.rows[key] = rows[i]
-        CheckForScrollButtonEnable(rows[i].scrollHolderFrame, selectedAffix)
+        CheckForScrollButtonEnable(rows[i].scrollHolderFrame)
     end
 end
 
@@ -1913,14 +1777,12 @@ end
     CreateRunFrame - Creates a frame to display the given affixes best run for a dungeon
     @param anchorFrame - the frames anchor
     @param parentFrame - the frames parent
-    @param affix - the affixes name
     @return - the created frame
 ]]
-local function CreateRunFrame(anchorFrame, parentFrame, affix)
+local function CreateRunFrame(anchorFrame, parentFrame)
     local parentFrameHeight = parentFrame:GetHeight()
     local affixFrame = CreateFrame("Frame", nil, parentFrame)
     local anchorPosition = "LEFT"
-    if(affix == addon.tyrannicalID) then anchorPosition = "RIGHT" end
     affixFrame:SetPoint("RIGHT", anchorFrame, anchorPosition)
     affixFrame:SetSize(parentFrame:GetParent().smallColumnWidth, parentFrameHeight)
     affixFrame.keyLevelText = DefaultFontString(12, affixFrame, nil)
@@ -1979,25 +1841,17 @@ local function CreateDungeonSummaryHeader(parentFrame)
     local holder = CreateFrame("Frame", "DUNGEON_SUMMARY_HEADER", parentFrame)
     holder:SetPoint("TOP", parentFrame, "TOP")
     holder:SetSize(parentFrame:GetWidth(), holderHeight)
-    -- Tyrannical column
-    local tyranHeader = CreateFrame("Frame", nil, holder)
-    tyranHeader:SetPoint("RIGHT", holder, "RIGHT")
-    tyranHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
-    tyranHeader.texture = tyranHeader:CreateTexture()
-    tyranHeader.texture:SetPoint("RIGHT")
-    tyranHeader.texture:SetSize(iconSize, iconSize)
-    tyranHeader.texture:SetTexture("Interface/Icons/Achievement_Boss_Archaedas.PNG")
-    -- Fortified column
-    local fortHeader = CreateFrame("Frame", nil, holder)
-    fortHeader:SetPoint("RIGHT", tyranHeader, "LEFT")
-    fortHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
-    fortHeader.texture = fortHeader:CreateTexture()
-    fortHeader.texture:SetPoint("RIGHT")
-    fortHeader.texture:SetSize(iconSize, iconSize)
-    fortHeader.texture:SetTexture("Interface/Icons/ability_toughness.PNG")
+    -- Level column
+    local levelHeader = CreateFrame("Frame", nil, holder)
+    levelHeader:SetPoint("RIGHT", holder, "RIGHT")
+    levelHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
+    levelHeader.texture = levelHeader:CreateTexture()
+    levelHeader.texture:SetPoint("RIGHT")
+    levelHeader.texture:SetSize(iconSize, iconSize)
+    levelHeader.texture:SetTexture("Interface/Icons/Achievement_Boss_Archaedas.PNG")
     -- Score column
     local scoreHeader = CreateFrame("Frame", nil, holder)
-    scoreHeader:SetPoint("RIGHT", fortHeader, "LEFT")
+    scoreHeader:SetPoint("RIGHT", levelHeader, "LEFT")
     scoreHeader:SetSize(parentFrame.smallColumnWidth, holderHeight)
     scoreHeader.text = DefaultFontString(12, scoreHeader, "OUTLINE")
     scoreHeader.text:ClearAllPoints()
@@ -2028,9 +1882,8 @@ local function CreateBestRunRow(anchorFrame, parentFrame)
     local holder = CreateFrame("Frame", nil, parentFrame)
     holder:SetPoint("TOP", anchorFrame, "BOTTOM", 0, yPadding)
     holder:SetSize(parentFrame:GetWidth(), parentFrame:GetHeight()/9)
-    holder.tyrFrame = CreateRunFrame(holder, holder, addon.tyrannicalID)
-    holder.fortFrame = CreateRunFrame(holder.tyrFrame, holder, addon.fortifiedID)
-    holder.scoreFrame = CreateDungeonScoreFrame(holder.fortFrame, holder)
+    holder.levelFrame = CreateRunFrame(holder, holder)
+    holder.scoreFrame = CreateDungeonScoreFrame(holder.levelFrame, holder)
     holder.nameFrame = CreateDungeonBestNameFrame(holder)
     return holder
 end
@@ -2050,15 +1903,14 @@ end
 
 --[[
     GetDungeonLevelString - Creates a string representing the best dungeon run for a affix.
-    @param affix - the affix to get the run for
     @param dungeonID - the dungeon to get the run for
     @return - formatted string representing the run.
 --]]
-local function GetDungeonLevelString(affix, dungeonID)
+local function GetDungeonLevelString(dungeonID)
     local runString = "-"
-    local level = addon.playerBests[affix][dungeonID].level
-    if(level > 1 and addon.playerBests[affix][dungeonID].rating > 0) then 
-        runString = addon:CalculateChest(dungeonID, addon.playerBests[affix][dungeonID].time) .. level
+    local level = addon.playerBests[dungeonID].level
+    if(level > 1 and addon.playerBests[dungeonID].rating > 0) then 
+        runString = addon:CalculateChest(dungeonID, addon.playerBests[dungeonID].time) .. level
     end
     return runString
 end
@@ -2069,9 +1921,8 @@ end
     @param dungeonID - the dungeon data to use
 --]]
 local function FillBestRunRow(rowFrame, dungeonID)
-    rowFrame.tyrFrame.keyLevelText:SetText(GetDungeonLevelString(addon.tyrannicalID, dungeonID))
-    rowFrame.fortFrame.keyLevelText:SetText(GetDungeonLevelString(addon.fortifiedID, dungeonID))
-    rowFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerDungeonRatings[dungeonID].mapScore))
+    rowFrame.levelFrame.keyLevelText:SetText(GetDungeonLevelString(dungeonID))
+    rowFrame.scoreFrame.scoreText:SetText(addon:FormatDecimal(addon.playerBests[dungeonID].rating))
     rowFrame.nameFrame.nameText:SetText(addon.dungeonInfo[dungeonID].name)
 end
 
@@ -2081,7 +1932,7 @@ end
     @param dungeonID - the dungeon being updated
 --]]
 local function UpdateDungeonBests(parentFrame, dungeonID)
-    addon:CalculateDungeonRatings()
+    --addon:CalculateDungeonRatings()
     -- Get row position of the dungeon.
     local orderPos = 1
     for key, value in pairs(parentFrame.order) do
@@ -2095,7 +1946,7 @@ local function UpdateDungeonBests(parentFrame, dungeonID)
         for i = orderPos - 1, 1, -1 do
             tempID = parentFrame.order[i]
             -- If the updated dungeons map score is better than the current iteration rows dungeon
-            if(addon.playerDungeonRatings[dungeonID].mapScore > addon.playerDungeonRatings[tempID].mapScore) then
+            if(addon.playerBests[dungeonID].rating > addon.playerBests[tempID].rating) then
                 -- Store the iterations row, replace it with the last iterations row, replace last iteration row variable.
                 local tempRow = parentFrame.rows[tempID]
                 parentFrame.rows[tempID] = newRow
@@ -2286,7 +2137,7 @@ end
 local function CheckForNewBest(dungeonID, level, time)
     local completionRating = addon:CalculateRating((time/1000), dungeonID, level)
     if(level > 1 and completionRating > 0) then
-        if(completionRating > addon.playerBests[weeklyAffix][dungeonID].rating) then
+        if(completionRating > addon.playerBests[dungeonID].rating) then
             return true
         end
     end
@@ -2301,17 +2152,11 @@ end
     @return bool - whether or not the data was setup.
 --]]
 local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
-    weeklyAffix = addon:GetWeeklyAffixInfo()
-    if(weeklyAffix == nil) then return false end
-    selectedAffix = weeklyAffix
-    if(selectedAffix ~= addon.tyrannicalID) then
-        SetDesaturation(headerFrame.toggle.toggles[addon.tyrannicalID].texture, true)
-    else
-        SetDesaturation(headerFrame.toggle.toggles[addon.fortifiedID].texture, true)
-    end
+    local info = addon:GetWeeklyAffixInfo()
+    if(info == nil) then return false end
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
-    addon:CalculateDungeonRatings()
+    --addon:CalculateDungeonRatings()
     PopulateAllDungeonRows(dungeonHolderFrame)
     PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
     PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
@@ -2399,7 +2244,7 @@ local function StartUp()
                     = C_ChallengeMode.GetCompletionInfo()
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
-                addon:SetNewBest(dungeonID, level, time, weeklyAffix, onTime)
+                addon:SetNewBest(dungeonID, level, time, onTime)
                 UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
                 UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
                 -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
