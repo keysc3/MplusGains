@@ -4,6 +4,7 @@
 ## Author: Colin Keys
 ## Version: 1.5.6
 ## SavedVariables: MplusGainsSettings
+## DefaultState: disabled
 
 Libs/LibStub.lua
 Libs/LibSharedMedia-3.0.lua
