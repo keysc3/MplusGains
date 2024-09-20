@@ -292,10 +292,10 @@ local function ResetScrollFrameValues(scrollChild, gainedScoreFrame)
 end
 
 --[[
-    ResetBothToStartingLevel - Resets both affix weeks of the given rows scrollholder frame to the default state.
+    ResetToStartingLevel - Resets the given rows scrollholder frame to the default state.
     @param rowFrame - the row frame to reset
 --]]
-local function ResetBothToStartingLevel(rowFrame)
+local function ResetToStartingLevel(rowFrame)
     local scrollChild = rowFrame.scrollHolderFrame.scrollChild
     local scrollFrame = rowFrame.scrollHolderFrame.scrollFrame
     local gainedScoreFrame = rowFrame.gainedScoreFrame
@@ -1105,7 +1105,7 @@ local function CreateHeaderFrame(parentFrame)
         if(btn == "LeftButton") then
             if(mainFrame.dungeonHolderFrame.rows ~= nil) then
                 for key, value in pairs(mainFrame.dungeonHolderFrame.rows) do
-                    ResetBothToStartingLevel(value)
+                    ResetToStartingLevel(value)
                 end
                 mainFrame.summaryFrame.header.scoreHeader.gainText:SetText("")
             end
@@ -1557,7 +1557,7 @@ local function CalculateRowWidth(row)
 end
 
 --[[
-    UpdateDungeonButtons - Updates the position and selected buttons of a dungeon row based on a given level. Adds new buttons if needed.
+    UpdateDungeonButtons - Updates the position and selected buttons of a dungeon row based on a given level.
     @param scrollHolderFrame - the rows scroll holder frame
 --]]
 local function UpdateDungeonButtons(scrollHolderFrame)
@@ -1572,7 +1572,7 @@ local function UpdateDungeonButtons(scrollHolderFrame)
     end
     --end
     -- Reset scroll frame to no key selected state.
-    ResetBothToStartingLevel(scrollHolderFrame:GetParent())
+    ResetToStartingLevel(scrollHolderFrame:GetParent())
 end
 
 --[[
@@ -1580,7 +1580,6 @@ end
     @param parentFrame - the frame whose children are the affix rows.
 --]]
 local function PopulateAllAffixRows(parentFrame)
-    --local sortedAffixes = addon:SortAffixesByLevel()
     local rows = { parentFrame:GetChildren() }
     local counter = 1
     for i, key in ipairs(addon.affixInfo) do
@@ -1941,7 +1940,6 @@ end
     @param dungeonID - the dungeon being updated
 --]]
 local function UpdateDungeonBests(parentFrame, dungeonID)
-    --addon:CalculateDungeonRatings()
     -- Get row position of the dungeon.
     local orderPos = 1
     for key, value in pairs(parentFrame.order) do
