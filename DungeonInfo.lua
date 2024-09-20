@@ -10,9 +10,9 @@ local scorePerLevel = {0, 94, 101, 108, 125, 132, 139, 146, 153, 170, 177, 184, 
 
 local affixLevels = {
     [2] = {148},
-    [4] = {10, 9},
+    [4] = {9, 10},
     [7] = {152},
-    [10] = { 10, 9},
+    [10] = {9, 10},
     [12] = {147}
     --[5] = {135, 136, 3, 134, 124},
     --[10] = {123, 6, 7, 11, 8}
@@ -104,9 +104,8 @@ function addon:GetWeeklyAffixInfo()
                 ["name"] = name,
                 ["filedataid"] = filedataid,
                 ["level"] = GetAffixLevel(value.id)
-            }
-            print(affixInfo[value.id].name)   
-        end 
+            }  
+        end
         addon.affixInfo = affixInfo
     end
     return #affixIDs
