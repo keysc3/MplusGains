@@ -82,7 +82,6 @@ function addon:GetWeeklyAffixInfo()
                 ["filedataid"] = filedataid,
                 ["level"] = affixLevels[i]
             }
-            print(name)
             table.insert(affixInfo, newArray)  
         end
         addon.affixInfo = affixInfo

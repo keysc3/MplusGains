@@ -1587,7 +1587,12 @@ local function PopulateAllAffixRows(parentFrame)
         local affixTable = addon.affixInfo[i]
         if(counter < 4 and affixTable.level ~= 7) then
             rows[counter].titleFrame.nameText:SetText(affixTable.name)
-            rows[counter].titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
+            local text = "(+" .. ((affixTable.level ~= 0) and affixTable.level or "?")
+            if(affixTable.level == 2) then
+                text = text .. " - +11"
+            end
+            text = text .. ")"
+            rows[counter].titleFrame.levelText:SetText(text)
             rows[counter].titleFrame.texture:SetTexture(affixTable.filedataid)
             rows[counter].descFrame.descText:SetText(affixTable.description)
             counter = counter + 1
