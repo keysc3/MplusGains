@@ -2,7 +2,7 @@ local _, addon = ...
 
 local maxModifier = 0.4
 
-local scorePerLevel = {165, 180, 205, 220, 235, 265, 280, 295, 320, 335, 365, 380, 395, 410, 425,
+local scorePerLevel = {0, 165, 180, 205, 220, 235, 265, 280, 295, 320, 335, 365, 380, 395, 410, 425,
  440, 455, 470, 485, 500, 515, 530, 545, 560, 575, 590, 605, 620, 635}
 
 local affixLevels = {[1] = 2, [2] = 4, [3] = 7, [4] = 10, [5] = 12}
@@ -107,11 +107,9 @@ end
     @param level - the level of the dungeon
     @return rating - the score from the run
 --]]
---TODO: CLAMP
 function addon:CalculateRating(runTime, dungeonID, level)
     local baseBonus = 15
     local untimedBase = 10
-    local
     -- ((totaltime - runTime)/(totaltime * maxModifier)) * baseBonuse = bonusScore
     -- Subtract baseBonuse if overtime
     local bonusRating = 0
@@ -173,7 +171,6 @@ end
 --[[
     SortDungeonByLevel - Sorts the dungeons by their best completed levels
     return - an array of dungeonIDs indexed by ascending completed level.
-    Note: Ties are sorted by score.
 --]]
 function addon:SortDungeonsByLevel()
     -- Put mapIDs into an array
@@ -189,8 +186,6 @@ function addon:SortDungeonsByLevel()
             if(id1_level ~= id2_level) then
                 return id1_level < id2_level
             end
-            -- TODO: REMOVE?
-            return addon.playerBests[id1].rating < addon.playerBests[id2].rating
         end
         return addon.playerBests[id1].rating < addon.playerBests[id2].rating
     end)
@@ -200,7 +195,7 @@ end
 --[[
     SortAffixesByLevel - Sorts affixes by the level they are added to the keystone in ascending order.
 --]]
-function addon:SortAffixesByLevel()
+--[[function addon:SortAffixesByLevel()
     local array = {}
     for k, v in pairs(addon.affixInfo) do
         table.insert(array, k)
@@ -211,7 +206,7 @@ function addon:SortAffixesByLevel()
         end)
 
     return array
-end
+end--]]
 
 --[[
     SetNewBest - Sets a dungeons best run to the given one.
