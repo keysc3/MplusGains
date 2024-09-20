@@ -2,8 +2,8 @@ local _, addon = ...
 
 local maxModifier = 0.4
 
-local scorePerLevel = {0, 94, 101, 108, 125, 132, 139, 146, 153, 170, 177, 184, 191, 198, 205, 212, 
-219, 226, 233, 240, 247, 254, 261, 268, 275, 282, 289, 296, 303, 310}
+local scorePerLevel = {165, 180, 205, 220, 235, 265, 280, 295, 320, 335, 365, 380, 395, 410, 425,
+ 440, 455, 470, 485, 500, 515, 530, 545, 560, 575, 590, 605, 620, 635}
 
 local affixLevels = {[1] = 2, [2] = 4, [3] = 7, [4] = 10, [5] = 12}
 
@@ -109,8 +109,11 @@ end
 --]]
 --TODO: CLAMP
 function addon:CalculateRating(runTime, dungeonID, level)
-    -- ((totaltime - runTime)/(totaltime * maxModifier)) * 5 = bonusScore
-    -- Subtract 5 if overtime
+    local baseBonus = 15
+    local untimedBase = 10
+    local
+    -- ((totaltime - runTime)/(totaltime * maxModifier)) * baseBonuse = bonusScore
+    -- Subtract baseBonuse if overtime
     local bonusRating = 0
     local dungeonTimeLimit = addon.dungeonInfo[dungeonID].timeLimit
     -- Runs over time by 40% are a 0 score.
@@ -120,18 +123,17 @@ function addon:CalculateRating(runTime, dungeonID, level)
     local numerator = dungeonTimeLimit - runTime
     local denominator = dungeonTimeLimit * maxModifier
     local quotient = numerator/denominator
-    -- local qotient = math.clamp(numerator/denominator, -1, 1)
-    -- bonuseRating = math.clamp(quotient * 5, -5, 5)
-    if(quotient >= 1) then bonusRating = 5
-    elseif(quotient <= -1) then bonusRating = -5
-    else bonusRating = quotient * 5 end
+
+    if(quotient >= 1) then bonusRating = baseBonus
+    elseif(quotient <= -1) then bonusRating = -(baseBonus)
+    else bonusRating = quotient * baseBonus end
 
     if(runTime > dungeonTimeLimit) then
-        bonusRating  = bonusRating - 5
+        bonusRating  = bonusRating - baseBonus
     end
-    -- Untimed keys over 20 use the base score of a 20.
-    if(level > 20 and runTime > dungeonTimeLimit) then
-        level = 20
+    -- Untimed keys base change
+    if(level > untimedBase and runTime > dungeonTimeLimit) then
+        level = untimedBase
     end
     return scorePerLevel[level] + bonusRating
 end
