@@ -1,26 +1,13 @@
 local _, addon = ...
 
 local maxModifier = 0.4
---local tyrannicalID = 9
---local fortifiedID = 10
---local weeklyAffix = nil
 
 local scorePerLevel = {0, 94, 101, 108, 125, 132, 139, 146, 153, 170, 177, 184, 191, 198, 205, 212, 
 219, 226, 233, 240, 247, 254, 261, 268, 275, 282, 289, 296, 303, 310}
 
-local affixLevels = {
-    [2] = {148},
-    [4] = {9, 10},
-    [7] = {152},
-    [10] = {9, 10},
-    [12] = {147}
-    --[5] = {135, 136, 3, 134, 124},
-    --[10] = {123, 6, 7, 11, 8}
-}
+local affixLevels = {[1] = 2, [2] = 4, [3] = 7, [4] = 10, [5] = 12}
 
 addon.scorePerLevel = scorePerLevel
---addon.tyrannicalID = tyrannicalID
---addon.fortifiedID = fortifiedID
 
 --[[
     GetGeneralDungeonInfo - Gets and stores the current mythic+ dungeons and their time limits.
@@ -64,17 +51,6 @@ function addon:GetPlayerDungeonBests()
 end
 
 --[[
-    GetOppositeAffix - Gets the alternating affix that isn't active this given.
---]]
---[[function addon:GetOppositeAffix(givenAffix)
-    if(givenAffix == tyrannicalID) then 
-        return fortifiedID
-    else 
-        return tyrannicalID
-    end
-end--]]
-
---[[
     CreateNoRunsEntry - Creates a default table for use when a dungeon doens't have a run for an associated week.
     @return - the created default run table.
 --]]
@@ -99,12 +75,15 @@ function addon:GetWeeklyAffixInfo()
     if(affixIDs ~= nil) then
         for i, value in ipairs(affixIDs) do
             local name, description, filedataid = C_ChallengeMode.GetAffixInfo(value.id)
-            affixInfo[value.id] = {
+            newArray = {
+                ["id"] = value.id,
                 ["description"] = description,
                 ["name"] = name,
                 ["filedataid"] = filedataid,
-                ["level"] = GetAffixLevel(value.id)
-            }  
+                ["level"] = affixLevels[i]
+            }
+            print(name)
+            table.insert(affixInfo, newArray)  
         end
         addon.affixInfo = affixInfo
     end
@@ -209,27 +188,12 @@ function addon:SortDungeonsByLevel()
             if(id1_level ~= id2_level) then
                 return id1_level < id2_level
             end
+            -- TODO: REMOVE?
             return addon.playerBests[id1].rating < addon.playerBests[id2].rating
         end
         return addon.playerBests[id1].rating < addon.playerBests[id2].rating
     end)
     return array
-end
-
---[[
-    GetAffixLevel - Gets the level an affix starts at given its ID
-    @param affixID - id of the affix
-    @return - level the affix starts at.
---]]
-function GetAffixLevel(affixID)
-    for key, value in pairs(affixLevels) do
-        for _, v in ipairs(value) do
-            if(v == affixID) then
-                return key
-            end
-        end
-    end
-    return 0
 end
 
 --[[

@@ -1580,20 +1580,19 @@ end
     @param parentFrame - the frame whose children are the affix rows.
 --]]
 local function PopulateAllAffixRows(parentFrame)
-    local sortedAffixes = addon:SortAffixesByLevel()
+    --local sortedAffixes = addon:SortAffixesByLevel()
     local rows = { parentFrame:GetChildren() }
-    local counter = 0
-    for i, key in ipairs(sortedAffixes) do
-        if(counter < 3) then
-            local affixTable = addon.affixInfo[key]
-            rows[i].titleFrame.nameText:SetText(affixTable.name)
-            rows[i].titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
-            rows[i].titleFrame.texture:SetTexture(affixTable.filedataid)
-            rows[i].descFrame.descText:SetText(affixTable.description)
+    local counter = 1
+    for i, key in ipairs(addon.affixInfo) do
+        local affixTable = addon.affixInfo[i]
+        if(counter < 4 and affixTable.level ~= 7) then
+            rows[counter].titleFrame.nameText:SetText(affixTable.name)
+            rows[counter].titleFrame.levelText:SetText("(+" .. ((affixTable.level ~= 0) and affixTable.level or "?") .. ")")
+            rows[counter].titleFrame.texture:SetTexture(affixTable.filedataid)
+            rows[counter].descFrame.descText:SetText(affixTable.description)
+            counter = counter + 1
         end
-        counter = counter + 1
     end
-    print("WOW")
 end
 
 --[[
