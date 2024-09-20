@@ -86,7 +86,6 @@ function addon:GetWeeklyAffixInfo()
         end
         addon.affixInfo = affixInfo
     end
-    return #affixIDs
 end
 
 --[[

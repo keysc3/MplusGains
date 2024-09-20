@@ -1580,8 +1580,14 @@ end
     @param parentFrame - the frame whose children are the affix rows.
 --]]
 local function PopulateAllAffixRows(parentFrame)
+    addon:GetWeeklyAffixInfo()
     local rows = { parentFrame:GetChildren() }
     local counter = 1
+    -- If affixes do not load
+    if(addon.affixInfo == nil) then
+        rows[2].titleFrame.nameText:SetText("Error loading affixes")
+        return
+    end
     for i, key in ipairs(addon.affixInfo) do
         local affixTable = addon.affixInfo[i]
         if(counter < 4 and affixTable.level ~= 7) then
@@ -2159,8 +2165,7 @@ end
     @return bool - whether or not the data was setup.
 --]]
 local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
-    local info = addon:GetWeeklyAffixInfo()
-    if(info == nil) then return false end
+    --if(affixInfo == nil) then return false end
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
     --addon:CalculateDungeonRatings()
@@ -2168,7 +2173,7 @@ local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
     PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
     PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
     summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
-    return true
+    --return true
 end
 
 --[[
@@ -2222,6 +2227,8 @@ local function StartUp()
             if(isInitialLogin) then
                 -- Check if the font used exists, update if it doesn't
                 mainFrame:SetScript("OnShow", function(self)
+                    -- Possible for affix info to be nil on inital login load. Try to populate on first open.
+                    PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
                     local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
                     if(fontName == nil) then
                         FontSelectOnClick(self.fontDropDownSHF.defaultFrame, "LeftButton", false)
@@ -2238,10 +2245,8 @@ local function StartUp()
         end
         -- M+ affix update
         if(event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE") then
-            -- Affix info is available after this event fires, but not always the first time.
-            if(DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)) then
-                self:UnregisterEvent(event)
-            end
+            DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
+            self:UnregisterEvent(event)
         end
         -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
