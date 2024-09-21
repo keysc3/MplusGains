@@ -15,6 +15,7 @@ local mainFrame = nil
 local colorVar = nil
 local frameToChange = nil
 local addonTitle = C_AddOns.GetAddOnMetadata(addonName, "Title")
+local affixInfoSet = false
 
 -- Setup libraries and data broker.
 local icon = LibStub("LibDBIcon-1.0")
@@ -1588,6 +1589,7 @@ local function PopulateAllAffixRows(parentFrame)
         rows[2].titleFrame.nameText:SetText("Error loading affixes")
         return
     end
+    affixInfoSet = true
     for i, key in ipairs(addon.affixInfo) do
         local affixTable = addon.affixInfo[i]
         if(counter < 4 and affixTable.level ~= 7) then
@@ -2227,8 +2229,11 @@ local function StartUp()
             if(isInitialLogin) then
                 -- Check if the font used exists, update if it doesn't
                 mainFrame:SetScript("OnShow", function(self)
+                    print(affixInfoSet)
                     -- Possible for affix info to be nil on inital login load. Try to populate on first open.
-                    PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
+                    if(not affixInfoSet) then
+                        PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
+                    end
                     local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
                     if(fontName == nil) then
                         FontSelectOnClick(self.fontDropDownSHF.defaultFrame, "LeftButton", false)
