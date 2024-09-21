@@ -2229,7 +2229,6 @@ local function StartUp()
             if(isInitialLogin) then
                 -- Check if the font used exists, update if it doesn't
                 mainFrame:SetScript("OnShow", function(self)
-                    print(affixInfoSet)
                     -- Possible for affix info to be nil on inital login load. Try to populate on first open.
                     if(not affixInfoSet) then
                         PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
