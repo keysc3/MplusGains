@@ -1372,19 +1372,16 @@ end
 --]]
 local function GetStartingLevel(dungeonID)
     local best = addon.playerBests[dungeonID]
-    if(best.overTime) then
-        local baseLevel = best.level
-        for i = best.level - 1, 2, -1 do
-            -- Find lowest key that gives more min rating than best rating
-            if(addon.scorePerLevel[i] > best.rating) then
-                baseLevel = i
-            else
-                break
-            end
+    local baseLevel = best.level
+    for i = best.level + 1, 2, -1 do
+        -- Find lowest key that gives more min rating than best rating
+        if(addon.scorePerLevel[i] > best.rating) then
+            baseLevel = i
+        else
+            break
         end
-        return baseLevel
     end
-    return best.level + 1
+    return baseLevel
 
 end
 
@@ -2167,15 +2164,12 @@ end
     @return bool - whether or not the data was setup.
 --]]
 local function DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
-    --if(affixInfo == nil) then return false end
     addon:GetGeneralDungeonInfo()
     addon:GetPlayerDungeonBests()
-    --addon:CalculateDungeonRatings()
     PopulateAllDungeonRows(dungeonHolderFrame)
     PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
     PopulateAllBestRunsRows(summaryFrame.bestRunsFrame)
     summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
-    --return true
 end
 
 --[[
@@ -2260,7 +2254,7 @@ local function StartUp()
                     = C_ChallengeMode.GetCompletionInfo()
             if(CheckForNewBest(dungeonID, level, time)) then
                 -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
-                addon:SetNewBest(dungeonID, level, time, onTime)
+                addon:SetNewBest(dungeonID, level, time)
                 UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
                 UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
                 -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
