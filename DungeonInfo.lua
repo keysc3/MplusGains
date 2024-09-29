@@ -220,4 +220,5 @@ function addon:SetNewBest(dungeonID, level, time, onTime)
     entry.time = time/1000
     entry.rating = addon:CalculateRating(time/1000, dungeonID, level)
     entry.overTime = not onTime
+    CalculateTotalRating()
 end
