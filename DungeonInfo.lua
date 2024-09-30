@@ -8,6 +8,7 @@ local scorePerLevel = {0, 165, 180, 205, 220, 235, 265, 280, 295, 320, 335, 365,
 local affixLevels = {[1] = 2, [2] = 4, [3] = 7, [4] = 10, [5] = 12}
 
 addon.scorePerLevel = scorePerLevel
+addon.scoresSet = false
 
 --[[
     GetGeneralDungeonInfo - Gets and stores the current mythic+ dungeons and their time limits.
@@ -26,22 +27,33 @@ function addon:GetGeneralDungeonInfo()
 end
 
 --[[
-    GetGeneralDungeonInfo - Gets and stores the current characters best dungeon run per affix per dungeon.
+    GetPlayerDungeonBests - Gets and stores the current characters best dungeon run per dungeon.
 --]]
 function addon:GetPlayerDungeonBests()
     local playerBests = {}
     for key, value in pairs(addon.dungeonInfo) do
-        local affixScores, bestOverAllScore = C_MythicPlus.GetSeasonBestAffixScoreInfoForMap(key)
-        if(affixScores ~= nil) then
-            for i, affix in ipairs(affixScores) do
-                dungeonBest = {
-                    ["level"] = affix.level,
-                    ["rating"] = addon:CalculateRating(affix.durationSec, key, affix.level),
-                    ["time"] = affix.durationSec,
-                    ["overTime"]  = affix.overTime
-                }
+        local intimeInfo, overtimeInfo = C_MythicPlus.GetSeasonBestForMap(key)
+        -- Check for nils before adding an entry.
+        if(intimeInfo ~= nil or overtimeInfo ~= nil) then
+            local bestInfo = intimeInfo
+            if(intimeInfo ~= nil and overtimeInfo ~= nil) then
+                local intimeScore = addon:CalculateRating(intimeInfo.durationSec, key, intimeInfo.level)
+                local overtimeScore = addon:CalculateRating(overtimeInfo.durationSec, key, overtimeInfo.level)
+                bestInfo = (intimeScore > overtimeScore) and intimeInfo or overtimeInfo
+            else
+                if(intimeInfo == nil) then 
+                    bestInfo = overtimeInfo 
+                end
             end
+            dungeonBest = {
+                ["level"] = bestInfo.level,
+                ["rating"] = addon:CalculateRating(bestInfo.durationSec, key, bestInfo.level),
+                ["time"] = bestInfo.durationSec
+            }
             playerBests[key] = dungeonBest
+            if(not addon.scoresSet) then 
+                addon.scoresSet = true
+            end
         else
             playerBests[key] = CreateNoRunsEntry()
         end
@@ -58,8 +70,7 @@ function CreateNoRunsEntry()
     local dungeonBest = {
         ["level"] = 1,
         ["rating"] = 0,
-        ["time"] = 0,
-        ["overTime"] = false
+        ["time"] = 0
     }
     return dungeonBest
 end
@@ -168,6 +179,25 @@ function addon:SortDungeonsByScore()
 end
 
 --[[
+    GetStartingLevel - Gets the lowest dungeon level it is possible to get rating from and returns it.
+    @param dungeonID - the ID of the dungeon to be checked.
+    @return - the lowest key level the player can get rating from for the dungeon.
+--]]
+function addon:GetStartingLevel(dungeonID)
+    local best = addon.playerBests[dungeonID]
+    local baseLevel = best.level
+    for i = best.level + 1, 2, -1 do
+        -- Find lowest key that gives more min rating than best rating
+        if(addon.scorePerLevel[i] > best.rating) then
+            baseLevel = i
+        else
+            break
+        end
+    end
+    return baseLevel
+end
+
+--[[
     SortDungeonByLevel - Sorts the dungeons by their best completed levels
     return - an array of dungeonIDs indexed by ascending completed level.
 --]]
@@ -179,8 +209,8 @@ function addon:SortDungeonsByLevel()
     end
     -- Sort the mapIDs by their levels, ratings if ties, overall map rating if no run for both the dungeons
     table.sort(array, function(id1, id2)
-        id1_level = addon.playerBests[id1].level
-        id2_level = addon.playerBests[id2].level
+        id1_level = addon:GetStartingLevel(id1)
+        id2_level = addon:GetStartingLevel(id2)
         if(id1_level ~= 1 and id2_level ~= 1) then
             if(id1_level ~= id2_level) then
                 return id1_level < id2_level
@@ -212,12 +242,11 @@ end--]]
     @param dungeonID - the dungeons ID
     @param level - the completed level
     @param time - the time completed in
-    @param onTime - bool for if the key was completed on time
 --]]
-function addon:SetNewBest(dungeonID, level, time, onTime)
+function addon:SetNewBest(dungeonID, level, time)
     local entry = addon.playerBests[dungeonID]
     entry.level = level
     entry.time = time/1000
     entry.rating = addon:CalculateRating(time/1000, dungeonID, level)
-    entry.overTime = not onTime
+    CalculateTotalRating()
 end
