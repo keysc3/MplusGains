@@ -8,6 +8,7 @@ local scorePerLevel = {0, 165, 180, 205, 220, 235, 265, 280, 295, 320, 335, 365,
 local affixLevels = {[1] = 2, [2] = 4, [3] = 7, [4] = 10, [5] = 12}
 
 addon.scorePerLevel = scorePerLevel
+addon.scoresSet = false
 
 --[[
     GetGeneralDungeonInfo - Gets and stores the current mythic+ dungeons and their time limits.
@@ -50,6 +51,9 @@ function addon:GetPlayerDungeonBests()
                 ["time"] = bestInfo.durationSec
             }
             playerBests[key] = dungeonBest
+            if(not addon.scoresSet) then 
+                addon.scoresSet = true
+            end
         else
             playerBests[key] = CreateNoRunsEntry()
         end
@@ -175,6 +179,25 @@ function addon:SortDungeonsByScore()
 end
 
 --[[
+    GetStartingLevel - Gets the lowest dungeon level it is possible to get rating from and returns it.
+    @param dungeonID - the ID of the dungeon to be checked.
+    @return - the lowest key level the player can get rating from for the dungeon.
+--]]
+function addon:GetStartingLevel(dungeonID)
+    local best = addon.playerBests[dungeonID]
+    local baseLevel = best.level
+    for i = best.level + 1, 2, -1 do
+        -- Find lowest key that gives more min rating than best rating
+        if(addon.scorePerLevel[i] > best.rating) then
+            baseLevel = i
+        else
+            break
+        end
+    end
+    return baseLevel
+end
+
+--[[
     SortDungeonByLevel - Sorts the dungeons by their best completed levels
     return - an array of dungeonIDs indexed by ascending completed level.
 --]]
@@ -186,8 +209,8 @@ function addon:SortDungeonsByLevel()
     end
     -- Sort the mapIDs by their levels, ratings if ties, overall map rating if no run for both the dungeons
     table.sort(array, function(id1, id2)
-        id1_level = addon.playerBests[id1].level
-        id2_level = addon.playerBests[id2].level
+        id1_level = addon:GetStartingLevel(id1)
+        id2_level = addon:GetStartingLevel(id2)
         if(id1_level ~= 1 and id2_level ~= 1) then
             if(id1_level ~= id2_level) then
                 return id1_level < id2_level

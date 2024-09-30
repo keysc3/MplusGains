@@ -1366,32 +1366,12 @@ local function CreateAllButtons(scrollHolderFrame, maxLevel)
 end
 
 --[[
-    GetStartingLevel - Gets the lowest dungeon level it is possible to get rating from and returns it.
-    @param dungeonID - the ID of the dungeon to be checked.
-    @return - the lowest key level the player can get rating from for the dungeon.
---]]
-local function GetStartingLevel(dungeonID)
-    local best = addon.playerBests[dungeonID]
-    local baseLevel = best.level
-    for i = best.level + 1, 2, -1 do
-        -- Find lowest key that gives more min rating than best rating
-        if(addon.scorePerLevel[i] > best.rating) then
-            baseLevel = i
-        else
-            break
-        end
-    end
-    return baseLevel
-
-end
-
---[[
     CreateButtonRow - Creates the buttons for a row frame.
     @param scrollHolderFrame - the scroll holder frame for the buttons.
     @param dungeonID - the dungeonID the row is for.
 --]]
 local function CreateButtonRow(scrollHolderFrame, dungeonID)
-    local startingKeyLevel = GetStartingLevel(dungeonID)
+    local startingKeyLevel = addon:GetStartingLevel(dungeonID)
     -- Setup base values
     scrollHolderFrame.scrollChild.dungeonID = dungeonID
     scrollHolderFrame.scrollChild.baseLevel = startingKeyLevel
@@ -1560,7 +1540,7 @@ end
 --]]
 local function UpdateDungeonButtons(scrollHolderFrame)
     local dungeonID = scrollHolderFrame.scrollChild.dungeonID
-    local newLevel = GetStartingLevel(dungeonID)
+    local newLevel = addon:GetStartingLevel(dungeonID)
     local oldBase = scrollHolderFrame.scrollChild.baseLevel
     scrollHolderFrame.scrollChild.startingLevel = newLevel
     -- Setup new scroll range and pos values
@@ -2226,6 +2206,14 @@ local function StartUp()
                     -- Possible for affix info to be nil on inital login load. Try to populate on first open.
                     if(not affixInfoSet) then
                         PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
+                    end
+                    if(not addon.scoresSet) then
+                        addon:GetPlayerDungeonBests()
+                        for key, value in pairs(addon.dungeonInfo) do 
+                            UpdateDungeonButtons(dungeonHolderFrame.rows[key].scrollHolderFrame)
+                            UpdateDungeonBests(summaryFrame.bestRunsFrame, key)
+                        end
+                        summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
                     end
                     local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
                     if(fontName == nil) then
