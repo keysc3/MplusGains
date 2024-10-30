@@ -188,7 +188,11 @@ function addon:GetStartingLevel(dungeonID)
     local baseLevel = best.level
     for i = best.level + 1, 2, -1 do
         -- Find lowest key that gives more min rating than best rating
-        if(addon.scorePerLevel[i] > best.rating) then
+        if(addon.scorePerLevel[i] >= best.rating) then
+            if(addon.scorePerLevel[i] == best.rating) then
+                baseLevel = i + 1
+                break
+            end
             baseLevel = i
         else
             break
