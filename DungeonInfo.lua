@@ -124,6 +124,9 @@ function addon:CalculateRating(runTime, dungeonID, level)
     -- Subtract baseBonuse if overtime
     local bonusRating = 0
     local dungeonTimeLimit = addon.dungeonInfo[dungeonID].timeLimit
+    if(level >= 7) then
+        dungeonTimeLimit = dungeonTimeLimit + 90
+    end
     -- Runs over time by 40% are a 0 score.
     if(runTime > (dungeonTimeLimit + (dungeonTimeLimit * maxModifier))) then
         return 0
@@ -150,10 +153,14 @@ end
     CalculateChest - Calculates the dungeon runs performance based on its timer thresholds. 
     @param dungeonID - the id of the dungeon
     @param timeCompleted - the runs time in seconds
+    @param level - key level
     @return - string of the performance
 --]]
-function addon:CalculateChest(dungeonID, timeCompleted)
+function addon:CalculateChest(dungeonID, timeCompleted, level)
     local timeLimit = addon.dungeonInfo[dungeonID].timeLimit
+    if(level >= 7) then
+        timeLimit = timeLimit + 90
+    end
     if(timeCompleted <= (timeLimit * 0.6)) then return "+++" end
     if(timeCompleted <= (timeLimit * 0.8)) then return "++" end
     if(timeCompleted <= timeLimit) then return "+" end
@@ -188,7 +195,11 @@ function addon:GetStartingLevel(dungeonID)
     local baseLevel = best.level
     for i = best.level + 1, 2, -1 do
         -- Find lowest key that gives more min rating than best rating
-        if(addon.scorePerLevel[i] > best.rating) then
+        if(addon.scorePerLevel[i] >= best.rating) then
+            if(addon.scorePerLevel[i] == best.rating) then
+                baseLevel = i + 1
+                break
+            end
             baseLevel = i
         else
             break

@@ -1903,7 +1903,7 @@ local function GetDungeonLevelString(dungeonID)
     local runString = "-"
     local level = addon.playerBests[dungeonID].level
     if(level > 1 and addon.playerBests[dungeonID].rating > 0) then 
-        runString = addon:CalculateChest(dungeonID, addon.playerBests[dungeonID].time) .. level
+        runString = addon:CalculateChest(dungeonID, addon.playerBests[dungeonID].time, level) .. level
     end
     return runString
 end
