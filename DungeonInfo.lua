@@ -5,7 +5,7 @@ local maxModifier = 0.4
 local scorePerLevel = {0, 165, 180, 205, 220, 235, 265, 280, 295, 320, 335, 365, 380, 395, 410, 425,
  440, 455, 470, 485, 500, 515, 530, 545, 560, 575, 590, 605, 620, 635}
 
-local affixLevels = {[1] = 2, [2] = 4, [3] = 7, [4] = 10, [5] = 12}
+local affixLevels = {[1] = 4, [2] = 7, [3] = 10, [4] = 12}
 
 addon.scorePerLevel = scorePerLevel
 addon.scoresSet = false
