@@ -158,9 +158,9 @@ end
 --]]
 function addon:CalculateChest(dungeonID, timeCompleted, level)
     local timeLimit = addon.dungeonInfo[dungeonID].timeLimit
-    if(level >= 7) then
+    --[[if(level >= 7) then
         timeLimit = timeLimit + 90
-    end
+    end--]]
     if(timeCompleted <= (timeLimit * 0.6)) then return "+++" end
     if(timeCompleted <= (timeLimit * 0.8)) then return "++" end
     if(timeCompleted <= timeLimit) then return "+" end
