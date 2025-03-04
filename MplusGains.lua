@@ -1569,7 +1569,7 @@ local function PopulateAllAffixRows(parentFrame)
     affixInfoSet = true
     for i, key in ipairs(addon.affixInfo) do
         local affixTable = addon.affixInfo[i]
-        if(counter < 4 and affixTable.level ~= 7) then
+        if(counter < 4 and affixTable.level ~= 4) then
             rows[counter].titleFrame.nameText:SetText(affixTable.name)
             local text = "(+" .. ((affixTable.level ~= 0) and affixTable.level or "?")
             if(affixTable.level == 2) then
