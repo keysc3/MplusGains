@@ -3,7 +3,7 @@ local addonName, addon = ...
 local hover = { r = 255, g = 255, b = 255, a = 0.1 }
 local unselected = { r = 66/255, g = 66/255, b = 66/255, a = 1 }
 local outline = { r = 0, g = 0, b = 0, a = 1 }
-local maxLevel = 20
+local maxLevel = 30
 local buttonWidth = 48
 local xColPadding = 20
 local xPadding = 2
@@ -1569,7 +1569,7 @@ local function PopulateAllAffixRows(parentFrame)
     affixInfoSet = true
     for i, key in ipairs(addon.affixInfo) do
         local affixTable = addon.affixInfo[i]
-        if(counter < 4 and affixTable.level ~= 7) then
+        if(counter < 4 and affixTable.level ~= 4) then
             rows[counter].titleFrame.nameText:SetText(affixTable.name)
             local text = "(+" .. ((affixTable.level ~= 0) and affixTable.level or "?")
             if(affixTable.level == 2) then
