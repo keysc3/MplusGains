@@ -2,9 +2,9 @@ local _, addon = ...
 
 local maxModifier = 0.4
 
-local scorePerLevel = {0, 155, 170, 195, 210, 225, 255, 270, 285, 310, 325, 355, 
-370, 385, 400, 415, 430, 445, 460, 475, 490, 505, 520, 535, 550, 565, 580, 595, 
-610, 625}
+local scorePerLevel = {0, 155, 170, 200, 215, 230, 265, 280, 295, 
+325, 340, 375, 390, 405, 420, 435, 450, 465, 480, 495, 510, 525, 540, 
+555, 570, 585, 600, 615, 630, 645}
 
 local affixLevels = {[1] = 4, [2] = 7, [3] = 10, [4] = 12}
 
@@ -125,9 +125,9 @@ function addon:CalculateRating(runTime, dungeonID, level)
     -- Subtract baseBonuse if overtime
     local bonusRating = 0
     local dungeonTimeLimit = addon.dungeonInfo[dungeonID].timeLimit
-    if(level >= 7) then
+    --[[if(level >= 7) then
         dungeonTimeLimit = dungeonTimeLimit + 90
-    end
+    end--]]
     -- Runs over time by 40% are a 0 score.
     if(runTime > (dungeonTimeLimit + (dungeonTimeLimit * maxModifier))) then
         return 0
