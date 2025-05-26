@@ -15,7 +15,6 @@ local mainFrame = nil
 local colorVar = nil
 local frameToChange = nil
 local addonTitle = C_AddOns.GetAddOnMetadata(addonName, "Title")
-local affixInfoSet = false
 
 -- Setup libraries and data broker.
 local icon = LibStub("LibDBIcon-1.0")
@@ -1566,7 +1565,6 @@ local function PopulateAllAffixRows(parentFrame)
         rows[2].titleFrame.nameText:SetText("Error loading affixes")
         return
     end
-    affixInfoSet = true
     for i, key in ipairs(addon.affixInfo) do
         local affixTable = addon.affixInfo[i]
         if(counter < 4 and affixTable.level ~= 4) then
@@ -2177,62 +2175,35 @@ local function StartUp()
                 end
                 -- Register minimap icon.
                 icon:Register("MplusGainsDB", dataObject, MplusGainsSettings.Minimap)
-            end
-        end
-        -- Player Login
-        if(event == "PLAYER_LOGIN") then
-            -- Check if font still exists
-            local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name, true)
-            if(fontCheck == nil) then 
-                SetDefaultFont()
-            end
-            -- Setup static frames.
-            buttonWidth = math.floor(ApplyScale(buttonWidth))
-            dungeonRowHeight = ApplyScale(dungeonRowHeight)
-            mainFrame:SetSize(ApplyScale(1000), ApplyScale(600))
-            headerFrame = CreateHeaderFrame(mainFrame)
-            dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
-            summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
-            mainFrame.summaryFrame = summaryFrame
-            mainFrame.dungeonHolderFrame = dungeonHolderFrame
-            CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
-        end
-        -- Player entering world
-        if(event == "PLAYER_ENTERING_WORLD") then
-            local isInitialLogin, isReloadingUI = ...
-            if(isInitialLogin) then
-                -- Check if the font used exists, update if it doesn't
+                -- Check if font still exists
+                local fontCheck = LSM:Fetch("font", MplusGainsSettings.Font.name, true)
+                if(fontCheck == nil) then 
+                    SetDefaultFont()
+                end
+                -- Setup static frames.
+                buttonWidth = math.floor(ApplyScale(buttonWidth))
+                dungeonRowHeight = ApplyScale(dungeonRowHeight)
+                mainFrame:SetSize(ApplyScale(1000), ApplyScale(600))
+                headerFrame = CreateHeaderFrame(mainFrame)
+                dungeonHolderFrame = CreateDungeonHelper(mainFrame, headerFrame)
+                summaryFrame = CreateSummary(mainFrame, dungeonHolderFrame, headerFrame:GetWidth())
+                mainFrame.summaryFrame = summaryFrame
+                mainFrame.dungeonHolderFrame = dungeonHolderFrame
+                CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
+                -- Setup data. Data unavailable on load sometimes so do it on show?
                 mainFrame:SetScript("OnShow", function(self)
-                    -- Possible for affix info to be nil on inital login load. Try to populate on first open.
-                    if(not affixInfoSet) then
-                        PopulateAllAffixRows(summaryFrame.affixInfoHolderFrame)
-                    end
-                    if(not addon.scoresSet) then
-                        addon:GetPlayerDungeonBests()
-                        for key, value in pairs(addon.dungeonInfo) do 
-                            UpdateDungeonButtons(dungeonHolderFrame.rows[key].scrollHolderFrame)
-                            UpdateDungeonBests(summaryFrame.bestRunsFrame, key)
-                        end
-                        summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
-                    end
+                    DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
                     local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
                     if(fontName == nil) then
                         FontSelectOnClick(self.fontDropDownSHF.defaultFrame, "LeftButton", false)
                     end
                     self:SetScript("OnShow", nil)
                 end)
-                -- Register for event needed to get data.
-                self:RegisterEvent("MYTHIC_PLUS_CURRENT_AFFIX_UPDATE")
-            else
-                if(isReloadingUI) then
-                    DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
-                end
             end
         end
-        -- M+ affix update
-        if(event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE") then
-            DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
-            self:UnregisterEvent(event)
+        -- Player Login
+        if(event == "PLAYER_LOGIN") then
+            addon:RequestInfo()
         end
         -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
