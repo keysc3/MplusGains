@@ -8,7 +8,15 @@ local scorePerLevel = {0, 155, 170, 200, 215, 230, 260, 275, 290, 320, 335, 365,
 local affixLevels = {[1] = 4, [2] = 7, [3] = 10, [4] = 12}
 
 addon.scorePerLevel = scorePerLevel
-addon.scoresSet = false
+
+--[[
+    RequestInfo - Load info for needed C_MythicPlus functions to return values.
+--]]
+function addon:RequestInfo()
+    C_MythicPlus.RequestMapInfo()
+    C_MythicPlus.RequestCurrentAffixes()
+    C_MythicPlus.RequestRewards()
+end
 
 --[[
     GetGeneralDungeonInfo - Gets and stores the current mythic+ dungeons and their time limits.
@@ -51,9 +59,6 @@ function addon:GetPlayerDungeonBests()
                 ["time"] = bestInfo.durationSec
             }
             playerBests[key] = dungeonBest
-            if(not addon.scoresSet) then 
-                addon.scoresSet = true
-            end
         else
             playerBests[key] = CreateNoRunsEntry()
         end
@@ -81,7 +86,6 @@ end
 --]]
 function addon:GetWeeklyAffixInfo()
     local affixInfo = {}
-    C_MythicPlus.RequestCurrentAffixes()
     local affixIDs = C_MythicPlus.GetCurrentAffixes()
     if(affixIDs ~= nil) then
         for i, value in ipairs(affixIDs) do
