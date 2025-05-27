@@ -15,6 +15,7 @@ local mainFrame = nil
 local colorVar = nil
 local frameToChange = nil
 local addonTitle = C_AddOns.GetAddOnMetadata(addonName, "Title")
+local firstShow = false
 
 -- Setup libraries and data broker.
 local icon = LibStub("LibDBIcon-1.0")
@@ -2192,6 +2193,7 @@ local function StartUp()
                 CreateFooter(dungeonHolderFrame, mainFrame, headerFrame)
                 -- Setup data. Data unavailable on load sometimes so do it on show?
                 mainFrame:SetScript("OnShow", function(self)
+                    shown = true
                     DataSetup(dungeonHolderFrame, summaryFrame, headerFrame)
                     local fontName, fontHeight, fontFlags = headerFrame.text:GetFont()
                     if(fontName == nil) then
@@ -2207,18 +2209,20 @@ local function StartUp()
         end
         -- Challenge mode completed
         if(event == "CHALLENGE_MODE_COMPLETED") then
-            local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
-                oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
-                PrimaryAffix, isEligibleForScore, members
-                    = C_ChallengeMode.GetCompletionInfo()
-            if(CheckForNewBest(dungeonID, level, time)) then
-                -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
-                addon:SetNewBest(dungeonID, level, time)
-                UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
-                UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
-                -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
-                summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
-                summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
+            if(shown) then
+                local dungeonID, level, time, onTime, keystoneUpgradeLevels, practiceRun,
+                    oldOverallDungeonScore, newOverallDungeonScore, IsMapRecord, IsAffixRecord,
+                    PrimaryAffix, isEligibleForScore, members
+                        = C_ChallengeMode.GetCompletionInfo()
+                if(CheckForNewBest(dungeonID, level, time)) then
+                    -- Replace the old run with the newly completed one and update that dungeons summary and helper row.
+                    addon:SetNewBest(dungeonID, level, time)
+                    UpdateDungeonButtons(dungeonHolderFrame.rows[dungeonID].scrollHolderFrame)
+                    UpdateDungeonBests(summaryFrame.bestRunsFrame, dungeonID)
+                    -- Set new total, subtract rows gain, set overall gain, and reset row gain to 0.
+                    summaryFrame.header.scoreHeader.ratingText:SetText(addon.totalRating)
+                    summaryFrame.header.scoreHeader.gainText:SetText(((totalGained + addon.totalRating) == addon.totalRating) and "" or ("(" .. totalGained + addon.totalRating .. ")"))
+                end
             end
         end
     end)
