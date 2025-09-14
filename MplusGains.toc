@@ -1,8 +1,8 @@
-## Interface: 110105
+## Interface: 110200
 ## Title: Mplus Gains
 ## Notes: Provides M+ rating gain information. /mplusgains or /mpg
 ## Author: Colin Keys
-## Version: 1.6.5
+## Version: 1.6.6
 ## SavedVariables: MplusGainsSettings
 ## DefaultState: enabled
 
