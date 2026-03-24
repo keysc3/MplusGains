@@ -1,4 +1,4 @@
-## Interface: 110200
+## Interface: 120001
 ## Title: Mplus Gains
 ## Notes: Provides M+ rating gain information. /mplusgains or /mpg
 ## Author: Colin Keys
